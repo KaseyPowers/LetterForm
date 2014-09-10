@@ -33,6 +33,7 @@ namespace penToText
     public class mainWindows
     {
         //Hello Everybody
+        //Hi Doctor Nick!
         public InputWindow myInputWindow;
         public DisplayWindow myDisplayWindow;
 
