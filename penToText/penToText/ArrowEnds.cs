@@ -1,6 +1,10 @@
 //------------------------------------------
 // ArrowEnds.cs (c) 2007 by Charles Petzold
 //------------------------------------------
+
+// DOMINIQUES TEST COMMENT
+
+
 using System;
 
 namespace Petzold.Media2D
