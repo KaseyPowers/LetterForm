@@ -36,6 +36,7 @@ namespace penToText
         //Hi Doctor Nick!
         public InputWindow myInputWindow;
         public DisplayWindow myDisplayWindow;
+        public penToText myPenToText;
 
         private double inputHeight = 300;
         private double inputWidth = 300;
@@ -47,6 +48,7 @@ namespace penToText
         {
             data = new List<Point>();
             currentPoint = new Point(-5, -5);
+            myPenToText = new penToText();
         }
 
         public void createWindows()
@@ -81,6 +83,7 @@ namespace penToText
         
         public void newData(Point newPoint)
         {
+            myPenToText.newData(newPoint);
             //input copy
             if(currentPoint==new Point(-5,-5)){
                 currentPoint=newPoint;

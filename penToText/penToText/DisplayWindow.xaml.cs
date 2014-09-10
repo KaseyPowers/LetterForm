@@ -82,4 +82,14 @@ namespace penToText
             ArrowCanvas.Height = canvasSize.Height;
         }
     }
+
+    public class dynamicDisplay
+    {
+
+    }
+
+    public class dynamicCanvas
+    {
+
+    }
 }
