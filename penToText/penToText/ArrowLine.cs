@@ -5,6 +5,8 @@ using System;
 using System.Windows;
 using System.Windows.Media;
 
+// test comment DOMINIQUE
+
 namespace Petzold.Media2D
 {
     /// <summary>
