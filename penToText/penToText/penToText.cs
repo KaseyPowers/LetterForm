@@ -19,10 +19,22 @@ namespace penToText
     class penToText
     {
 
+        private Point lastPoint;
+        String lastDirection = "";
+        String[] directionArray;
+        int i = 0;
+        public penToText()
+        {
+            lastPoint = new Point(-5, -5);
+        }
         public bool newData(Point newPoint)
         {
-
-
+            if (lastPoint != new Point(-5, -5))
+            {
+                Dominique1(newPoint);
+            }      
+           
+            lastPoint = newPoint;
             return true;
         }
 
@@ -36,9 +48,39 @@ namespace penToText
 
         }
 
-        private void Dominique1()
+        private void Dominique1(Point newPoint)
         {
+            String direction ="";
+            if (newPoint.X > lastPoint.X)
+            {
+                if (newPoint.Y > lastPoint.Y)
+                {
+                    direction = "up positive";
+                }
+                else {
+                    direction = "down negative";
+                }
+            }
 
+            if (newPoint.X < lastPoint.X)
+            {
+                if (newPoint.Y > lastPoint.Y)
+                {
+                    direction = "up negative";
+                }
+                else {
+                    direction = "down positive";
+                }
+            }
+
+            // change in direction
+            if (direction != lastDirection)
+            {
+                directionArray[i]=direction;
+                i++;
+            }
+
+            lastDirection = direction;
         }
 
         private void Dominique2()
