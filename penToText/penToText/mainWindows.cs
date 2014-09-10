@@ -32,6 +32,7 @@ namespace penToText
     }
     public class mainWindows
     {
+        //Hello Everybody
         public InputWindow myInputWindow;
         public DisplayWindow myDisplayWindow;
 
