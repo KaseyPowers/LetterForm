@@ -16,7 +16,7 @@ using Petzold.Media2D;
 
 namespace penToText
 {
-    class penToText
+    public class convertToText
     {
 
         public bool newData(Point newPoint)

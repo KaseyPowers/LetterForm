@@ -63,7 +63,7 @@
       <DependentUpon>InputWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="mainWindows.cs" />
-    <Compile Include="penToText.cs" />
+    <Compile Include="convertToText.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

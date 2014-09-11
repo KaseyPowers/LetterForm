@@ -49,6 +49,7 @@ namespace penToText
         {
             InputCanvas.Children.Clear();
             manager.clear();
+            manager.myDisplayWindow.arrows.changeLoc(0, 1);
         }
 
         private void startDraw(object sender, MouseEventArgs e)

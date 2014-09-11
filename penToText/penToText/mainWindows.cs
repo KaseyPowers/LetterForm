@@ -36,7 +36,7 @@ namespace penToText
         //Hi Doctor Nick!
         public InputWindow myInputWindow;
         public DisplayWindow myDisplayWindow;
-        public penToText myPenToText;
+        public convertToText myPenToText;
 
         private double inputHeight = 300;
         private double inputWidth = 300;
@@ -48,7 +48,7 @@ namespace penToText
         {
             data = new List<Point>();
             currentPoint = new Point(-5, -5);
-            myPenToText = new penToText();
+            myPenToText = new convertToText();
         }
 
         public void createWindows()
@@ -95,7 +95,7 @@ namespace penToText
                 temp.Y1= currentPoint.Y;
                 temp.X2= newPoint.X;
                 temp.Y2= newPoint.Y;
-                myDisplayWindow.InputCanvas.Children.Add(temp);
+                myDisplayWindow.dynamicInput.myCanvas.Children.Add(temp);
                 currentPoint = newPoint;
             }
 
@@ -117,7 +117,7 @@ namespace penToText
                 DisplayCanvas.Children.Add(test);*/
                 //drawArrow(new Point(5, 5), new Point(100, 100));
 
-                myDisplayWindow.ArrowCanvas.Children.Clear();
+                myDisplayWindow.arrows.myCanvas.Children.Clear();
                 for (int i = 1; i < data.Count; i++)
                 {
                     Point a = data[i - 1];
@@ -130,7 +130,7 @@ namespace penToText
                     test.Y1 = a.Y;
                     test.X2 = b.X;
                     test.Y2 = b.Y;
-                    myDisplayWindow.ArrowCanvas.Children.Add(test);
+                    myDisplayWindow.arrows.myCanvas.Children.Add(test);
 
                 }
             }
@@ -146,8 +146,8 @@ namespace penToText
         {
             data.Clear();
             currentPoint = new Point(-5, -5);
-            myDisplayWindow.InputCanvas.Children.Clear();
-            myDisplayWindow.ArrowCanvas.Children.Clear();
+            myDisplayWindow.dynamicInput.myCanvas.Children.Clear();
+            myDisplayWindow.arrows.myCanvas.Children.Clear();
         }
     }
 }
