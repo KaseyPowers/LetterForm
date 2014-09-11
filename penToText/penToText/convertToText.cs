@@ -23,7 +23,7 @@ namespace penToText
         String lastDirection = "";
         String[] directionArray;
         int i = 0;
-        public penToText()
+        public convertToText()
         {
             lastPoint = new Point(-5, -5);
         }
