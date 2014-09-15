@@ -88,18 +88,18 @@ namespace penToText
         {
             myPenToText.newData(newPoint);          
 
-        }
+        }       
 
-        private double distance(Point a, Point b)
-        {
-            return Math.Sqrt(Math.Pow((a.X - b.X), 2) + Math.Pow((a.Y - b.Y), 2));
-        }
-
-        internal void clear()
+        public void clear()
         {
             data.Clear();
             currentPoint = new Point(-5, -5);
             myPenToText.clear();
+        }
+
+        public void endDraw()
+        {
+            myPenToText.endDraw();
         }
     }
 }

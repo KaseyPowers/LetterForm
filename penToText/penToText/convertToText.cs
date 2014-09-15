@@ -12,6 +12,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using System.Diagnostics;
 using Petzold.Media2D;
 
 namespace penToText
@@ -32,6 +33,7 @@ namespace penToText
 
         //canvas stuff
         private lineDrawCanvas inputCopy;
+        private List<lineDrawCanvas> cleanTesters;
         public Size canvasSizes;
        
         public convertToText(dynamicDisplay display, Size inputSize)
@@ -43,10 +45,38 @@ namespace penToText
 
             thisDynamicDisplay = display;
 
-            inputCopy = new lineDrawCanvas(0, 0, display);
+            //copy of input
+            inputCopy = new lineDrawCanvas(0, 0, display, "Copy Input");
             inputCopy.outOfX = inputSize.Width;
             inputCopy.outOfy = inputSize.Height;
             thisDynamicDisplay.addCanvas(inputCopy);
+
+            //initial clean
+            cleanTesters = new List<lineDrawCanvas>();
+            
+            lineDrawCanvas lineClean = new lineDrawCanvas(1, 0, display, "remove lines r=2");
+            lineClean.outOfX = inputSize.Width;
+            lineClean.outOfy = inputSize.Height;
+            lineClean.toAddCircles = true;
+            thisDynamicDisplay.addCanvas(lineClean);
+            cleanTesters.Add(lineClean);
+
+            lineClean = new lineDrawCanvas(0, 1, display, "remove lines r=4");
+            lineClean.outOfX = inputSize.Width;
+            lineClean.outOfy = inputSize.Height;
+            lineClean.toAddCircles = true;
+            thisDynamicDisplay.addCanvas(lineClean);
+            cleanTesters.Add(lineClean);
+
+            lineClean = new lineDrawCanvas(1, 1, display, "remove lines r=8");
+            lineClean.outOfX = inputSize.Width;
+            lineClean.outOfy = inputSize.Height;
+            lineClean.toAddCircles = true;
+            thisDynamicDisplay.addCanvas(lineClean);
+            cleanTesters.Add(lineClean);
+
+            
+
         }
 
         public void createDisplays()
@@ -54,9 +84,114 @@ namespace penToText
             //might be needed
         }
 
+        public void endDraw()
+        {
+            /*int equalCount = 0;
+            int aNill = 0;
+            int bNill = 0;
+            int bothNill = 0;
+            int total = 0;
+            for (int i = 2; i < originalData.Count; i++)
+            {
+                Point a, b, c;
+                a = originalData[i-2];
+                b = originalData[i - 1];
+                c = originalData[i];
+                double angleWith1 = angle(a, b, c);
+                double angleWith2 = angle2(a, b, c);
+
+                total++;
+                if (Double.IsNaN(angleWith1) && Double.IsNaN(angleWith2))
+                {
+                    bothNill++;
+                }
+                else if (Double.IsNaN(angleWith1))
+                {
+                    aNill++;
+                }
+                else if (Double.IsNaN(angleWith2))
+                {
+                    bNill++;
+                }
+                else if (Math.Abs(angleWith1 - angleWith2) <.01)
+                {
+                    equalCount++;
+                }
+            }
+            Console.WriteLine("total: " + total);
+            Console.WriteLine("how many time both get the same result: " + equalCount);
+            Console.WriteLine("how many times angle1 is NaN: " + aNill);
+            Console.WriteLine("how many times angle2 is NaN: " + bNill);
+            Console.WriteLine("both angles return NaN: " + bothNill); */
+
+            // to test clean methods, will clean 100 times
+            //start timer
+            Stopwatch stopWatch = new Stopwatch();
+            int testIterations = 100000;
+            stopWatch.Start();
+            for (int i = 0; i < testIterations; i++)
+            {
+                cleanTesters[0].newData(clearLines(originalData, 2));
+            }
+            cleanTesters[0].updateDraw();
+            stopWatch.Stop();
+
+            TimeSpan ts = stopWatch.Elapsed;
+            string elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
+               ts.Hours, ts.Minutes, ts.Seconds,
+               ts.Milliseconds / 10);
+
+            cleanTesters[0].title.Text = cleanTesters[0].title.Text + "\n" + elapsedTime;
+
+
+            //next test
+            stopWatch.Reset();
+            stopWatch.Start();
+            for (int i = 0; i < testIterations; i++)
+            {
+                cleanTesters[1].newData(clearLines(originalData, 4));
+            }
+            cleanTesters[1].updateDraw();
+
+            stopWatch.Stop();
+
+            ts = stopWatch.Elapsed;
+            elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
+               ts.Hours, ts.Minutes, ts.Seconds,
+               ts.Milliseconds / 10);
+
+            cleanTesters[1].title.Text = cleanTesters[1].title.Text + "\n" + elapsedTime;
+
+            stopWatch.Reset();
+            stopWatch.Start();
+            for (int i = 0; i < testIterations; i++)
+            {
+                cleanTesters[2].newData(clearLines(originalData, 8));
+            }
+            cleanTesters[2].updateDraw();
+
+            stopWatch.Stop();
+
+            ts = stopWatch.Elapsed;
+            elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
+               ts.Hours, ts.Minutes, ts.Seconds,
+               ts.Milliseconds / 10);
+
+            cleanTesters[2].title.Text = cleanTesters[2].title.Text + "\n" + elapsedTime;
+           
+        }
+
         public void clear()
         {
             //reset data
+            originalData.Clear();
+            inputCopy.newData(originalData);
+            inputCopy.updateDraw();
+            for (int i = 0; i < cleanTesters.Count; i++)
+            {
+                cleanTesters[i].newData(originalData);
+            }
+            //lineClean.updateDraw();
         }
 
         public void resize()
@@ -64,6 +199,16 @@ namespace penToText
             inputCopy.outOfX = inputSize.Width;
             inputCopy.outOfy = inputSize.Height;
             inputCopy.updateDraw();
+
+            for (int i = 0; i < cleanTesters.Count; i++)
+            {
+                lineDrawCanvas lineClean= cleanTesters[i];
+                lineClean.outOfX = inputSize.Width;
+                lineClean.outOfy = inputSize.Height;
+            }
+            /*lineClean.outOfX = inputSize.Width;
+            lineClean.outOfy = inputSize.Height;
+            lineClean.updateDraw();*/
         }
         
         public bool newData(Point newPoint)
@@ -72,6 +217,8 @@ namespace penToText
             originalData.Add(newPoint);
             inputCopy.newData(originalData);
             inputCopy.updateDraw();
+
+           
 
 
             if (lastPoint != new Point(-5, -5))
@@ -136,5 +283,64 @@ namespace penToText
 
         }
 
+        private List<Point> clearLines(List<Point> input, double r)
+        {
+            double lineAngleMax = degreesToRadians(r);
+            List<Point> output = new List<Point>();
+            if (input.Count > 2)
+            {
+                output.Add(input[0]);
+                output.Add(input[1]);
+
+
+                for (int i = 2; i < input.Count; i++)
+                {
+                    Point a, b, c;
+                    a = output[output.Count - 2];
+                    b = output[output.Count - 1];
+                    c = input[i];
+
+                    if (Math.Abs(angle(b, a, c)-Math.PI) < lineAngleMax)
+                    {
+                        output.RemoveAt(output.Count - 1);
+                    }
+
+                    output.Add(c);
+
+                }
+
+            }
+            return output;
+        }
+
+        private double angle(Point A, Point B, Point C)
+        {
+            double output = 0.0;
+
+            Point a = new Point();
+            a.X = A.X - B.X;
+            a.Y = A.Y - B.Y;
+            double aMag= Math.Sqrt((a.X*a.X)+(a.Y*a.Y));
+
+            Point b = new Point();
+            b.X = A.X - C.X;
+            b.Y = A.Y - C.Y;
+            double bMag= Math.Sqrt((b.X*b.X) + (b.Y*b.Y));
+
+            output = Math.Acos((a.X * b.X + a.Y * b.Y) / (aMag * bMag));
+
+
+            return Math.Abs(output);
+        }
+
+        private double distance(Point a, Point b)
+        {
+            return Math.Sqrt(Math.Pow((a.X - b.X), 2) + Math.Pow((a.Y - b.Y), 2));
+        }
+
+        private double degreesToRadians(double input)
+        {
+            return ((Math.PI) / 180.0) * input;
+        }
     }    
 }

@@ -123,5 +123,18 @@ namespace penToText
 
             e.Handled = true;   
         }
+
+        private void endDraw(object sender, MouseEventArgs e)
+        {
+            if (e.StylusDevice == null)
+            {
+                manager.endDraw();
+            }
+        }
+        private void endDraw(object sender, StylusEventArgs e)
+        {
+            manager.endDraw();
+            e.Handled = true;
+        }
     }
 }

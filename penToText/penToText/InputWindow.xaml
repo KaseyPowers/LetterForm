@@ -4,11 +4,10 @@
         Title="InputWindow" Width="300" Height="300"
         
         SizeChanged="update_size"
-        Loaded="Window_Loaded"
-        WindowStartupLocation="CenterScreen"  >
+        Loaded="Window_Loaded"  >
 
     <Grid Name="Container" ShowGridLines="True" >
-        <Canvas Name="InputCanvas" MouseDown="startDraw" MouseMove="moveDraw" StylusDown="startDraw" StylusMove="moveDraw" >
+        <Canvas Name="InputCanvas" MouseDown="startDraw" MouseMove="moveDraw" StylusDown="startDraw" StylusMove="moveDraw" MouseUp="endDraw" StylusUp="endDraw">
             <Canvas.Background>
                 <SolidColorBrush Color="White" Opacity="0"/>
             </Canvas.Background>

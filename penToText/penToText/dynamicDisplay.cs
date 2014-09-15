@@ -143,16 +143,20 @@ namespace penToText
     {
         private List<Point> data;
         public TextBox title;
+        public string titleText;
         public double outOfX;
         public double outOfy;
-        public lineDrawCanvas( int xPos, int yPos, dynamicDisplay parent)
+        public bool toAddCircles;
+        public lineDrawCanvas( int xPos, int yPos, dynamicDisplay parent, string titleText)
         {
+            toAddCircles = false;
             this.data = new List<Point>();
             this.xPos = xPos;
             this.yPos = yPos;
             this.parent = parent;
+            this.titleText = titleText;
             outOfy = 0;
-            outOfX = 0;
+            outOfX = 0;            
             //Grid holder = new Grid();    
 
            
@@ -165,11 +169,11 @@ namespace penToText
             myPanel.Height = default_sizeY;     
 
             title = new TextBox();
-            title.Text = "InputCopy";
+            title.Text = titleText;
             title.HorizontalAlignment = HorizontalAlignment.Left;
             title.VerticalAlignment = VerticalAlignment.Top;
-            title.Width = 70;
-            title.Height = 23;  
+            title.Width = Double.NaN;
+            title.Height = Double.NaN;  
             myPanel.Children.Add(title);
 
             outOfy = myPanel.Height;
@@ -182,6 +186,9 @@ namespace penToText
         { 
             myPanel.Children.Clear();
             myPanel.Children.Add(title);
+            title.Text = titleText + "\n " + data.Count;
+
+            double radius = 6;
             if (outOfX != 0 && outOfy != 0 && !Double.IsNaN(outOfX) && ! Double.IsNaN(outOfy))
             {
                 double xScale = myPanel.Width / outOfX;
@@ -189,9 +196,11 @@ namespace penToText
                 if ((data != null) && data.Count > 1)
                 {
                     Point lastPoint = data[0];
+                    if (toAddCircles) { drawCircle(lastPoint.X * xScale, lastPoint.Y * yScale, radius); }
                     for (int i = 1; i < data.Count; i++)
                     {
                         Point currentPoint = data[i];
+                        if (toAddCircles) { drawCircle(currentPoint.X * xScale, currentPoint.Y * yScale, radius); }
                         Line temp = new Line();
                         temp.Stroke = Brushes.Black;
                         temp.StrokeThickness = 2;
@@ -204,6 +213,20 @@ namespace penToText
                     }
                 }
             }
+        }
+
+        public void drawCircle(double centerX, double centerY, double r)
+        {
+           Ellipse circle = new Ellipse();
+            circle.Width = r;
+            circle.Height = r;
+            circle.Stroke = Brushes.Black;
+            circle.StrokeThickness = 2;
+            double left = centerX - (r / 2.0);
+            double top = centerY - (r / 2.0);
+            Canvas.SetLeft(circle, left);
+            Canvas.SetTop(circle, top);
+            myPanel.Children.Add(circle);
         }
     }
 }
