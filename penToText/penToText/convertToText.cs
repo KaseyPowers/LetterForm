@@ -54,21 +54,21 @@ namespace penToText
             //initial clean
             cleanTesters = new List<lineDrawCanvas>();
             
-            lineDrawCanvas lineClean = new lineDrawCanvas(1, 0, display, "remove lines r=2");
+            lineDrawCanvas lineClean = new lineDrawCanvas(1, 0, display, "remove lines r=10");
             lineClean.outOfX = inputSize.Width;
             lineClean.outOfy = inputSize.Height;
             lineClean.toAddCircles = true;
             thisDynamicDisplay.addCanvas(lineClean);
             cleanTesters.Add(lineClean);
 
-            lineClean = new lineDrawCanvas(0, 1, display, "remove lines r=4");
+            lineClean = new lineDrawCanvas(0, 1, display, "remove distance d=8");
             lineClean.outOfX = inputSize.Width;
             lineClean.outOfy = inputSize.Height;
             lineClean.toAddCircles = true;
             thisDynamicDisplay.addCanvas(lineClean);
             cleanTesters.Add(lineClean);
 
-            lineClean = new lineDrawCanvas(1, 1, display, "remove lines r=8");
+            lineClean = new lineDrawCanvas(1, 1, display, "remove lines r=10 d=8");
             lineClean.outOfX = inputSize.Width;
             lineClean.outOfy = inputSize.Height;
             lineClean.toAddCircles = true;
@@ -131,7 +131,7 @@ namespace penToText
             stopWatch.Start();
             for (int i = 0; i < testIterations; i++)
             {
-                cleanTesters[0].newData(clearLines(originalData, 2));
+                cleanTesters[0].newData(clearLines(originalData, 10));
             }
             cleanTesters[0].updateDraw();
             stopWatch.Stop();
@@ -149,7 +149,7 @@ namespace penToText
             stopWatch.Start();
             for (int i = 0; i < testIterations; i++)
             {
-                cleanTesters[1].newData(clearLines(originalData, 4));
+                cleanTesters[1].newData(cleanDistance(originalData, 8));
             }
             cleanTesters[1].updateDraw();
 
@@ -166,7 +166,7 @@ namespace penToText
             stopWatch.Start();
             for (int i = 0; i < testIterations; i++)
             {
-                cleanTesters[2].newData(clearLines(originalData, 8));
+                cleanTesters[2].newData(clearLines(cleanDistance(originalData, 8), 10));
             }
             cleanTesters[2].updateDraw();
 
@@ -331,6 +331,20 @@ namespace penToText
 
 
             return Math.Abs(output);
+        }
+
+        private List<Point> cleanDistance(List<Point> input, double inDistance)
+        {
+            int pos = 1;
+            while (pos < input.Count)
+            {
+                if (distance(input[pos - 1], input[pos]) < inDistance)
+                {
+                    input.RemoveAt(pos);
+                }
+                else { pos++; }
+            }
+            return input;
         }
 
         private double distance(Point a, Point b)
