@@ -32,11 +32,10 @@ namespace penToText
     }
     public class mainWindows
     {
-        //Hello Everybody
-        //Hi Doctor Nick!
         public InputWindow myInputWindow;
         public DisplayWindow myDisplayWindow;
         public convertToText myPenToText;
+        public dynamicDisplay myDynamicDisplay;
 
         private double inputHeight = 300;
         private double inputWidth = 300;
@@ -47,8 +46,8 @@ namespace penToText
         public mainWindows()
         {
             data = new List<Point>();
-            currentPoint = new Point(-5, -5);
-            myPenToText = new convertToText();
+            currentPoint = new Point(-5, -5);            
+            myDynamicDisplay = new dynamicDisplay();
         }
 
         public void createWindows()
@@ -56,7 +55,12 @@ namespace penToText
             myInputWindow = new InputWindow();
             myInputWindow.manager = this;
 
-            myDisplayWindow = new DisplayWindow();
+            Size inputSize = new Size();
+            inputSize.Width = myInputWindow.InputCanvas.Width;
+            inputSize.Height = myInputWindow.InputCanvas.Height;
+            myPenToText = new convertToText(myDynamicDisplay, inputSize);
+
+            myDisplayWindow = new DisplayWindow(myDynamicDisplay);
 
             myDisplayWindow.manager = this;
             myDisplayWindow.Visibility = Visibility.Visible;
@@ -72,68 +76,17 @@ namespace penToText
 
         public void resized()
         {
-            inputWidth = ((Grid)myInputWindow.Content).ActualWidth;
-            inputHeight = ((Grid)myInputWindow.Content).ActualHeight;
-
-            myDisplayWindow.canvasSize.Height = inputHeight;
+            myPenToText.inputSize = myInputWindow.InputCanvas.RenderSize;
+            myPenToText.resize();
+            /*myDisplayWindow.canvasSize.Height = inputHeight;
             myDisplayWindow.canvasSize.Width = inputWidth;
-            myDisplayWindow.resize();
+            myDisplayWindow.resize();*/
         }
 
         
         public void newData(Point newPoint)
         {
-            myPenToText.newData(newPoint);
-            //input copy
-            if(currentPoint==new Point(-5,-5)){
-                currentPoint=newPoint;
-            }else{
-                Line temp= new Line();
-                temp.Stroke= Brushes.Black;
-                temp.StrokeThickness=2;
-                temp.X1= currentPoint.X;
-                temp.Y1= currentPoint.Y;
-                temp.X2= newPoint.X;
-                temp.Y2= newPoint.Y;
-                myDisplayWindow.dynamicInput.myCanvas.Children.Add(temp);
-                currentPoint = newPoint;
-            }
-
-            //arrow copy
-            double recordDistance = 15.0f;
-
-            if (data.Count == 0) { data.Add(newPoint); }
-
-            if (distance(newPoint, data[data.Count - 1]) >= recordDistance)
-            {
-                data.Add(newPoint);
-                /*ArrowLine test = new ArrowLine();
-                test.Stroke = Brushes.Black;
-                test.StrokeThickness = 3;
-                test.X1 = 15;
-                test.Y1 = 15;
-                test.X2 = 200;
-                test.Y2 = 200;
-                DisplayCanvas.Children.Add(test);*/
-                //drawArrow(new Point(5, 5), new Point(100, 100));
-
-                myDisplayWindow.arrows.myCanvas.Children.Clear();
-                for (int i = 1; i < data.Count; i++)
-                {
-                    Point a = data[i - 1];
-                    Point b = data[i];
-
-                    ArrowLine test = new ArrowLine();
-                    test.Stroke = Brushes.Black;
-                    test.StrokeThickness = 3;
-                    test.X1 = a.X;
-                    test.Y1 = a.Y;
-                    test.X2 = b.X;
-                    test.Y2 = b.Y;
-                    myDisplayWindow.arrows.myCanvas.Children.Add(test);
-
-                }
-            }
+            myPenToText.newData(newPoint);          
 
         }
 
@@ -146,8 +99,7 @@ namespace penToText
         {
             data.Clear();
             currentPoint = new Point(-5, -5);
-            myDisplayWindow.dynamicInput.myCanvas.Children.Clear();
-            myDisplayWindow.arrows.myCanvas.Children.Clear();
+            myPenToText.clear();
         }
     }
 }

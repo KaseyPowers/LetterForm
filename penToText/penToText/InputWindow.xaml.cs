@@ -23,6 +23,7 @@ namespace penToText
         Point currentPoint;
         public mainWindows manager;
         public bool loaded;
+        public double aspectRatio = 0.0;
 
 
         public InputWindow()
@@ -34,13 +35,25 @@ namespace penToText
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            aspectRatio = this.ActualWidth / this.ActualHeight;
             loaded = true;
         }
 
-        private void update_size(object sender, SizeChangedEventArgs e)
+        private void update_size(object sender, SizeChangedEventArgs sizeInfo)
         {
             if (loaded)
             {
+                double xChange = Math.Abs(sizeInfo.NewSize.Width - sizeInfo.PreviousSize.Width);
+                double yChange = Math.Abs(sizeInfo.NewSize.Height - sizeInfo.PreviousSize.Height);
+
+                if (xChange > yChange)
+                {
+                    this.Height= this.Width;
+                }
+                else
+                {
+                    this.Width = this.Height;
+                }         
                 manager.resized();
             }
         }
@@ -49,7 +62,7 @@ namespace penToText
         {
             InputCanvas.Children.Clear();
             manager.clear();
-            manager.myDisplayWindow.arrows.changeLoc(0, 1);
+            //manager.myDisplayWindow.arrows.changeLoc(0, 1);
         }
 
         private void startDraw(object sender, MouseEventArgs e)
