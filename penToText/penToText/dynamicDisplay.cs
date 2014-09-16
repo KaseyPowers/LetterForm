@@ -18,7 +18,7 @@ namespace penToText
 {
     public class dynamicDisplay
     {
-
+        private ScrollViewer holder;
         private Grid flexibleGrid;
         int x_grid;
         int y_grid;
@@ -27,6 +27,9 @@ namespace penToText
 
         public dynamicDisplay()
         {
+            holder = new ScrollViewer();
+            holder.HorizontalScrollBarVisibility = ScrollBarVisibility.Visible;
+            holder.VerticalScrollBarVisibility = ScrollBarVisibility.Visible;
             views = new List<dynamicView>();
 
             x_grid = 1;
@@ -36,13 +39,20 @@ namespace penToText
             flexibleGrid.ShowGridLines = true;
             flexibleGrid.HorizontalAlignment = HorizontalAlignment.Left;
             flexibleGrid.VerticalAlignment = VerticalAlignment.Top;
+            holder.Content= flexibleGrid;
             updateGrid();
         }
 
         public Grid getGrid()
-        {
+        {            
             return flexibleGrid;
         }
+
+        public ScrollViewer getScrollView()
+        {
+            return holder;
+        }
+
 
         private void updateGrid()
         {
@@ -188,7 +198,7 @@ namespace penToText
             myPanel.Children.Add(title);
             title.Text = titleText + "\n " + data.Count;
 
-            double radius = 6;
+            double radius = 4;
             if (outOfX != 0 && outOfy != 0 && !Double.IsNaN(outOfX) && ! Double.IsNaN(outOfy))
             {
                 double xScale = myPanel.Width / outOfX;

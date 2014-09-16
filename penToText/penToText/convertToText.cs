@@ -49,28 +49,39 @@ namespace penToText
             inputCopy = new lineDrawCanvas(0, 0, display, "Copy Input");
             inputCopy.outOfX = inputSize.Width;
             inputCopy.outOfy = inputSize.Height;
+            inputCopy.myPanel.Width = 400;
+            inputCopy.myPanel.Height = 400;
+            inputCopy.toAddCircles = true;
             thisDynamicDisplay.addCanvas(inputCopy);
 
             //initial clean
-            cleanTesters = new List<lineDrawCanvas>();
+            cleanTesters = new List<lineDrawCanvas>();            
             
-            lineDrawCanvas lineClean = new lineDrawCanvas(1, 0, display, "remove lines r=10");
-            lineClean.outOfX = inputSize.Width;
-            lineClean.outOfy = inputSize.Height;
-            lineClean.toAddCircles = true;
-            thisDynamicDisplay.addCanvas(lineClean);
-            cleanTesters.Add(lineClean);
+            /*for (int y = 0; y <= 10; y++)
+            {
+                for (int x = 0; x <= 10; x++)
+                {
+                    if (!(x == 0 && y == 0))
+                    {
+                        double r = x * 2;
+                        double d = y * 2;
+                        lineDrawCanvas lineClean = new lineDrawCanvas(x, y, display, "remove lines");
+                        lineClean.outOfX = inputSize.Width;
+                        lineClean.outOfy = inputSize.Height;
+                        lineClean.myPanel.Width = 200;
+                        lineClean.myPanel.Height = 200;
+                        lineClean.toAddCircles = true;
+                        thisDynamicDisplay.addCanvas(lineClean);
+                        cleanTesters.Add(lineClean);
+                    }
+                }
+            }*/
 
-            lineClean = new lineDrawCanvas(0, 1, display, "remove distance d=8");
+            lineDrawCanvas lineClean = new lineDrawCanvas(1, 0, display, "remove lines");
             lineClean.outOfX = inputSize.Width;
             lineClean.outOfy = inputSize.Height;
-            lineClean.toAddCircles = true;
-            thisDynamicDisplay.addCanvas(lineClean);
-            cleanTesters.Add(lineClean);
-
-            lineClean = new lineDrawCanvas(1, 1, display, "remove lines r=10 d=8");
-            lineClean.outOfX = inputSize.Width;
-            lineClean.outOfy = inputSize.Height;
+            lineClean.myPanel.Width = 400;
+            lineClean.myPanel.Height = 400;
             lineClean.toAddCircles = true;
             thisDynamicDisplay.addCanvas(lineClean);
             cleanTesters.Add(lineClean);
@@ -86,70 +97,47 @@ namespace penToText
 
         public void endDraw()
         {
-            /*int equalCount = 0;
-            int aNill = 0;
-            int bNill = 0;
-            int bothNill = 0;
-            int total = 0;
-            for (int i = 2; i < originalData.Count; i++)
-            {
-                Point a, b, c;
-                a = originalData[i-2];
-                b = originalData[i - 1];
-                c = originalData[i];
-                double angleWith1 = angle(a, b, c);
-                double angleWith2 = angle2(a, b, c);
-
-                total++;
-                if (Double.IsNaN(angleWith1) && Double.IsNaN(angleWith2))
-                {
-                    bothNill++;
-                }
-                else if (Double.IsNaN(angleWith1))
-                {
-                    aNill++;
-                }
-                else if (Double.IsNaN(angleWith2))
-                {
-                    bNill++;
-                }
-                else if (Math.Abs(angleWith1 - angleWith2) <.01)
-                {
-                    equalCount++;
-                }
-            }
-            Console.WriteLine("total: " + total);
-            Console.WriteLine("how many time both get the same result: " + equalCount);
-            Console.WriteLine("how many times angle1 is NaN: " + aNill);
-            Console.WriteLine("how many times angle2 is NaN: " + bNill);
-            Console.WriteLine("both angles return NaN: " + bothNill); */
-
-            // to test clean methods, will clean 100 times
+            /*// to test clean methods, will clean N times
             //start timer
-            Stopwatch stopWatch = new Stopwatch();
-            int testIterations = 100000;
-            stopWatch.Start();
-            for (int i = 0; i < testIterations; i++)
+           
+            int testIterations = 10000;
+
+            for (int y = 0; y <= 10; y++)
             {
-                cleanTesters[0].newData(clearLines(originalData, 10));
+                for (int x = 0; x <= 10; x++)
+                {
+                    if (!(x == 0 && y == 0))
+                    {
+                        double r = x * 2;
+                        double d = y * 2;
+                        int pos=((x - 1) + (11 * y));
+                        Stopwatch stopWatch = new Stopwatch();
+                        stopWatch.Start();
+                        for (int i = 0; i < testIterations; i++)
+                        {
+                            cleanTesters[pos].newData(clearLines (clearDistance(originalData, d), r));
+                        }
+                        cleanTesters[pos].titleText = "Line Clean d= " + d + " r= " + r;
+                        cleanTesters[pos].updateDraw();
+                        stopWatch.Stop();
+                        TimeSpan ts = stopWatch.Elapsed;
+                        string elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
+                           ts.Hours, ts.Minutes, ts.Seconds,
+                           ts.Milliseconds / 10);
+                        cleanTesters[pos].title.Text = cleanTesters[pos].title.Text + "\n" + elapsedTime;
+
+                    }
+                }
             }
-            cleanTesters[0].updateDraw();
-            stopWatch.Stop();
-
-            TimeSpan ts = stopWatch.Elapsed;
-            string elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
-               ts.Hours, ts.Minutes, ts.Seconds,
-               ts.Milliseconds / 10);
-
-            cleanTesters[0].title.Text = cleanTesters[0].title.Text + "\n" + elapsedTime;
-
+            
+           
 
             //next test
             stopWatch.Reset();
             stopWatch.Start();
             for (int i = 0; i < testIterations; i++)
             {
-                cleanTesters[1].newData(cleanDistance(originalData, 8));
+                cleanTesters[1].newData(clearDistance(originalData, 8));
             }
             cleanTesters[1].updateDraw();
 
@@ -166,7 +154,7 @@ namespace penToText
             stopWatch.Start();
             for (int i = 0; i < testIterations; i++)
             {
-                cleanTesters[2].newData(clearLines(cleanDistance(originalData, 8), 10));
+                cleanTesters[2].newData(clearLines(clearDistance(originalData, 8), 10));
             }
             cleanTesters[2].updateDraw();
 
@@ -177,8 +165,59 @@ namespace penToText
                ts.Hours, ts.Minutes, ts.Seconds,
                ts.Milliseconds / 10);
 
-            cleanTesters[2].title.Text = cleanTesters[2].title.Text + "\n" + elapsedTime;
-           
+            cleanTesters[2].title.Text = cleanTesters[2].title.Text + "\n" + elapsedTime;*/
+
+            
+            double goalClean = 2 / degreesToRadians(15);
+            double testcleanliness = goalClean + 1;
+            List<Point> cleaned = new List<Point>(); ;
+            double d=0;
+            double r=0;
+            int iterations=0;
+            double step = .1;
+            while (testcleanliness > goalClean && iterations< 1000000)
+            {
+                List<Point> clean1 = clearLines(clearDistance(originalData, d+step), r);
+                List<Point> clean2 = clearLines(clearDistance(originalData, d), r + step);
+                double cleanValue1, cleanValue2;
+                cleanValue1= cleanliness(clean1);
+                cleanValue2 = cleanliness(clean2);
+                if ( cleanValue1 < cleanValue2)
+                {
+                    cleaned = clean1;
+                    testcleanliness = cleanValue1;
+                    d += step;
+                }
+                else
+                {
+                    cleaned = clean2;
+                    testcleanliness = cleanValue2;
+                    r += step;
+                } 
+                iterations++;
+            }
+
+            cleanTesters[0].newData(cleaned);
+            cleanTesters[0].titleText = "Line Clean clean#: " + testcleanliness.ToString("N3") + " out of: " + goalClean.ToString("N3") + " after :" + iterations + "\n r: " + r + " d: " + d;
+            cleanTesters[0].updateDraw();
+
+            Point average = new Point();
+            average.X = 0;
+            average.Y = 0;
+            for (int i = 0; i < originalData.Count; i++)
+            {
+                average.X += originalData[i].X;
+                average.Y += originalData[i].Y;
+            }
+            average.X /= originalData.Count;
+            average.Y /= originalData.Count;
+
+            double xScale = cleanTesters[0].myPanel.Width / cleanTesters[0].outOfX;
+            double yScale = cleanTesters[0].myPanel.Height / cleanTesters[0].outOfy;
+
+            cleanTesters[0].drawCircle(average.X * xScale, average.Y * yScale, 6);
+
+
         }
 
         public void clear()
@@ -333,7 +372,7 @@ namespace penToText
             return Math.Abs(output);
         }
 
-        private List<Point> cleanDistance(List<Point> input, double inDistance)
+        private List<Point> clearDistance(List<Point> input, double inDistance)
         {
             int pos = 1;
             while (pos < input.Count)
@@ -350,6 +389,29 @@ namespace penToText
         private double distance(Point a, Point b)
         {
             return Math.Sqrt(Math.Pow((a.X - b.X), 2) + Math.Pow((a.Y - b.Y), 2));
+        }
+
+
+        private double cleanliness(List<Point> input)
+        {
+            Point average = new Point();
+            average.X = 0;
+            average.Y = 0;
+            for (int i = 0; i < input.Count; i++)
+            {
+                average.X += input[i].X;
+                average.Y += input[i].Y;
+            }
+            average.X /= input.Count;
+            average.Y /= input.Count;
+
+            double theta = 0.0;
+            for (int i = 1; i < input.Count; i++)
+            {
+                theta += angle(average, input[i - 1], input[i]);
+            }
+
+            return (input.Count / theta);
         }
 
         private double degreesToRadians(double input)
