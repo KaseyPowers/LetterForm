@@ -177,12 +177,20 @@ namespace penToText
             double step = .1;
             while (testcleanliness > goalClean && iterations< 1000000)
             {
+                
+                Stopwatch stopWatch = new Stopwatch();
+                stopWatch.Start();
                 List<Point> clean1 = clearLines(clearDistance(originalData, d+step), r);
+                stopWatch.Stop();
+                long time1 = stopWatch.ElapsedTicks;
+                stopWatch.Restart();
                 List<Point> clean2 = clearLines(clearDistance(originalData, d), r + step);
+                stopWatch.Stop();
+                long time2 = stopWatch.ElapsedTicks;
                 double cleanValue1, cleanValue2;
                 cleanValue1= cleanliness(clean1);
                 cleanValue2 = cleanliness(clean2);
-                if ( cleanValue1 < cleanValue2)
+                if ( (long)cleanValue1*time1 < (long)cleanValue2*time2)
                 {
                     cleaned = clean1;
                     testcleanliness = cleanValue1;
