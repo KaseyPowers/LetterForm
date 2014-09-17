@@ -218,6 +218,8 @@ namespace penToText
                         temp.Y1 = currentPoint.Y * yScale;
                         temp.X2 = lastPoint.X * xScale;
                         temp.Y2 = lastPoint.Y * yScale;
+                        temp.HorizontalAlignment = HorizontalAlignment.Left;
+                        temp.VerticalAlignment = VerticalAlignment.Top;
                         myPanel.Children.Add(temp);
                         lastPoint = currentPoint;
                     }
