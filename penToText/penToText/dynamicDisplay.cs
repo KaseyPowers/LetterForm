@@ -191,6 +191,7 @@ namespace penToText
         }
 
         public void newData(List<Point> data) { this.data = data; }
+        public List<Point> getData() { return data; }
 
         public override void updateDraw()
         { 

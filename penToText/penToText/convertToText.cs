@@ -35,6 +35,10 @@ namespace penToText
         private lineDrawCanvas inputCopy;
         private lineDrawCanvas dominique1;
         private lineDrawCanvas dominique2;
+        private lineDrawCanvas dominique3;
+        private lineDrawCanvas kasey1;
+        private lineDrawCanvas kasey2;
+        private lineDrawCanvas kasey3;
         private List<lineDrawCanvas> cleanTesters;
         public Size canvasSizes;
        
@@ -51,8 +55,8 @@ namespace penToText
             inputCopy = new lineDrawCanvas(0, 0, display, "Copy Input");
             inputCopy.outOfX = inputSize.Width;
             inputCopy.outOfy = inputSize.Height;
-            inputCopy.myPanel.Width = 400;
-            inputCopy.myPanel.Height = 400;
+            inputCopy.myPanel.Width = 200;
+            inputCopy.myPanel.Height = 200;
             inputCopy.toAddCircles = true;
             thisDynamicDisplay.addCanvas(inputCopy);
 
@@ -82,27 +86,68 @@ namespace penToText
             lineDrawCanvas lineClean = new lineDrawCanvas(1, 0, display, "remove lines");
             lineClean.outOfX = inputSize.Width;
             lineClean.outOfy = inputSize.Height;
-            lineClean.myPanel.Width = 400;
-            lineClean.myPanel.Height = 400;
+            lineClean.myPanel.Width = 200;
+            lineClean.myPanel.Height = 200;
             lineClean.toAddCircles = true;
             thisDynamicDisplay.addCanvas(lineClean);
             cleanTesters.Add(lineClean);
 
+            lineDrawCanvas lineClean2 = new lineDrawCanvas(2, 0, display, "RDP clean");
+            lineClean2.outOfX = inputSize.Width;
+            lineClean2.outOfy = inputSize.Height;
+            lineClean2.myPanel.Width = 200;
+            lineClean2.myPanel.Height = 200;
+            lineClean2.toAddCircles = true;
+            thisDynamicDisplay.addCanvas(lineClean2);
+            cleanTesters.Add(lineClean2);
+
             dominique1 = new lineDrawCanvas(0, 1, display, "Dominique 1");
             dominique1.outOfX = inputSize.Width;
             dominique1.outOfy = inputSize.Height;
-            dominique1.myPanel.Width = 400;
-            dominique1.myPanel.Height = 400;
+            dominique1.myPanel.Width = 200;
+            dominique1.myPanel.Height = 200;
             dominique1.toAddCircles = true;
             thisDynamicDisplay.addCanvas(dominique1);
 
             dominique2 = new lineDrawCanvas(1, 1, display, "Dominique 2");
             dominique2.outOfX = inputSize.Width;
             dominique2.outOfy = inputSize.Height;
-            dominique2.myPanel.Width = 400;
-            dominique2.myPanel.Height = 400;
+            dominique2.myPanel.Width = 200;
+            dominique2.myPanel.Height = 200;
             dominique2.toAddCircles = true;
             thisDynamicDisplay.addCanvas(dominique2);
+
+            dominique3 = new lineDrawCanvas(2, 1, display, "Dominique 3");
+            dominique3.outOfX = inputSize.Width;
+            dominique3.outOfy = inputSize.Height;
+            dominique3.myPanel.Width = 200;
+            dominique3.myPanel.Height = 200;
+            dominique3.toAddCircles = true;
+            thisDynamicDisplay.addCanvas(dominique3);
+
+            kasey1 = new lineDrawCanvas(0, 2, display, "Kasey 1");
+            kasey1.outOfX = inputSize.Width;
+            kasey1.outOfy = inputSize.Height;
+            kasey1.myPanel.Width = 200;
+            kasey1.myPanel.Height = 200;
+            kasey1.toAddCircles = true;
+            thisDynamicDisplay.addCanvas(kasey1);
+
+            kasey2 = new lineDrawCanvas(1, 2, display, "Kasey 2");
+            kasey2.outOfX = inputSize.Width;
+            kasey2.outOfy = inputSize.Height;
+            kasey2.myPanel.Width = 200;
+            kasey2.myPanel.Height = 200;
+            kasey2.toAddCircles = true;
+            thisDynamicDisplay.addCanvas(kasey2);
+
+            kasey3 = new lineDrawCanvas(2, 2, display, "Kasey 3");
+            kasey3.outOfX = inputSize.Width;
+            kasey3.outOfy = inputSize.Height;
+            kasey3.myPanel.Width = 200;
+            kasey3.myPanel.Height = 200;
+            kasey3.toAddCircles = true;
+            thisDynamicDisplay.addCanvas(kasey3);
 
 
             /*Point a = new Point();
@@ -208,7 +253,7 @@ namespace penToText
             cleanTesters[2].title.Text = cleanTesters[2].title.Text + "\n" + elapsedTime;*/
 
             
-            double goalClean = 2 / degreesToRadians(13);
+            double goalClean = 1 / degreesToRadians(10);
             double testcleanliness = goalClean + 1;
             List<Point> cleaned = new List<Point>(); ;
             double d=2;
@@ -265,10 +310,48 @@ namespace penToText
 
             cleanTesters[0].drawCircle(average.X * xScale, average.Y * yScale, 6);
 
+            goalClean = 1 / (20.0);
+            testcleanliness = goalClean + 1;
+            List<Point> cleaned2 = new List<Point>(); ;
+            double e = 0;
+            iterations = 0;
+            step = .1;
+            while (testcleanliness > goalClean && iterations < 1000000)
+            {
+                e += step;
+                cleaned2 = RDPclean(originalData, e);
+                testcleanliness = cleanliness2(cleaned2);                
+                iterations++;
+            }
+
+            cleanTesters[1].newData(cleaned2);
+            cleanTesters[1].titleText = "RDP: " + testcleanliness.ToString("N3") + " out of: " + goalClean.ToString("N3") + " after :" + iterations + "\ne: " +e;
+            cleanTesters[1].updateDraw();
+
+            average = avgPoint(0, cleaned2.Count-1, cleaned2);
+
+            xScale = cleanTesters[1].myPanel.Width / cleanTesters[1].outOfX;
+            yScale = cleanTesters[1].myPanel.Height / cleanTesters[1].outOfy;
+
+            cleanTesters[1].drawCircle(average.X * xScale, average.Y * yScale, 6);
+
 
             dominique2.newData(Dominique2(cleaned));
+            dominique2.titleText = "Dominique 2\n" + Dominique3(dominique2.getData());
             dominique2.updateDraw();
 
+            dominique3.newData(Dominique2(cleaned2));
+            dominique3.titleText = "Dominique 3\n" + Dominique3(dominique3.getData());
+            dominique3.updateDraw();
+
+
+            kasey2.newData(Kasey3(cleaned,  Dominique1(cleaned)));
+            kasey2.titleText = "Kasey 2 " + Dominique3(kasey2.getData());
+            kasey2.updateDraw();
+
+            kasey3.newData(Kasey3(cleaned2, Dominique1(cleaned2)));
+            kasey3.titleText = "Kasey 3 " + Dominique3(kasey3.getData());
+            kasey3.updateDraw();
 
         }
 
@@ -299,6 +382,22 @@ namespace penToText
             dominique2.outOfy = inputSize.Height;
             dominique2.updateDraw();
 
+            dominique3.outOfX = inputSize.Width;
+            dominique3.outOfy = inputSize.Height;
+            dominique3.updateDraw();
+
+            kasey1.outOfX = inputSize.Width;
+            kasey1.outOfy = inputSize.Height;
+            kasey1.updateDraw();
+
+            kasey2.outOfX = inputSize.Width;
+            kasey2.outOfy = inputSize.Height;
+            kasey2.updateDraw();
+
+            kasey3.outOfX = inputSize.Width;
+            kasey3.outOfy = inputSize.Height;
+            kasey3.updateDraw();
+
             for (int i = 0; i < cleanTesters.Count; i++)
             {
                 lineDrawCanvas lineClean= cleanTesters[i];
@@ -309,7 +408,24 @@ namespace penToText
             lineClean.outOfy = inputSize.Height;
             lineClean.updateDraw();*/
         }
-        
+
+        public string Dominique3(List<Point> input)
+        {
+            String output = "";
+            for (int i = 0; (i < (input.Count - 1) && output.Length<10); i++)
+            {
+                bool left = xChange(input[i], input[i + 1]) == 1;
+                bool up = yChange(input[i], input[i + 1]) == 1;
+                if (left && up) { output += "A"; }
+                if (!left && !up) { output += "B"; }
+                if (!left && up) { output += "C"; }
+                if (left && !up) { output += "D"; }
+            }
+
+
+            return output;
+        }
+
         public bool newData(Point newPoint)
         {
             //show copy of raw data
@@ -318,16 +434,20 @@ namespace penToText
             inputCopy.updateDraw();
 
             dominique1.newData(Dominique2(originalData));
+            dominique1.titleText = "Dominique 1\n" + Dominique3(dominique1.getData());
             dominique1.updateDraw();
 
+            kasey1.newData(Kasey3(originalData, Dominique1(originalData)));
+            kasey1.titleText = "Kasey 1 " + Dominique3(kasey1.getData());
+            kasey1.updateDraw();
 
-            if (lastPoint != new Point(-5, -5))
+            /*if (lastPoint != new Point(-5, -5))
             {
                 Dominique1(newPoint);
             }      
            
             lastPoint = newPoint;
-
+            */
             
             
             return true;
@@ -656,15 +776,53 @@ namespace penToText
 
             }
             return new Ksection();
-        }
-
-        private Point avgPoint(int startLoc, int endLoc, List<Point>){
-            return new Point();
         }*/
 
-        private void Dominique1(Point newPoint)
+        private Point avgPoint(int startLoc, int endLoc, List<Point> input){
+            Point output = new Point();
+            if (startLoc == endLoc)
+            {
+                output= input[startLoc];
+            }
+            else
+            {
+                double xVal = 0;
+                double yVal = 0;
+                for (int i = startLoc; i <= endLoc; i++)
+                {
+                    xVal += input[i].X;
+                    yVal += input[i].Y;
+                }
+                xVal = xVal / (double)(endLoc - startLoc + 1);
+                yVal = yVal / (double)(endLoc - startLoc + 1);
+
+                output.X = (int)xVal;
+                output.Y = (int)yVal;
+            }
+            return output;
+        }
+        
+        private List<int> Dominique1(List<Point> input){
+            List<int> output=new List<int>();
+
+            int sLoc = 0;
+            output.Add(0);
+            for (int i = 0; i < (input.Count - 1); i++)
+            {                
+                bool sameSlope = ((xChange(input[sLoc], input[sLoc + 1]) == xChange(input[i], input[i + 1])) && (yChange(input[sLoc], input[sLoc + 1]) == yChange(input[i], input[i + 1])));
+                if (!sameSlope)
+                {
+                    output.Add(i);
+                    sLoc = i;
+                }
+            }
+            output.Add(input.Count - 1);
+            output= output.Distinct().ToList();
+            return output;
+        }
+        /*private void Dominique1(Point newPoint)
         {
-            /*String direction ="";
+            String direction ="";
             if (newPoint.X > lastPoint.X)
             {
                 if (newPoint.Y > lastPoint.Y)
@@ -694,35 +852,228 @@ namespace penToText
                 i++;
             }
 
-            lastDirection = direction;*/
-        }
+            lastDirection = direction;
+        }*/
 
         private List<Point> Dominique2(List<Point> input)
         {
-            List<Point> output= new List<Point>();
-            int sLoc = 0;
-            output.Add(input[0]);            
-            for (int i = 0; i < (input.Count-1); i++)
-            {
-                bool sameSlope = ((xChange(input[sLoc], input[sLoc + 1]) == xChange(input[i], input[i+1])) && (yChange(input[sLoc], input[sLoc + 1]) == yChange(input[i], input[i+1])));
-                if (!sameSlope)
+            List<Point> output = new List<Point>();
+            if (input.Count > 2)
+            {                
+                int sLoc = 0;
+                output.Add(input[0]);
+                for (int i = 0; i < (input.Count - 1); i++)
                 {
-                    output.Add(input[i]);
-                    sLoc = i;
+                    bool sameSlope = ((xChange(input[sLoc], input[sLoc + 1]) == xChange(input[i], input[i + 1])) && (yChange(input[sLoc], input[sLoc + 1]) == yChange(input[i], input[i + 1])));
+                    if (!sameSlope)
+                    {
+                        output.Add(input[i]);
+                        sLoc = i;
+                    }
                 }
+                output.Add(input[input.Count - 1]);
             }
-            output.Add(input[input.Count - 1]);
+            else
+            {
+                output = input;
+            }
             return output;
         }
 
-        private bool xChange(Point a, Point b)
+        private List<Point> Kasey3(List<Point> input, List<int> locations)
         {
-            return (a.X >= b.X);
+            List<Point> output = new List<Point>();
+            if (locations.Count >= 3)
+            {
+                List<int> newLocs = new List<int>();
+                newLocs.Add(locations[0]);
+                bool done = false;
+                while (!done)
+                {
+                    done = true;
+                    for (int i = 2; (i < locations.Count); i++)
+                    {
+                        if (validCurve(input[locations[i - 2]], input[locations[i - 1]], input[locations[i]]))
+                        {
+                            // newLocs.Add(locations[i]);
+                            locations.RemoveAt(i - 1);
+                            done = false;
+                            i--;
+                        }
+                        /*else if (validCurve(input[locations[i - 2]], avgPoint(locations[i - 2] + 1, locations[i] - 1, input), input[locations[i]]))
+                        {
+                            //newLocs.Add(locations[i]);
+
+                            locations.RemoveAt(i - 1);
+                            done = false;
+                            i--;
+                        }*/
+                        if (done && i>1 && opposite(input[locations[i - 2]], input[locations[i - 1]], input[locations[i - 1]], input[locations[i]]))
+                        {
+                            if (locations.Count - 1 > i && !intersect(input[locations[i+1]], input[locations[i]], input[locations[i-1]], input[locations[i-2]]))
+                            {
+                                locations.RemoveAt(i);
+                                i--;
+                                done = false;
+                            }
+                            else if (i >2 && !intersect(input[locations[i]], input[locations[i-1]], input[locations[i-2]], input[locations[i-3]]))
+                            {
+                                locations.RemoveAt(i - 2);
+                                done = false;
+                                i--;
+                            }
+                        }
+                        if (done && i > 2 && opposite(input[locations[i - 3]], input[locations[i - 2]], input[locations[i - 1]], input[locations[i]]))
+                        {
+                            int a = locations[i - 2];
+                            int b = locations[i - 1];
+
+                        }
+                        if (done && i >= 4)
+                        {
+                            int a, b, c, d, e;
+                            a = locations[i - 4];
+                            b = locations[i - 3];
+                            c = locations[i - 2];
+                            d = locations[i - 1];
+                            e = locations[i];
+                            if (isLoop(a,b, c, d,e, input))
+                            {
+                                bool leftWorks = !opposite(input[a], input[c], input[c], input[d]);
+                                bool rightWorks = !opposite(input[b], input[c], input[c], input[e]);
+                                if (!leftWorks && !rightWorks)
+                                {
+                                    locations.RemoveAt(i - 1);
+                                    locations.RemoveAt(i - 3);
+                                    i -= 2;
+                                    done = false;
+                                }
+                                if (rightWorks)
+                                {
+                                    locations.RemoveAt(i - 1);
+                                    done = false;
+                                    i--;
+                                }
+                                if (leftWorks)
+                                {
+                                    locations.RemoveAt(i-3);
+                                    done = false;
+                                    i--;
+                                }
+                                
+                                
+                            }
+                        }
+                    }
+
+                }
+                for (int i = 0; i < locations.Count; i++)
+                {
+                    output.Add(input[locations[i]]);
+                }
+
+            }
+            return output;
         }
 
-        private bool yChange(Point a, Point b)
+
+        private bool isLoop(int a, int b, int c, int d, int e, List<Point> input)
         {
-            return (a.Y >= b.Y);
+            bool output = opposite(input[a], input[b], input[c], input[d]) && opposite(input[b], input[c], input[d], input[e]);
+
+            output = output && intersect(input[a], input[b], input[d], input[e]);
+
+
+            if (output)
+            {
+                output = false;
+                for (int i = d; i < e && !output; i++)
+                {
+                    output = intersect(input[a], input[b], input[i], input[i+1]);
+                }
+            }
+
+            if (output)
+            {
+                output = false;
+                for (int i = a; i < b && !output; i++)
+                {
+                    output = intersect(input[i], input[i+1], input[d], input[e]);
+                }
+            }
+
+            return output;
+        }
+
+        private bool intersect(Point a, Point b, Point c, Point d)
+        {
+            return ((clockwise(a, b, c) != clockwise(a, b, d)) && (clockwise(c, d, a) != clockwise(c, d, b)));
+        }
+
+        private int clockwise(Point a, Point b, Point c)
+        {
+            //-1 is counterclockwise, 1 is clockwise, 0 is a line
+            double val = ((b.X - a.X) * (c.Y - a.Y) - (b.Y - a.Y) * (c.X - a.X));
+            if (val == 0) { return 0; }
+            else if (val > 0) { return 1; }
+            else { return -1; }
+        }
+        private bool opposite(Point a, Point b, Point c, Point d)
+        {
+            bool output = false;
+
+            output = (xChange(a, b) == xChange(d, c));
+            output = output && (yChange(a, b) == yChange(d, c));
+
+            return output;
+        }
+
+        private bool validCurve(Point a, Point b, Point c)
+        {
+            bool output = false;
+            //x valuees go in the same direction
+            if ((a.X > b.X) == (b.X > c.X))
+            //if (xChange(a,b) == xChange(b,c))
+            {
+                output = true; ;
+            }
+            //if x values valid, test if y isnt
+            if (output && !((a.Y > b.Y) == (b.Y > c.Y)))
+            //if (output && !((yChange(a,b) == yChange(b,c))))
+            {
+                output = false;
+            }
+
+            return output;
+        }
+
+        private int xChange(Point a, Point b)
+        {
+            //0 is same, 1 a is greater, 2 b is greater;
+            int output = 0;
+            if (a.X > b.X)
+            {
+                output = 1;
+            }
+            else if (a.X < b.X)
+            {
+                output = 2;
+            }
+            return output;
+        }
+
+        private int yChange(Point a, Point b)
+        {
+            int output = 0;
+            if (a.Y > b.Y)
+            {
+                output = 1;
+            }
+            else if (a.Y < b.Y)
+            {
+                output = 2;
+            }
+            return output;
         }
 
 
@@ -818,9 +1169,79 @@ namespace penToText
             return (input.Count / theta);
         }
 
+        private double cleanliness2(List<Point> input)
+        {
+            double length = 0;
+            for (int i = 1; i < input.Count; i++)
+            {
+                length += distance(input[i - 1], input[i]);
+            }
+
+            return (input.Count / length);
+        }
+
         private double degreesToRadians(double input)
         {
             return ((Math.PI) / 180.0) * input;
+        }
+
+        private List<Point> RDPclean(List<Point> input, double epsilon)
+        {
+            List<Point> output= new List<Point>();
+            if (input.Count > 1)
+            {
+                double maxDistance = 0.0;
+                int pos = 0;
+                //find the greatest distance
+                for (int i = 1; i < input.Count - 1; i++)
+                {
+                    double d = lineDistance(input[i], input[0], input[input.Count - 1]);
+                    if (d > maxDistance)
+                    {
+                        maxDistance = d;
+                        pos = i;
+                    }
+                }
+
+                if (maxDistance > epsilon)
+                {
+
+
+                    output = RDPclean(input.GetRange(0, pos + 1), epsilon);
+
+                    output.AddRange(RDPclean(input.GetRange(pos, (input.Count - pos)), epsilon));
+
+                    output = output.Distinct().ToList();
+
+                }
+                else
+                {
+                    //no points in list are long enough, so just return first and last point
+                    output.Add(input[0]);
+                    output.Add(input[input.Count - 1]);
+                }
+            }
+            else
+            {
+                output = input;
+            }
+            return output;
+        }
+
+        private double lineDistance(Point a, Point lineA, Point lineB)
+        {
+            double X0, X1, X2, Y0, Y1, Y2;
+            X0 = a.X;
+            Y0 = a.Y;
+            X1 = lineA.X;
+            Y1 = lineA.Y;
+            X2 = lineB.X;
+            Y2 = lineB.Y;
+
+            double numerator =  Math.Abs(( X2- X1 )*(Y1 - Y0) - ( X1 - X0 )*(Y2 - Y1));
+            double denominator = Math.Sqrt(Math.Pow((X2 - X1), 2) + Math.Pow((Y2 - Y1), 2));
+
+            return (numerator / denominator);
         }
     }    
 }
