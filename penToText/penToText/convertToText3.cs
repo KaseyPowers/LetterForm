@@ -29,19 +29,22 @@ namespace penToText
         private dynamicDisplay thisDynamicDisplay;
         private List<Point> originalData;
         private List<Point> cleanedData;
-        private List<Point> slopeData;
+        private List<Point> cleanedData2;
+        private List<Point> slopeData1;
+        private List<Point> slopeData2;
         public Size inputSize;
 
         //canvas stuff
         //private lineDrawCanvas inputCopy;
         private lineDrawCanvas clean1;
-        private lineDrawCanvas slopes;
+        private lineDrawCanvas clean2;
+        private lineDrawCanvas slopes1;
+        private lineDrawCanvas slopes2;
         public Size canvasSizes;
 
         //testing lists and whatnot
-        private double scale= 100.0;
         private double goalClean;
-        private double e;       
+        private double e, e2;       
 
         public convertToText3(dynamicDisplay display, Size inputSize)
         {
@@ -51,8 +54,11 @@ namespace penToText
 
             originalData = new List<Point>();            
             cleanedData = new List<Point>();
-            slopeData = new List<Point>();
+            cleanedData2 = new List<Point>();
+            slopeData1 = new List<Point>();
+            slopeData2 = new List<Point>();
             e = 0;
+            e2 = 0;
 
             //thisDynamicDisplay = new dynamicDisplay();
             thisDynamicDisplay = display;
@@ -74,13 +80,29 @@ namespace penToText
             clean1.toAddCircles = true;
             thisDynamicDisplay.addCanvas(clean1);
 
-            slopes = new lineDrawCanvas(1, 0, display, "Slopes");
-            slopes.outOfX = inputSize.Width;
-            slopes.outOfy = inputSize.Height;
-            slopes.myPanel.Width = 400;
-            slopes.myPanel.Height = 400;
-            slopes.toAddCircles = true;
-            thisDynamicDisplay.addCanvas(slopes);
+            clean2 = new lineDrawCanvas(1, 0, display, "Clean All quicker");
+            clean2.outOfX = inputSize.Width;
+            clean2.outOfy = inputSize.Height;
+            clean2.myPanel.Width = 400;
+            clean2.myPanel.Height = 400;
+            clean2.toAddCircles = true;
+            thisDynamicDisplay.addCanvas(clean2);
+
+            slopes1 = new lineDrawCanvas(0, 1, display, "Slopes1");
+            slopes1.outOfX = inputSize.Width;
+            slopes1.outOfy = inputSize.Height;
+            slopes1.myPanel.Width = 400;
+            slopes1.myPanel.Height = 400;
+            slopes1.toAddCircles = true;
+            thisDynamicDisplay.addCanvas(slopes1);
+
+            slopes2 = new lineDrawCanvas(1, 1, display, "Slopes2");
+            slopes2.outOfX = inputSize.Width;
+            slopes2.outOfy = inputSize.Height;
+            slopes2.myPanel.Width = 400;
+            slopes2.myPanel.Height = 400;
+            slopes2.toAddCircles = true;
+            thisDynamicDisplay.addCanvas(slopes2);
         }
 
         public void getData(BlockingCollection<Point> data)
@@ -89,6 +111,7 @@ namespace penToText
             {
                 Point current = item;
                 originalData.Add(current);
+                cleanedData2.Add(current);
                 updateData();
             }
         }
@@ -132,9 +155,43 @@ namespace penToText
             clean1.myPanel.Dispatcher.BeginInvoke(new drawingDelegate(clean1.updateDraw));
 
 
-            slopeData = Dominique2(cleanedData);
-            slopes.newData(slopeData);
-            slopes.myPanel.Dispatcher.BeginInvoke(new drawingDelegate(slopes.updateDraw));
+            testClean = goalClean + 1;
+            if (e2 != 0) { e2 -= step; }
+
+            i = 0;
+            List<Point> temp = cleanedData2;
+            while (testClean > goalClean*1.5 && i < iterations)
+            {
+                e2 += step;
+                i++;
+
+                temp = RDPclean(temp, e2);
+
+                testClean = cleanliness(temp);
+
+                //Console.WriteLine("e: " + e + " cleanliness: " + testClean +" out ouf: " + goalClean);
+            }
+
+            if (i == iterations)
+            {
+                e2 = 0;
+                //cleanedData = originalData;
+            }
+            else
+            {
+                cleanedData2 = temp;
+            }
+
+            clean2.newData(cleanedData2);
+            clean2.myPanel.Dispatcher.BeginInvoke(new drawingDelegate(clean2.updateDraw));
+
+            slopeData1 = Dominique2(cleanedData);
+            slopes1.newData(slopeData1);
+            slopes1.myPanel.Dispatcher.BeginInvoke(new drawingDelegate(slopes1.updateDraw));
+
+            slopeData2 = Dominique2(cleanedData2);
+            slopes2.newData(slopeData2);
+            slopes2.myPanel.Dispatcher.BeginInvoke(new drawingDelegate(slopes2.updateDraw));
         }
 
         
@@ -149,15 +206,27 @@ namespace penToText
             clean1.outOfy = inputSize.Height;
             clean1.updateDraw();
 
-            slopes.outOfX = inputSize.Width;
-            slopes.outOfy = inputSize.Height;
-            slopes.updateDraw();
+            clean2.outOfX = inputSize.Width;
+            clean2.outOfy = inputSize.Height;
+            clean2.updateDraw();
+
+            slopes1.outOfX = inputSize.Width;
+            slopes1.outOfy = inputSize.Height;
+            slopes1.updateDraw();
+
+            slopes2.outOfX = inputSize.Width;
+            slopes2.outOfy = inputSize.Height;
+            slopes2.updateDraw();
         }
 
         public void clear()
         {
             //reset data
             originalData.Clear();
+            cleanedData.Clear();
+            cleanedData2.Clear();
+            slopeData1.Clear();
+            slopeData2.Clear();
 
 
             /*inputCopy.newData(originalData);
@@ -166,8 +235,11 @@ namespace penToText
             clean1.newData(originalData);
             clean1.updateDraw();
 
-            slopes.newData(originalData);
-            slopes.updateDraw();
+            slopes1.newData(originalData);
+            slopes1.updateDraw();
+
+            slopes2.newData(originalData);
+            slopes2.updateDraw();
 
             //reset variables
             cleanedData.Clear();
