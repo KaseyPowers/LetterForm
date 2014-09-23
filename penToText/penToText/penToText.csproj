@@ -71,10 +71,6 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ArrowEnds.cs" />
-    <Compile Include="ArrowLine.cs" />
-    <Compile Include="ArrowLineBase.cs" />
-    <Compile Include="ArrowPolyline.cs" />
     <Compile Include="convertToText2.cs" />
     <Compile Include="convertToText3.cs" />
     <Compile Include="dynamicDisplay.cs" />

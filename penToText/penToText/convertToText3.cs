@@ -16,7 +16,6 @@ using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using System.Windows.Shapes;
 using System.Diagnostics;
-using Petzold.Media2D;
 
 namespace penToText
 {
@@ -44,13 +43,16 @@ namespace penToText
 
         //testing lists and whatnot
         private double goalClean;
-        private double e, e2;       
+        private double e, e2;
+        private long c1, c2;
+        private Stopwatch timer;
 
         public convertToText3(dynamicDisplay display, Size inputSize)
         {
             this.inputSize = inputSize;
+            timer = new Stopwatch();
 
-            goalClean = (1 / 10.0);
+            goalClean = (1 / 15.0);
 
             originalData = new List<Point>();            
             cleanedData = new List<Point>();
@@ -60,47 +62,52 @@ namespace penToText
             e = 0;
             e2 = 0;
 
+            c1 = 0;
+            c2 = 0;
+
             //thisDynamicDisplay = new dynamicDisplay();
             thisDynamicDisplay = display;
 
-            /*//copy of input
-            inputCopy = new lineDrawCanvas(0, 0, display, "Threaded Copy Input");
+            double side = 250;
+
+            //copy of input
+            /*inputCopy = new lineDrawCanvas(0, 0, display, "Threaded Copy Input");
             inputCopy.outOfX = inputSize.Width;
             inputCopy.outOfy = inputSize.Height;
-            inputCopy.myPanel.Width = 200;
-            inputCopy.myPanel.Height = 200;
+            inputCopy.myPanel.Width = side;
+            inputCopy.myPanel.Height = side;
             inputCopy.toAddCircles = false;
             thisDynamicDisplay.addCanvas(inputCopy);*/
 
             clean1 = new lineDrawCanvas(0, 0, display, "Clean All");
             clean1.outOfX = inputSize.Width;
             clean1.outOfy = inputSize.Height;
-            clean1.myPanel.Width = 400;
-            clean1.myPanel.Height = 400;
+            clean1.myPanel.Width = side;
+            clean1.myPanel.Height = side;
             clean1.toAddCircles = true;
             thisDynamicDisplay.addCanvas(clean1);
 
             clean2 = new lineDrawCanvas(1, 0, display, "Clean All quicker");
             clean2.outOfX = inputSize.Width;
             clean2.outOfy = inputSize.Height;
-            clean2.myPanel.Width = 400;
-            clean2.myPanel.Height = 400;
+            clean2.myPanel.Width = side;
+            clean2.myPanel.Height = side;
             clean2.toAddCircles = true;
             thisDynamicDisplay.addCanvas(clean2);
 
             slopes1 = new lineDrawCanvas(0, 1, display, "Slopes1");
             slopes1.outOfX = inputSize.Width;
             slopes1.outOfy = inputSize.Height;
-            slopes1.myPanel.Width = 400;
-            slopes1.myPanel.Height = 400;
+            slopes1.myPanel.Width = side;
+            slopes1.myPanel.Height = side;
             slopes1.toAddCircles = true;
             thisDynamicDisplay.addCanvas(slopes1);
 
             slopes2 = new lineDrawCanvas(1, 1, display, "Slopes2");
             slopes2.outOfX = inputSize.Width;
             slopes2.outOfy = inputSize.Height;
-            slopes2.myPanel.Width = 400;
-            slopes2.myPanel.Height = 400;
+            slopes2.myPanel.Width = side;
+            slopes2.myPanel.Height = side;
             slopes2.toAddCircles = true;
             thisDynamicDisplay.addCanvas(slopes2);
         }
@@ -122,23 +129,29 @@ namespace penToText
             /*inputCopy.newData(originalData);
             inputCopy.myPanel.Dispatcher.BeginInvoke(new drawingDelegate(inputCopy.updateDraw));*/
 
-
             double testClean = goalClean + 1;
             double step = .1;
-            if (e != 0) { e -= step; }
+            //if (e != 0) { e -= step; }
 
             double originalClean = cleanliness(originalData);
 
             int i = 0;
             int iterations = 100;
+            if (e != 0) {
+                int steps = (int)(e / step);
+                steps = (int)((double)steps * .75);
+                e = (double)(steps * step);
 
+            }
+
+            timer.Start(); 
             while (testClean > goalClean && i < iterations)
             {
                 e += step;
                 i++;
 
                 cleanedData = RDPclean(originalData, e);
-                
+                //cleanedData = cleanedData.Distinct().ToList();
                 testClean = cleanliness(cleanedData);
                 
                 //Console.WriteLine("e: " + e + " cleanliness: " + testClean +" out ouf: " + goalClean);
@@ -149,24 +162,39 @@ namespace penToText
                 e = 0;
                 cleanedData = originalData;
             }
-
+            timer.Stop();
+            c1 += timer.ElapsedTicks;
+            timer.Reset();
             clean1.newData(cleanedData);
-            clean1.titleText = "Clean from: " + originalData.Count + " e: " + e;
+            clean1.titleText = "Clean from: " + originalData.Count + " e: " + e + "\nClean: " + testClean +" out of: " +goalClean + "\nTicks: " + c1;
             clean1.myPanel.Dispatcher.BeginInvoke(new drawingDelegate(clean1.updateDraw));
 
 
             testClean = goalClean + 1;
-            if (e2 != 0) { e2 -= step; }
+            //if (e2 != 0) { e2 -= step; }
+            //if (e2 != 0) { e2 /= 2; }
+            //e2 = 0;
+
+            if (e2 != 0)
+            {
+                int steps = (int)(e2 / step);
+                steps = (int)((double)steps * .75);
+                e2 = (double)(steps * step);
+
+            }
 
             i = 0;
             List<Point> temp = cleanedData2;
-            while (testClean > goalClean*1.75 && i < iterations)
+            //goalClean *= 1.25;
+            String newTitle = "Clean e: ";
+            timer.Start();
+            while (testClean > goalClean && i < iterations)
             {
                 e2 += step;
                 i++;
 
-                temp = RDPclean(temp, e2);
-
+                temp = RDPclean(cleanedData2, e2);
+                //temp = temp.Distinct().ToList();
                 testClean = cleanliness(temp);
 
                 //Console.WriteLine("e: " + e + " cleanliness: " + testClean +" out ouf: " + goalClean);
@@ -175,14 +203,21 @@ namespace penToText
             if (i == iterations)
             {
                 e2 = 0;
+                newTitle += "F";
                 //cleanedData = originalData;
             }
             else
             {
                 cleanedData2 = temp;
+                newTitle += e + "\nClean: " + testClean + " out of: " + goalClean;
             }
 
+            timer.Stop();
+            c2 += timer.ElapsedTicks;
+            timer.Reset();
+            newTitle += "\nTicks: " + c2;
             clean2.newData(cleanedData2);
+            clean2.titleText = newTitle;
             clean2.myPanel.Dispatcher.BeginInvoke(new drawingDelegate(clean2.updateDraw));
 
             slopeData1 = Dominique2(cleanedData);
@@ -228,6 +263,11 @@ namespace penToText
             slopeData1.Clear();
             slopeData2.Clear();
 
+            c1 = 0;
+            c2 = 0;
+            e = 0;
+            e2 = 0;
+
 
             /*inputCopy.newData(originalData);
             inputCopy.updateDraw();*/
@@ -235,15 +275,14 @@ namespace penToText
             clean1.newData(originalData);
             clean1.updateDraw();
 
+            clean2.newData(originalData);
+            clean2.updateDraw();
+
             slopes1.newData(originalData);
             slopes1.updateDraw();
 
             slopes2.newData(originalData);
             slopes2.updateDraw();
-
-            //reset variables
-            cleanedData.Clear();
-            e = 0;
         }
 
         private List<Point> RDPclean(List<Point> input, double epsilon)
@@ -269,10 +308,10 @@ namespace penToText
 
 
                     output = RDPclean(input.GetRange(0, pos + 1), epsilon);
-
+                    output.RemoveAt(output.Count - 1);
                     output.AddRange(RDPclean(input.GetRange(pos, (input.Count - pos)), epsilon));
 
-                    output = output.Distinct().ToList();
+                    //output = output.Distinct().ToList();
 
                 }
                 else

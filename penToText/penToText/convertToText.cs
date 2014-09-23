@@ -13,7 +13,6 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Diagnostics;
-using Petzold.Media2D;
 
 namespace penToText
 {
@@ -308,7 +307,7 @@ namespace penToText
             double xScale = cleanTesters[0].myPanel.Width / cleanTesters[0].outOfX;
             double yScale = cleanTesters[0].myPanel.Height / cleanTesters[0].outOfy;
 
-            cleanTesters[0].drawCircle(average.X * xScale, average.Y * yScale, 6);
+            //cleanTesters[0].drawCircle(average.X * xScale, average.Y * yScale, 6);
 
             goalClean = 1 / (20.0);
             testcleanliness = goalClean + 1;
@@ -333,7 +332,7 @@ namespace penToText
             xScale = cleanTesters[1].myPanel.Width / cleanTesters[1].outOfX;
             yScale = cleanTesters[1].myPanel.Height / cleanTesters[1].outOfy;
 
-            cleanTesters[1].drawCircle(average.X * xScale, average.Y * yScale, 6);
+            //cleanTesters[1].drawCircle(average.X * xScale, average.Y * yScale, 6);
 
 
             dominique2.newData(Dominique2(cleaned));

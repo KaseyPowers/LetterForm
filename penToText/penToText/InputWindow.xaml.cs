@@ -20,13 +20,15 @@ namespace penToText
     /// </summary>
     public partial class InputWindow : Window
     {
-        Point currentPoint;
+        //Point currentPoint;
         public mainWindows manager;
+        private Polyline myLine;
         public bool loaded;
         public double aspectRatio = 0.0;
 
         public InputWindow()
         {
+            myLine = new Polyline();
             InitializeComponent();
             this.Show();
 
@@ -69,17 +71,26 @@ namespace penToText
             if (e.StylusDevice == null)
             {
                 Point position = e.GetPosition(this);
-                currentPoint = position;
                 manager.newData(position);
-                
+                //currentPoint = position;
+                myLine = new Polyline();
+                myLine.Stroke = System.Windows.Media.Brushes.Black;
+                myLine.StrokeThickness = 2;
+                myLine.Points.Add(position);
+                InputCanvas.Children.Add(myLine);
             }
         }
 
         private void startDraw(object sender, StylusEventArgs e)
         {
             Point position = e.GetPosition(this);
-            currentPoint = position;
             manager.newData(position);
+            //currentPoint = position;
+            myLine = new Polyline();
+            myLine.Stroke = System.Windows.Media.Brushes.Black;
+            myLine.StrokeThickness = 2;
+            myLine.Points.Add(position);
+            InputCanvas.Children.Add(myLine);            
             e.Handled = true;
         }        
 
@@ -90,7 +101,8 @@ namespace penToText
 
                 Point position = e.GetPosition(this);
                 manager.newData(position);
-                Line myLine = new Line();
+                myLine.Points.Add(position);
+                /*Line myLine = new Line();
                 myLine.Stroke = System.Windows.Media.Brushes.Black;
                 myLine.X1 = currentPoint.X;
                 myLine.X2 = position.X;
@@ -99,7 +111,7 @@ namespace penToText
                 myLine.StrokeThickness = 2;
 
                 currentPoint = position;
-                InputCanvas.Children.Add(myLine);
+                InputCanvas.Children.Add(myLine);*/
 
             }
         }
@@ -109,7 +121,8 @@ namespace penToText
 
             Point position = e.GetPosition(this);
             manager.newData(position);
-            Line myLine = new Line();
+            myLine.Points.Add(position);
+            /*Line myLine = new Line();
             myLine.Stroke = System.Windows.Media.Brushes.Black;
             myLine.X1 = currentPoint.X;
             myLine.X2 = position.X;
@@ -119,7 +132,7 @@ namespace penToText
 
             currentPoint = position;
 
-            InputCanvas.Children.Add(myLine);
+            InputCanvas.Children.Add(myLine);*/
 
             e.Handled = true;   
         }

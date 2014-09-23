@@ -12,7 +12,6 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
-using Petzold.Media2D;
 
 namespace penToText
 {
@@ -157,6 +156,7 @@ namespace penToText
         public double outOfX;
         public double outOfy;
         public bool toAddCircles;
+        private Polyline myLine;
         public lineDrawCanvas( int xPos, int yPos, dynamicDisplay parent, string titleText)
         {
             toAddCircles = false;
@@ -167,9 +167,7 @@ namespace penToText
             this.titleText = titleText;
             outOfy = 0;
             outOfX = 0;            
-            //Grid holder = new Grid();    
-
-           
+            //Grid holder = new Grid(); 
 
             myPanel = new Canvas();
             myPanel.Name = "InputCopyCanvas";
@@ -186,6 +184,11 @@ namespace penToText
             title.Height = Double.NaN;  
             myPanel.Children.Add(title);
 
+            myLine = new Polyline();
+            myLine.Stroke = Brushes.Black;
+            myLine.StrokeThickness = 2;
+            myPanel.Children.Add(myLine);
+
             outOfy = myPanel.Height;
             outOfX = myPanel.Width;
         }
@@ -197,6 +200,8 @@ namespace penToText
         { 
             myPanel.Children.Clear();
             myPanel.Children.Add(title);
+            myLine.Points.Clear();
+            myPanel.Children.Add(myLine);
             title.Text = titleText + "\n " + data.Count;
 
             double radius = 4;
@@ -206,13 +211,17 @@ namespace penToText
                 double yScale = myPanel.Height / outOfy;
                 if ((data != null) && data.Count > 1)
                 {
-                    Point lastPoint = data[0];
-                    if (toAddCircles) { drawCircle(lastPoint.X * xScale, lastPoint.Y * yScale, radius); }
-                    for (int i = 1; i < data.Count; i++)
+                    //Point lastPoint = data[0];
+                    //if (toAddCircles) { drawCircle(lastPoint.X * xScale, lastPoint.Y * yScale, radius); }
+                    for (int i = 0; i < data.Count; i++)
                     {
                         Point currentPoint = data[i];
-                        if (toAddCircles) { drawCircle(currentPoint.X * xScale, currentPoint.Y * yScale, radius); }
-                        Line temp = new Line();
+                        currentPoint.X *= xScale;
+                        currentPoint.Y *= yScale;
+                        if (toAddCircles) { drawCircle(currentPoint.X, currentPoint.Y, radius); }
+                        //myPoints.Add(currentPoint);
+                        myLine.Points.Add(currentPoint);
+                        /*Line temp = new Line();
                         temp.Stroke = Brushes.Black;
                         temp.StrokeThickness = 2;
                         temp.X1 = currentPoint.X * xScale;
@@ -221,10 +230,16 @@ namespace penToText
                         temp.Y2 = lastPoint.Y * yScale;
                         temp.HorizontalAlignment = HorizontalAlignment.Left;
                         temp.VerticalAlignment = VerticalAlignment.Top;
-                        myPanel.Children.Add(temp);
-                        lastPoint = currentPoint;
+                        childs.Add(temp);
+                        lastPoint = currentPoint;*/
                     }
                 }
+                /*Polyline myLine = new Polyline();
+                myLine.Stroke = Brushes.Black;
+                myLine.StrokeThickness = 2;
+                myLine.Points = myPoints;
+                myPanel.Children.Add(myLine);*/
+               
             }
         }
 
