@@ -193,13 +193,23 @@ namespace penToText
             //Console.WriteLine("Copmleted 1: " + originalData.Count);
 
             clean1.newData(cleanedData);
-            clean1.titleText = "Resample original data\nTicks: " + c1;
+            clean1.titleText = "Resample original, From: "+originalData.Count+ "\nTicks: " + c1;
             clean1.myPanel.Dispatcher.BeginInvoke(new drawingDelegate(clean1.updateDraw));
 
             //Console.WriteLine("Completed drawing 1");
 
+            List<Point> testing = cleanedData2;
+            int lines = goalPointCount-1;
+            double pointsPerLength = cleanedData2.Count / length(cleanedData2);
+
+
             timer.Start();
-            cleanedData2 = resample(new List<Point>(cleanedData2), goalPointCount);
+            
+            lines++;
+            cleanedData2 = resample(new List<Point>(cleanedData2), 35.0);
+            
+
+            //cleanedData2 = testing;
             timer.Stop();
 
             c2 += timer.ElapsedTicks;
@@ -208,7 +218,7 @@ namespace penToText
             //Console.WriteLine("Copmleted 2: " + originalData.Count);
 
             clean2.newData(cleanedData2);
-            clean2.titleText = "Resample as new data\nTicks: " + c2;
+            clean2.titleText = "Resample as new, From: " + originalData.Count + "\nTicks: " + c2;
             clean2.myPanel.Dispatcher.BeginInvoke(new drawingDelegate(clean2.updateDraw));
 
             //Console.WriteLine("Completed drawing 2");
@@ -451,6 +461,39 @@ namespace penToText
                     }
                 }
                 
+                return output;
+            }
+            else { return data; }
+        }
+
+        private List<Point> resample(List<Point> data, double spaceBetweenPoints)
+        {
+            if (length(data) > 3*spaceBetweenPoints)
+            {
+                double bigD = 0;
+                double lilD = 0;
+                List<Point> output = new List<Point>();
+                output.Add(data[0]);
+                for (int i = 1; i < data.Count; i++)
+                {
+                    lilD = distance(data[i], data[i - 1]);
+                    if (bigD + lilD > spaceBetweenPoints)
+                    {
+                        Point temp = new Point();
+                        temp.X = data[i - 1].X + ((spaceBetweenPoints - bigD) / lilD) * (data[i].X - data[i - 1].X);
+                        temp.Y = data[i - 1].Y + ((spaceBetweenPoints - bigD) / lilD) * (data[i].Y - data[i - 1].Y);
+                        output.Add(temp);
+                        data.Insert(i, temp);
+                        //i--;
+                        bigD = 0;
+                    }
+                    else
+                    {
+                        if (i == data.Count - 1) { output.Add(data[i]); }
+                        bigD += lilD;
+                    }
+                }
+
                 return output;
             }
             else { return data; }
