@@ -160,7 +160,7 @@ namespace penToText
 
             i = 0;
             List<Point> temp = cleanedData2;
-            while (testClean > goalClean*1.5 && i < iterations)
+            while (testClean > goalClean*1.75 && i < iterations)
             {
                 e2 += step;
                 i++;
