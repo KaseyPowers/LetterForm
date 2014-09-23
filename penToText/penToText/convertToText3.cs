@@ -29,6 +29,7 @@ namespace penToText
         private List<Point> originalData;
         private List<Point> cleanedData;
         private List<Point> cleanedData2;
+        private List<Point> cleanedData3;
         private List<Point> slopeData1;
         private List<Point> slopeData2;
         public Size inputSize;
@@ -37,14 +38,15 @@ namespace penToText
         //private lineDrawCanvas inputCopy;
         private lineDrawCanvas clean1;
         private lineDrawCanvas clean2;
-        private lineDrawCanvas slopes1;
-        private lineDrawCanvas slopes2;
+        private lineDrawCanvas clean3;
+        //private lineDrawCanvas slopes1;
+        //private lineDrawCanvas slopes2;
         public Size canvasSizes;
 
         //testing lists and whatnot
         private double goalClean;
-        private double e, e2;
-        private long c1, c2;
+        private double e;
+        private long c1, c2, c3;
         private Stopwatch timer;
 
         public convertToText3(dynamicDisplay display, Size inputSize)
@@ -57,13 +59,14 @@ namespace penToText
             originalData = new List<Point>();            
             cleanedData = new List<Point>();
             cleanedData2 = new List<Point>();
+            cleanedData3 = new List<Point>();
             slopeData1 = new List<Point>();
             slopeData2 = new List<Point>();
             e = 0;
-            e2 = 0;
 
             c1 = 0;
             c2 = 0;
+            c3 = 0;
 
             //thisDynamicDisplay = new dynamicDisplay();
             thisDynamicDisplay = display;
@@ -79,7 +82,7 @@ namespace penToText
             inputCopy.toAddCircles = false;
             thisDynamicDisplay.addCanvas(inputCopy);*/
 
-            clean1 = new lineDrawCanvas(0, 0, display, "Clean All");
+            clean1 = new lineDrawCanvas(0, 0, display, "Resample Original");
             clean1.outOfX = inputSize.Width;
             clean1.outOfy = inputSize.Height;
             clean1.myPanel.Width = side;
@@ -87,7 +90,7 @@ namespace penToText
             clean1.toAddCircles = true;
             thisDynamicDisplay.addCanvas(clean1);
 
-            clean2 = new lineDrawCanvas(1, 0, display, "Clean All quicker");
+            clean2 = new lineDrawCanvas(1, 0, display, "Resample  as add");
             clean2.outOfX = inputSize.Width;
             clean2.outOfy = inputSize.Height;
             clean2.myPanel.Width = side;
@@ -95,7 +98,15 @@ namespace penToText
             clean2.toAddCircles = true;
             thisDynamicDisplay.addCanvas(clean2);
 
-            slopes1 = new lineDrawCanvas(0, 1, display, "Slopes1");
+            clean3 = new lineDrawCanvas(2, 0, display, "Clean All ");
+            clean3.outOfX = inputSize.Width;
+            clean3.outOfy = inputSize.Height;
+            clean3.myPanel.Width = side;
+            clean3.myPanel.Height = side;
+            clean3.toAddCircles = true;
+            thisDynamicDisplay.addCanvas(clean3);
+
+            /*slopes1 = new lineDrawCanvas(0, 1, display, "Slopes1");
             slopes1.outOfX = inputSize.Width;
             slopes1.outOfy = inputSize.Height;
             slopes1.myPanel.Width = side;
@@ -109,7 +120,7 @@ namespace penToText
             slopes2.myPanel.Width = side;
             slopes2.myPanel.Height = side;
             slopes2.toAddCircles = true;
-            thisDynamicDisplay.addCanvas(slopes2);
+            thisDynamicDisplay.addCanvas(slopes2);*/
         }
 
         public void getData(BlockingCollection<Point> data)
@@ -119,6 +130,7 @@ namespace penToText
                 Point current = item;
                 originalData.Add(current);
                 cleanedData2.Add(current);
+                cleanedData3.Add(current);
                 updateData();
             }
         }
@@ -127,17 +139,17 @@ namespace penToText
         {
             //Thread.Sleep(1000);
             /*inputCopy.newData(originalData);
-            inputCopy.myPanel.Dispatcher.BeginInvoke(new drawingDelegate(inputCopy.updateDraw));*/
+            inputCopy.myPanel.Dispatcher.BeginInvoke(new drawingDelegate(inputCopy.updateDraw));
 
             double testClean = goalClean + 1;
             double step = .1;
             //if (e != 0) { e -= step; }
 
-            double originalClean = cleanliness(originalData);
+            //double originalClean = cleanliness(originalData);
 
             int i = 0;
             int iterations = 100;
-            if (e != 0) {
+            /*if (e != 0) {
                 int steps = (int)(e / step);
                 steps = (int)((double)steps * .75);
                 e = (double)(steps * step);
@@ -167,33 +179,67 @@ namespace penToText
             timer.Reset();
             clean1.newData(cleanedData);
             clean1.titleText = "Clean from: " + originalData.Count + " e: " + e + "\nClean: " + testClean +" out of: " +goalClean + "\nTicks: " + c1;
+            clean1.myPanel.Dispatcher.BeginInvoke(new drawingDelegate(clean1.updateDraw));*/
+
+            int goalPointCount = 20;
+
+            timer.Start();
+            cleanedData = resample(new List<Point>(originalData), goalPointCount);
+            timer.Stop();
+
+            c1 += timer.ElapsedTicks;
+            timer.Reset();
+
+            //Console.WriteLine("Copmleted 1: " + originalData.Count);
+
+            clean1.newData(cleanedData);
+            clean1.titleText = "Resample original data\nTicks: " + c1;
             clean1.myPanel.Dispatcher.BeginInvoke(new drawingDelegate(clean1.updateDraw));
 
+            //Console.WriteLine("Completed drawing 1");
 
-            testClean = goalClean + 1;
+            timer.Start();
+            cleanedData2 = resample(new List<Point>(cleanedData2), goalPointCount);
+            timer.Stop();
+
+            c2 += timer.ElapsedTicks;
+            timer.Reset();
+
+            //Console.WriteLine("Copmleted 2: " + originalData.Count);
+
+            clean2.newData(cleanedData2);
+            clean2.titleText = "Resample as new data\nTicks: " + c2;
+            clean2.myPanel.Dispatcher.BeginInvoke(new drawingDelegate(clean2.updateDraw));
+
+            //Console.WriteLine("Completed drawing 2");
+           
             //if (e2 != 0) { e2 -= step; }
             //if (e2 != 0) { e2 /= 2; }
             //e2 = 0;
+            double step = .1;
 
-            if (e2 != 0)
+            /*if (e != 0)
             {
-                int steps = (int)(e2 / step);
-                steps = (int)((double)steps * .75);
-                e2 = (double)(steps * step);
+                int steps = (int)(e / step);
+                steps = (int)((double)steps * .5);
+                e = (double)(steps * step);
 
-            }
-
-            i = 0;
-            List<Point> temp = cleanedData2;
+            }*/
+            e = 0;
+            double testClean = goalClean + 1;
+            int i = 0;
+            int iterations = 100;
+           
+            List<Point> temp = cleanedData3;
             //goalClean *= 1.25;
             String newTitle = "Clean e: ";
             timer.Start();
             while (testClean > goalClean && i < iterations)
             {
-                e2 += step;
+                e += step;
                 i++;
 
-                temp = RDPclean(cleanedData2, e2);
+                temp = RDPclean(cleanedData3, e);
                 //temp = temp.Distinct().ToList();
                 testClean = cleanliness(temp);
 
@@ -202,31 +248,31 @@ namespace penToText
 
             if (i == iterations)
             {
-                e2 = 0;
+                e = 0;
                 newTitle += "F";
                 //cleanedData = originalData;
             }
             else
             {
-                cleanedData2 = temp;
-                newTitle += e + "\nClean: " + testClean + " out of: " + goalClean;
+                cleanedData3 = temp;
+                newTitle += e + "\nClean: " + testClean.ToString("F3") + " out of: " + goalClean.ToString("F3");
             }
 
             timer.Stop();
-            c2 += timer.ElapsedTicks;
+            c3 += timer.ElapsedTicks;
             timer.Reset();
-            newTitle += "\nTicks: " + c2;
-            clean2.newData(cleanedData2);
-            clean2.titleText = newTitle;
-            clean2.myPanel.Dispatcher.BeginInvoke(new drawingDelegate(clean2.updateDraw));
+            newTitle += "\nTicks: " + c3;
+            clean3.newData(cleanedData3);
+            clean3.titleText = newTitle;
+            clean3.myPanel.Dispatcher.BeginInvoke(new drawingDelegate(clean3.updateDraw));
 
-            slopeData1 = Dominique2(cleanedData);
+            /*slopeData1 = Dominique2(cleanedData);
             slopes1.newData(slopeData1);
             slopes1.myPanel.Dispatcher.BeginInvoke(new drawingDelegate(slopes1.updateDraw));
 
             slopeData2 = Dominique2(cleanedData2);
             slopes2.newData(slopeData2);
-            slopes2.myPanel.Dispatcher.BeginInvoke(new drawingDelegate(slopes2.updateDraw));
+            slopes2.myPanel.Dispatcher.BeginInvoke(new drawingDelegate(slopes2.updateDraw));*/
         }
 
         
@@ -245,13 +291,17 @@ namespace penToText
             clean2.outOfy = inputSize.Height;
             clean2.updateDraw();
 
-            slopes1.outOfX = inputSize.Width;
+            clean3.outOfX = inputSize.Width;
+            clean3.outOfy = inputSize.Height;
+            clean3.updateDraw();
+
+            /*slopes1.outOfX = inputSize.Width;
             slopes1.outOfy = inputSize.Height;
             slopes1.updateDraw();
 
             slopes2.outOfX = inputSize.Width;
             slopes2.outOfy = inputSize.Height;
-            slopes2.updateDraw();
+            slopes2.updateDraw();*/
         }
 
         public void clear()
@@ -260,13 +310,14 @@ namespace penToText
             originalData.Clear();
             cleanedData.Clear();
             cleanedData2.Clear();
+            cleanedData3.Clear();
             slopeData1.Clear();
             slopeData2.Clear();
 
             c1 = 0;
             c2 = 0;
+            c3 = 0;
             e = 0;
-            e2 = 0;
 
 
             /*inputCopy.newData(originalData);
@@ -278,11 +329,15 @@ namespace penToText
             clean2.newData(originalData);
             clean2.updateDraw();
 
-            slopes1.newData(originalData);
+            clean3.newData(originalData);
+            clean3.updateDraw();
+
+
+            /*slopes1.newData(originalData);
             slopes1.updateDraw();
 
             slopes2.newData(originalData);
-            slopes2.updateDraw();
+            slopes2.updateDraw();*/
         }
 
         private List<Point> RDPclean(List<Point> input, double epsilon)
@@ -346,6 +401,11 @@ namespace penToText
 
         private double cleanliness(List<Point> input)
         {
+            return (input.Count / length(input));
+        }
+
+        private double length(List<Point> input)
+        {
             double length = 0;
             if (input.Count > 1)
             {
@@ -354,12 +414,46 @@ namespace penToText
                     length += distance(input[i - 1], input[i]);
                 }
             }
-            return (input.Count / length);
+            return length;
         }
 
         private double distance(Point a, Point b)
         {
             return Math.Sqrt(Math.Pow((a.X - b.X), 2) + Math.Pow((a.Y - b.Y), 2));
+        }
+
+        private List<Point> resample(List<Point> data, int n)
+        {
+            if (data.Count > n-1)
+            {
+                double spaceBetweenPoints = length(data) / (n - 1);
+                double bigD = 0;
+                double lilD = 0;
+                List<Point> output = new List<Point>();
+                output.Add(data[0]);
+                for (int i = 1; i < data.Count; i++)
+                {
+                    lilD = distance(data[i], data[i - 1]);
+                    if (bigD + lilD > spaceBetweenPoints)
+                    {
+                        Point temp = new Point();
+                        temp.X = data[i - 1].X + ((spaceBetweenPoints - bigD) / lilD) * (data[i].X - data[i - 1].X);
+                        temp.Y = data[i - 1].Y + ((spaceBetweenPoints - bigD) / lilD) * (data[i].Y - data[i - 1].Y);
+                        output.Add(temp);
+                        data.Insert(i, temp);
+                        //i--;
+                        bigD = 0;
+                    }
+                    else
+                    {
+                        if (i == data.Count - 1) { output.Add(data[i]); }
+                        bigD += lilD;
+                    }
+                }
+                
+                return output;
+            }
+            else { return data; }
         }
 
         private List<Point> Dominique2(List<Point> input)

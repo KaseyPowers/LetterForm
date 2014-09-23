@@ -53,6 +53,7 @@ namespace penToText
 
         //threading attempt 2
         public BlockingCollection<Point> blockingData;
+        private Task addingData;
 
         public mainWindows()
         {
@@ -75,7 +76,7 @@ namespace penToText
             //myPenToText = new convertToText(myDynamicDisplay, inputSize);
             myPenToText3 = new convertToText3(myDynamicDisplay, inputSize);
             blockingData = new BlockingCollection<Point>();
-            Task dataWorking = Task.Factory.StartNew(() => myPenToText3.getData(blockingData));            
+            addingData = Task.Factory.StartNew(() => myPenToText3.getData(blockingData));            
 
             myDisplayWindow = new DisplayWindow(myDynamicDisplay);
 
@@ -134,7 +135,7 @@ namespace penToText
         public void newData(Point newPoint)
         {
             //myPenToText.newData(newPoint);
-            Task temp = Task.Factory.StartNew(() => { blockingData.Add(newPoint); });
+            if (!blockingData.IsAddingCompleted) { blockingData.Add(newPoint); }
             //blockingData.Add(newPoint);
             
         }       
@@ -142,14 +143,15 @@ namespace penToText
         public void clear()
         {
             blockingData.CompleteAdding();
+            addingData.Wait();            
             blockingData = new BlockingCollection<Point>();
-            Task dataWorking = Task.Factory.StartNew(() => myPenToText3.getData(blockingData));   
 
             data.Clear();
             currentPoint = new Point(-5, -5);
             //myPenToText.clear();
             myPenToText3.clear();
-      
+
+            addingData = Task.Factory.StartNew(() => myPenToText3.getData(blockingData)); 
         }
 
         public void endDraw()
