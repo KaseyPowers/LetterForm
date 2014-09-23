@@ -25,7 +25,6 @@ namespace penToText
         public bool loaded;
         public double aspectRatio = 0.0;
 
-
         public InputWindow()
         {
             InitializeComponent();
@@ -72,6 +71,7 @@ namespace penToText
                 Point position = e.GetPosition(this);
                 currentPoint = position;
                 manager.newData(position);
+                
             }
         }
 
@@ -81,8 +81,8 @@ namespace penToText
             currentPoint = position;
             manager.newData(position);
             e.Handled = true;
-        }
-        
+        }        
+
         private void moveDraw(object sender, MouseEventArgs e)
         {
             if (e.LeftButton == MouseButtonState.Pressed && e.StylusDevice==null)

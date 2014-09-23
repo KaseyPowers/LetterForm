@@ -17,7 +17,7 @@ using Petzold.Media2D;
 
 namespace penToText
 {
-    public class convertToText
+    public class convertToText2
     {
         //general data storage
         private dynamicDisplay thisDynamicDisplay;
@@ -42,7 +42,7 @@ namespace penToText
         private List<lineDrawCanvas> cleanTesters;
         public Size canvasSizes;
        
-        public convertToText(dynamicDisplay display, Size inputSize)
+        public convertToText2(dynamicDisplay display, Size inputSize)
         {
             this.inputSize = inputSize;
             
@@ -927,7 +927,7 @@ namespace penToText
                         {
                             int a = locations[i - 2];
                             int b = locations[i - 1];
-
+                            
                         }
                         if (done && i >= 4)
                         {
