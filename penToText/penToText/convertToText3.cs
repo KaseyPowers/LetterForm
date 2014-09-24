@@ -29,7 +29,7 @@ namespace penToText
         private List<Point> originalData;
         private List<Point> cleanedData;
         private List<Point> cleanedData2;
-        private List<Point> cleanedData3;
+        //private List<Point> cleanedData3;
         private List<Point> slopeData1;
         private List<Point> slopeData2;
         public Size inputSize;
@@ -38,7 +38,7 @@ namespace penToText
         //private lineDrawCanvas inputCopy;
         private lineDrawCanvas clean1;
         private lineDrawCanvas clean2;
-        private lineDrawCanvas clean3;
+        //private lineDrawCanvas clean3;
         //private lineDrawCanvas slopes1;
         //private lineDrawCanvas slopes2;
         public Size canvasSizes;
@@ -64,7 +64,7 @@ namespace penToText
             originalData = new List<Point>();            
             cleanedData = new List<Point>();
             cleanedData2 = new List<Point>();
-            cleanedData3 = new List<Point>();
+            //cleanedData3 = new List<Point>();
             slopeData1 = new List<Point>();
             slopeData2 = new List<Point>();
             e = 0;
@@ -109,13 +109,13 @@ namespace penToText
             clean2.toAddCircles = true;
             thisDynamicDisplay.addCanvas(clean2);
 
-            clean3 = new lineDrawCanvas(2, 0, display, "Clean All ");
+            /*clean3 = new lineDrawCanvas(2, 0, display, "Clean All ");
             clean3.outOfX = inputSize.Width;
             clean3.outOfy = inputSize.Height;
             clean3.myPanel.Width = side;
             clean3.myPanel.Height = side;
             clean3.toAddCircles = true;
-            thisDynamicDisplay.addCanvas(clean3);
+            thisDynamicDisplay.addCanvas(clean3);*/
 
             /*slopes1 = new lineDrawCanvas(0, 1, display, "Slopes1");
             slopes1.outOfX = inputSize.Width;
@@ -157,7 +157,7 @@ namespace penToText
                     cleanedData = scaleList(new List<Point>(cleanedData));
                 }
                 cleanedData2.Add(current);
-                cleanedData3.Add(current);
+                //cleanedData3.Add(current);
                 updateData();
             }
         }
@@ -284,7 +284,7 @@ namespace penToText
             timer.Start();
             
             //lines++;
-            cleanedData2 = resample(new List<Point>(cleanedData2), 35.0);
+            cleanedData2 = resample(new List<Point>(cleanedData2), 15.0);
             
 
             //cleanedData2 = testing;
@@ -312,7 +312,7 @@ namespace penToText
                 steps = (int)((double)steps * .5);
                 e = (double)(steps * step);
 
-            }*/
+            }
             e = 0;
             double testClean = goalClean + 1;
             int i = 0;
@@ -381,9 +381,9 @@ namespace penToText
             clean2.outOfy = inputSize.Height;
             clean2.updateDraw();
 
-            clean3.outOfX = inputSize.Width;
+            /*clean3.outOfX = inputSize.Width;
             clean3.outOfy = inputSize.Height;
-            clean3.updateDraw();
+            clean3.updateDraw();*/
 
             /*slopes1.outOfX = inputSize.Width;
             slopes1.outOfy = inputSize.Height;
@@ -400,7 +400,7 @@ namespace penToText
             originalData.Clear();
             cleanedData.Clear();
             cleanedData2.Clear();
-            cleanedData3.Clear();
+            //cleanedData3.Clear();
             slopeData1.Clear();
             slopeData2.Clear();
 
@@ -424,8 +424,8 @@ namespace penToText
             clean2.newData(originalData);
             clean2.updateDraw();
 
-            clean3.newData(originalData);
-            clean3.updateDraw();
+            /*clean3.newData(originalData);
+            clean3.updateDraw();*/
 
 
             /*slopes1.newData(originalData);
