@@ -71,8 +71,7 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
-    <Compile Include="convertToText2.cs" />
-    <Compile Include="convertToText3.cs" />
+    <Compile Include="convertToText.cs" />
     <Compile Include="dynamicDisplay.cs" />
     <Compile Include="DisplayWindow.xaml.cs">
       <DependentUpon>DisplayWindow.xaml</DependentUpon>
@@ -81,7 +80,6 @@
       <DependentUpon>InputWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="mainWindows.cs" />
-    <Compile Include="convertToText.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -41,7 +41,7 @@ namespace penToText
         //public convertToText myPenToText;
         public dynamicDisplay myDynamicDisplay;
         //public dynamicDisplay myDynamicDisplay2;
-        public convertToText3 myPenToText3;
+        public convertToText myPenToText3;
 
         private double inputHeight = 300;
         private double inputWidth = 300;
@@ -74,7 +74,7 @@ namespace penToText
             inputSize.Height = myInputWindow.InputCanvas.Height;
 
             //myPenToText = new convertToText(myDynamicDisplay, inputSize);
-            myPenToText3 = new convertToText3(myDynamicDisplay, inputSize);
+            myPenToText3 = new convertToText(myDynamicDisplay, inputSize);
             blockingData = new BlockingCollection<Point>();
             addingData = Task.Factory.StartNew(() => myPenToText3.getData(blockingData));            
 
