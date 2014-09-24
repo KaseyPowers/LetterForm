@@ -139,10 +139,10 @@ namespace penToText
             foreach (var item in data.GetConsumingEnumerable())
             {
                 Point current = item;
-                if (!(Double.IsInfinity(current.X) || Double.IsInfinity(current.Y) || Double.IsNaN(current.X) || Double.IsNaN(current.Y)))
-                {
+                //if (!(Double.IsInfinity(current.X) || Double.IsInfinity(current.Y) || Double.IsNaN(current.X) || Double.IsNaN(current.Y)))
+                //{
                     originalData.Add(current);
-                    if (originalData.Count < 2)
+                    /*if (originalData.Count < 2)
                     {
                         cleanedData.Add(current);
                     }
@@ -151,13 +151,14 @@ namespace penToText
                         cleanedData.Add(testScale(current));
                     }
                     if (scaleChanged)
-                    {
-                        cleanedData = scaleList(new List<Point>(cleanedData));
-                    }
+                    {*/
+                    //cleanedData.Add(current);
+                    cleanedData = scaleList(new List<Point>(originalData));
+                    //}
                     cleanedData2.Add(current);
                     //cleanedData3.Add(current);
                     updateData();
-                }
+                //}
             }
         }
 
@@ -166,7 +167,8 @@ namespace penToText
         public List<Point> scaleList(List<Point> data)
         {
             double newScale;
-            double xMin = data[0].X + .1, yMin = data[0].Y + .1, xMax = data[0].X - .1, yMax = data[0].Y - .1;
+            bool worked = true;
+            double xMin = double.PositiveInfinity, yMin = double.PositiveInfinity, xMax = 0, yMax = 0;
             List<Point> output = new List<Point>();
             if (data.Count > 1)
             {
@@ -179,7 +181,8 @@ namespace penToText
                     yMax = Math.Max(yMin, data[i].Y);
                 }
                 newScale = Math.Max((xMax - xMin), (yMax - yMin));
-                for (int i = 0; i < data.Count; i++)
+                worked = !double.IsNaN(newScale) && !double.IsInfinity(newScale) && newScale != 0.0;
+                for (int i = 0; i < data.Count && worked; i++)
                 {
                     Point temp = new Point();
                     temp.X =  ((data[i].X - xMin) / newScale);
@@ -192,11 +195,14 @@ namespace penToText
                 scale *= newScale;
                 scaleChanged = false;
             }
-            else
+            else { worked = false; }
+
+            if(!worked)
             {
                 output = data;
                 scaleChanged = false;
             }
+
             return output;
         }
 
