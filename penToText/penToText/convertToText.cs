@@ -212,6 +212,9 @@ namespace penToText
 
         public void updateData()
         {
+            if(double.IsInfinity(originalData[0].X) || double.IsNaN(originalData[0].X) || double.IsInfinity(originalData[0].Y) || double.IsNaN(originalData[0].Y)){
+                bool something = true;
+            }
             //Thread.Sleep(1000);
             /*inputCopy.newData(originalData);
             inputCopy.myPanel.Dispatcher.BeginInvoke(new drawingDelegate(inputCopy.updateDraw));
