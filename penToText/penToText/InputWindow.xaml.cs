@@ -83,7 +83,7 @@ namespace penToText
 
         private void startDraw(object sender, StylusEventArgs e)
         {
-            Point position = e.GetPosition(this);
+            Point position = e.GetPosition(this);            
             manager.newData(position);
             //currentPoint = position;
             myLine = new Polyline();

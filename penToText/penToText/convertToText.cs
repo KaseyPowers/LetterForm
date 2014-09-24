@@ -139,22 +139,25 @@ namespace penToText
             foreach (var item in data.GetConsumingEnumerable())
             {
                 Point current = item;
-                originalData.Add(current);
-                if (originalData.Count <2)
+                if (!(Double.IsInfinity(current.X) || Double.IsInfinity(current.Y) || Double.IsNaN(current.X) || Double.IsNaN(current.Y)))
                 {
-                    cleanedData.Add(current);
+                    originalData.Add(current);
+                    if (originalData.Count < 2)
+                    {
+                        cleanedData.Add(current);
+                    }
+                    else
+                    {
+                        cleanedData.Add(testScale(current));
+                    }
+                    if (scaleChanged)
+                    {
+                        cleanedData = scaleList(new List<Point>(cleanedData));
+                    }
+                    cleanedData2.Add(current);
+                    //cleanedData3.Add(current);
+                    updateData();
                 }
-                else
-                {
-                    cleanedData.Add(testScale(current));
-                }
-                if (scaleChanged)
-                {
-                    cleanedData = scaleList(new List<Point>(cleanedData));
-                }
-                cleanedData2.Add(current);
-                //cleanedData3.Add(current);
-                updateData();
             }
         }
 
@@ -163,7 +166,7 @@ namespace penToText
         public List<Point> scaleList(List<Point> data)
         {
             double newScale;
-            double xMin = data[0].X + 1, yMin = data[0].Y + 1, xMax = data[0].X - 1, yMax = data[0].Y - 1;
+            double xMin = data[0].X + .1, yMin = data[0].Y + .1, xMax = data[0].X - .1, yMax = data[0].Y - .1;
             List<Point> output = new List<Point>();
             if (data.Count > 1)
             {
@@ -192,6 +195,7 @@ namespace penToText
             else
             {
                 output = data;
+                scaleChanged = false;
             }
             return output;
         }
