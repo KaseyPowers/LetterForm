@@ -212,63 +212,84 @@ namespace penToText
 
         public void updateData()
         {
-            
-            //Thread.Sleep(1000);
-            /*inputCopy.newData(originalData);
-            inputCopy.myPanel.Dispatcher.BeginInvoke(new drawingDelegate(inputCopy.updateDraw));
-
-            double testClean = goalClean + 1;
-            double step = .1;
-            //if (e != 0) { e -= step; }
-
-            //double originalClean = cleanliness(originalData);
-
-            int i = 0;
-            int iterations = 100;
-            /*if (e != 0) {
-                int steps = (int)(e / step);
-                steps = (int)((double)steps * .75);
-                e = (double)(steps * step);
-
-            }
-
-            timer.Start(); 
-            while (testClean > goalClean && i < iterations)
+            for (int i = 0; i < originalData.Count; i++)
             {
-                e += step;
-                i++;
+                //test points
+                if (Double.IsNaN(originalData[i].X) || Double.IsInfinity(originalData[i].X) || Double.IsInfinity(originalData[i].Y) || Double.IsNaN(originalData[i].Y))
+                {
+                    int breakpointHere = 0;
+                }
+            }
+            for (int i = 0; i < cleanedData.Count; i++)
+            {
+                if (Double.IsNaN(cleanedData[i].X) || Double.IsInfinity(cleanedData[i].X) || Double.IsInfinity(cleanedData[i].Y) || Double.IsNaN(cleanedData[i].Y))
+                {
+                    int breakpointHere = 0;
+                }
+            }
+            for (int i = 0; i < cleanedData2.Count; i++)
+            {
+                if (Double.IsNaN(cleanedData2[i].X) || Double.IsInfinity(cleanedData2[i].X) || Double.IsInfinity(cleanedData2[i].Y) || Double.IsNaN(cleanedData2[i].Y))
+                {
+                    int breakpointHere = 0;
+                }
+            }
+                //Thread.Sleep(1000);
+                /*inputCopy.newData(originalData);
+                inputCopy.myPanel.Dispatcher.BeginInvoke(new drawingDelegate(inputCopy.updateDraw));
 
-                cleanedData = RDPclean(originalData, e);
-                //cleanedData = cleanedData.Distinct().ToList();
-                testClean = cleanliness(cleanedData);
+                double testClean = goalClean + 1;
+                double step = .1;
+                //if (e != 0) { e -= step; }
+
+                //double originalClean = cleanliness(originalData);
+
+                int i = 0;
+                int iterations = 100;
+                /*if (e != 0) {
+                    int steps = (int)(e / step);
+                    steps = (int)((double)steps * .75);
+                    e = (double)(steps * step);
+
+                }
+
+                timer.Start(); 
+                while (testClean > goalClean && i < iterations)
+                {
+                    e += step;
+                    i++;
+
+                    cleanedData = RDPclean(originalData, e);
+                    //cleanedData = cleanedData.Distinct().ToList();
+                    testClean = cleanliness(cleanedData);
                 
-                //Console.WriteLine("e: " + e + " cleanliness: " + testClean +" out ouf: " + goalClean);
-            }
+                    //Console.WriteLine("e: " + e + " cleanliness: " + testClean +" out ouf: " + goalClean);
+                }
 
-            if (i == iterations)
-            {
-                e = 0;
-                cleanedData = originalData;
-            }
-            timer.Stop();
-            c1 += timer.ElapsedTicks;
-            timer.Reset();
-            clean1.newData(cleanedData);
-            clean1.titleText = "Clean from: " + originalData.Count + " e: " + e + "\nClean: " + testClean +" out of: " +goalClean + "\nTicks: " + c1;
-            clean1.myPanel.Dispatcher.BeginInvoke(new drawingDelegate(clean1.updateDraw));*/
+                if (i == iterations)
+                {
+                    e = 0;
+                    cleanedData = originalData;
+                }
+                timer.Stop();
+                c1 += timer.ElapsedTicks;
+                timer.Reset();
+                clean1.newData(cleanedData);
+                clean1.titleText = "Clean from: " + originalData.Count + " e: " + e + "\nClean: " + testClean +" out of: " +goalClean + "\nTicks: " + c1;
+                clean1.myPanel.Dispatcher.BeginInvoke(new drawingDelegate(clean1.updateDraw));*/
 
-            /*int goalPointCount = 20;
+                /*int goalPointCount = 20;
 
-            timer.Start();
-            cleanedData = resample(new List<Point>(originalData), goalPointCount);
-            timer.Stop();
+                timer.Start();
+                cleanedData = resample(new List<Point>(originalData), goalPointCount);
+                timer.Stop();
 
-            c1 += timer.ElapsedTicks;
-            timer.Reset();
+                c1 += timer.ElapsedTicks;
+                timer.Reset();
 
-            //Console.WriteLine("Copmleted 1: " + originalData.Count);*/
-            
-            clean1.newData(resample(new List<Point>(cleanedData), .1));
+                //Console.WriteLine("Copmleted 1: " + originalData.Count);*/
+
+                clean1.newData(resample(new List<Point>(cleanedData), .1));
             //clean1.titleText = "Resample original, From: "+originalData.Count+ "\nTicks: " + c1;
             clean1.titleText = "Scaled to 1.0, From: " + originalData.Count;
             
