@@ -174,13 +174,15 @@ namespace penToText
             {
                 for (int i = 0; i < data.Count; i++)
                 {
-                    xMin = Math.Min(xMin, data[i].X);
-                    yMin = Math.Min(yMin, data[i].Y);
+                    if (xMin > data[i].X) { xMin = data[i].X; }
+                    if (yMin > data[i].Y) { yMin = data[i].Y; }
 
-                    xMax = Math.Max(xMax, data[i].X);
-                    yMax = Math.Max(yMin, data[i].Y);
+                    if (xMax < data[i].X) { xMax = data[i].X; }
+                    if (yMax < data[i].Y) { yMax = data[i].Y; }
                 }
-                newScale = Math.Max((xMax - xMin), (yMax - yMin));
+                //newScale = Math.Max((xMax - xMin), (yMax - yMin));
+                newScale = (xMax - xMin);
+                if (yMax - yMin > newScale) { newScale = yMax - yMin; }
                 worked = !double.IsNaN(newScale) && !double.IsInfinity(newScale) && newScale != 0.0;
                 for (int i = 0; i < data.Count && worked; i++)
                 {
@@ -231,6 +233,11 @@ namespace penToText
                 if (Double.IsNaN(cleanedData[i].X) || Double.IsInfinity(cleanedData[i].X) || Double.IsInfinity(cleanedData[i].Y) || Double.IsNaN(cleanedData[i].Y))
                 {
                     int breakpointHere = 0;
+                }
+                if (cleanedData.Count>1 && ( cleanedData[i].X > 1 || cleanedData[i].Y > 1 || cleanedData[i].X < 0 || cleanedData[i].Y < 0))
+                {
+                    int otherBreakpoint = 0;
+                    scaleList(new List<Point>(originalData));
                 }
             }
             for (int i = 0; i < cleanedData2.Count; i++)
