@@ -270,6 +270,7 @@ namespace penToText
             clean1.newData(resample(new List<Point>(cleanedData), .1));
             //clean1.titleText = "Resample original, From: "+originalData.Count+ "\nTicks: " + c1;
             clean1.titleText = "Scaled to 1.0, From: " + originalData.Count;
+            
             clean1.myPanel.Dispatcher.BeginInvoke(new drawingDelegate(clean1.updateDraw));
 
             //Console.WriteLine("Completed drawing 1");
@@ -418,10 +419,10 @@ namespace penToText
             /*inputCopy.newData(originalData);
             inputCopy.updateDraw();*/
 
-            clean1.newData(originalData);
+            clean1.newData(new List<Point>());
             clean1.updateDraw();
 
-            clean2.newData(originalData);
+            clean2.newData(new List<Point>());
             clean2.updateDraw();
 
             /*clean3.newData(originalData);

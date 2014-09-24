@@ -143,13 +143,13 @@ namespace penToText
         public void clear()
         {
             blockingData.CompleteAdding();
-            addingData.Wait();            
+            addingData.Wait();
+            myPenToText3.clear();
             blockingData = new BlockingCollection<Point>();
 
             data.Clear();
             currentPoint = new Point(-5, -5);
             //myPenToText.clear();
-            myPenToText3.clear();
 
             addingData = Task.Factory.StartNew(() => myPenToText3.getData(blockingData)); 
         }
