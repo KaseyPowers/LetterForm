@@ -157,6 +157,7 @@ namespace penToText
         public double outOfy;
         public bool toAddCircles;
         private Polyline myLine;
+        public double padding = 0;
         public lineDrawCanvas( int xPos, int yPos, dynamicDisplay parent, string titleText)
         {
             toAddCircles = false;
@@ -216,8 +217,12 @@ namespace penToText
                     for (int i = 0; i < data.Count; i++)
                     {
                         Point currentPoint = data[i];
-                        currentPoint.X *= xScale;
+                        currentPoint.X += padding;
+                        currentPoint.Y += padding;
+
+                        currentPoint.X *= xScale;                        
                         currentPoint.Y *= yScale;
+                       
                         if (toAddCircles) { drawCircle(currentPoint.X, currentPoint.Y, radius); }
                         //myPoints.Add(currentPoint);
                         myLine.Points.Add(currentPoint);

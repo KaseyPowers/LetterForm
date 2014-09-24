@@ -49,6 +49,11 @@ namespace penToText
         private long c1, c2, c3;
         private Stopwatch timer;
 
+        double minX = 0;
+        double minY = 0;
+        double scale = 1;
+        bool scaleChanged = false;
+
         public convertToText3(dynamicDisplay display, Size inputSize)
         {
             this.inputSize = inputSize;
@@ -68,6 +73,11 @@ namespace penToText
             c2 = 0;
             c3 = 0;
 
+            minX = 0;
+            minY = 0;
+            scale = 1;
+            scaleChanged = false;
+
             //thisDynamicDisplay = new dynamicDisplay();
             thisDynamicDisplay = display;
 
@@ -83,8 +93,9 @@ namespace penToText
             thisDynamicDisplay.addCanvas(inputCopy);*/
 
             clean1 = new lineDrawCanvas(0, 0, display, "Resample Original");
-            clean1.outOfX = inputSize.Width;
-            clean1.outOfy = inputSize.Height;
+            clean1.outOfX = 1.2;
+            clean1.outOfy = 1.2;
+            clean1.padding = .1;
             clean1.myPanel.Width = side;
             clean1.myPanel.Height = side;
             clean1.toAddCircles = true;
@@ -129,10 +140,74 @@ namespace penToText
             {
                 Point current = item;
                 originalData.Add(current);
+                if (originalData.Count <2)
+                {
+                    /*Point temp = current;
+                    temp.X *= goalSize;
+                    temp.Y *= goalSize;
+                    cleanedData.Add(temp);*/
+                    cleanedData.Add(current);
+                }
+                else
+                {
+                    cleanedData.Add(testScale(current));
+                }
+                if (scaleChanged)
+                {
+                    cleanedData = scaleList(new List<Point>(cleanedData));
+                }
                 cleanedData2.Add(current);
                 cleanedData3.Add(current);
                 updateData();
             }
+        }
+
+        
+        //double goalSize = 100;
+        public List<Point> scaleList(List<Point> data)
+        {
+            double newScale;
+            double xMin = double.MaxValue, yMin = double.MaxValue, xMax = double.MinValue, yMax = double.MinValue;
+            List<Point> output = new List<Point>();
+            if (data.Count > 1)
+            {
+                for (int i = 0; i < data.Count; i++)
+                {
+                    xMin = Math.Min(xMin, data[i].X);
+                    yMin = Math.Min(yMin, data[i].Y);
+
+                    xMax = Math.Max(xMax, data[i].X);
+                    yMax = Math.Max(yMin, data[i].Y);
+                }
+                newScale = Math.Max((xMax - xMin), (yMax - yMin));
+                for (int i = 0; i < data.Count; i++)
+                {
+                    Point temp = new Point();
+                    temp.X =  ((data[i].X - xMin) / newScale);
+                    temp.Y =  ((data[i].Y - yMin) / newScale);
+                    output.Add(temp);
+                }
+
+                minX += (xMin * scale);
+                minY += (yMin * scale);
+                scale *= newScale;
+                scaleChanged = false;
+            }
+            else
+            {
+                output = data;
+            }
+            return output;
+        }
+
+        public Point testScale(Point input)
+        {
+            Point output = new Point();
+            output.X =  ((input.X - minX) / scale);
+            output.Y =  ((input.Y - minY) / scale);
+            //if (output.X > goalSize || output.Y > goalSize || output.X < 0 || output.Y < 0) { scaleChanged = true; }
+            if (output.X > 1.0 || output.Y > 1.0 || output.X < 0 || output.Y < 0) { scaleChanged = true; }
+            return output;
         }
 
         public void updateData()
@@ -181,7 +256,7 @@ namespace penToText
             clean1.titleText = "Clean from: " + originalData.Count + " e: " + e + "\nClean: " + testClean +" out of: " +goalClean + "\nTicks: " + c1;
             clean1.myPanel.Dispatcher.BeginInvoke(new drawingDelegate(clean1.updateDraw));*/
 
-            int goalPointCount = 20;
+            /*int goalPointCount = 20;
 
             timer.Start();
             cleanedData = resample(new List<Point>(originalData), goalPointCount);
@@ -190,22 +265,25 @@ namespace penToText
             c1 += timer.ElapsedTicks;
             timer.Reset();
 
-            //Console.WriteLine("Copmleted 1: " + originalData.Count);
-
-            clean1.newData(cleanedData);
-            clean1.titleText = "Resample original, From: "+originalData.Count+ "\nTicks: " + c1;
+            //Console.WriteLine("Copmleted 1: " + originalData.Count);*/
+            
+            clean1.newData(resample(new List<Point>(cleanedData), .1));
+            //clean1.titleText = "Resample original, From: "+originalData.Count+ "\nTicks: " + c1;
+            clean1.titleText = "Scaled to 1.0, From: " + originalData.Count;
             clean1.myPanel.Dispatcher.BeginInvoke(new drawingDelegate(clean1.updateDraw));
 
             //Console.WriteLine("Completed drawing 1");
 
-            List<Point> testing = cleanedData2;
-            int lines = goalPointCount-1;
+
+
+            //List<Point> testing = cleanedData2;
+            //int lines = goalPointCount-1;
             double pointsPerLength = cleanedData2.Count / length(cleanedData2);
 
 
             timer.Start();
             
-            lines++;
+            //lines++;
             cleanedData2 = resample(new List<Point>(cleanedData2), 35.0);
             
 
@@ -293,9 +371,11 @@ namespace penToText
             inputCopy.outOfy = inputSize.Height;
             inputCopy.updateDraw();*/
 
-            clean1.outOfX = inputSize.Width;
-            clean1.outOfy = inputSize.Height;
-            clean1.updateDraw();
+            //clean1.outOfX = inputSize.Width;
+            //clean1.outOfy = inputSize.Height;
+            /*clean1.outOfX = goalSize;
+            clean1.outOfy = goalSize;
+            clean1.updateDraw();*/
 
             clean2.outOfX = inputSize.Width;
             clean2.outOfy = inputSize.Height;
@@ -328,6 +408,11 @@ namespace penToText
             c2 = 0;
             c3 = 0;
             e = 0;
+
+            minX = 0;
+            minY = 0;
+            scale = 1;
+            scaleChanged = false;
 
 
             /*inputCopy.newData(originalData);
