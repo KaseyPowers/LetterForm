@@ -217,6 +217,10 @@ namespace penToText
                     for (int i = 0; i < data.Count; i++)
                     {
                         Point currentPoint = data[i];
+                        if (double.IsInfinity(currentPoint.X) || double.IsNaN(currentPoint.X) || double.IsInfinity(currentPoint.Y) || double.IsNaN(currentPoint.Y))
+                        {
+                            bool something = true;
+                        }
                         currentPoint.X += padding;
                         currentPoint.Y += padding;
 
