@@ -142,10 +142,6 @@ namespace penToText
                 originalData.Add(current);
                 if (originalData.Count <2)
                 {
-                    /*Point temp = current;
-                    temp.X *= goalSize;
-                    temp.Y *= goalSize;
-                    cleanedData.Add(temp);*/
                     cleanedData.Add(current);
                 }
                 else
@@ -167,7 +163,7 @@ namespace penToText
         public List<Point> scaleList(List<Point> data)
         {
             double newScale;
-            double xMin = double.MaxValue, yMin = double.MaxValue, xMax = double.MinValue, yMax = double.MinValue;
+            double xMin = data[0].X + 1, yMin = data[0].Y + 1, xMax = data[0].X - 1, yMax = data[0].Y - 1;
             List<Point> output = new List<Point>();
             if (data.Count > 1)
             {
