@@ -139,26 +139,34 @@ namespace penToText
             foreach (var item in data.GetConsumingEnumerable())
             {
                 Point current = item;
-                //if (!(Double.IsInfinity(current.X) || Double.IsInfinity(current.Y) || Double.IsNaN(current.X) || Double.IsNaN(current.Y)))
-                //{
+                
+                if (originalData.Count ==0  || !current.Equals(originalData[originalData.Count - 1]))
+                {
                     originalData.Add(current);
-                    /*if (originalData.Count < 2)
+                    if (originalData.Count < 2)
                     {
                         cleanedData.Add(current);
                     }
                     else
                     {
+                        timer.Start();
                         cleanedData.Add(testScale(current));
+                        timer.Stop();
+                        c1 += timer.ElapsedTicks;
+                        timer.Reset();
                     }
                     if (scaleChanged)
-                    {*/
-                    //cleanedData.Add(current);
-                    cleanedData = scaleList(new List<Point>(originalData));
-                    //}
+                    {
+                        timer.Start();
+                        cleanedData = scaleList(new List<Point>(cleanedData));
+                        timer.Stop();
+                        c1 += timer.ElapsedTicks;
+                        timer.Reset();
+                    }
+                    cleanedData = cleanedData.Distinct().ToList();
                     cleanedData2.Add(current);
-                    //cleanedData3.Add(current);
                     updateData();
-                //}
+                }
             }
         }
 
@@ -301,10 +309,13 @@ namespace penToText
                 timer.Reset();
 
                 //Console.WriteLine("Copmleted 1: " + originalData.Count);*/
-
-                clean1.newData(resample(new List<Point>(cleanedData), .1));
+            timer.Start();
+            clean1.newData(resample(new List<Point>(cleanedData), .1));
+            timer.Stop();
+            c1 += timer.ElapsedTicks;
+            timer.Reset();
             //clean1.titleText = "Resample original, From: "+originalData.Count+ "\nTicks: " + c1;
-            clean1.titleText = "Scaled to 1.0, From: " + originalData.Count;
+            clean1.titleText = "Scaled to 1.0, From: " + originalData.Count + "\nTicks: " + c1;
             
             clean1.myPanel.Dispatcher.BeginInvoke(new drawingDelegate(clean1.updateDraw));
 
