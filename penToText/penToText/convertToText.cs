@@ -81,7 +81,7 @@ namespace penToText
             //thisDynamicDisplay = new dynamicDisplay();
             thisDynamicDisplay = display;
 
-            double side = 250;
+            double side = 350;
 
             //copy of input
             /*inputCopy = new lineDrawCanvas(0, 0, display, "Threaded Copy Input");
