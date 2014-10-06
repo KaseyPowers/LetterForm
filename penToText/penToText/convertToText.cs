@@ -92,7 +92,7 @@ namespace penToText
             inputCopy.toAddCircles = false;
             thisDynamicDisplay.addCanvas(inputCopy);*/
 
-            clean1 = new lineDrawCanvas(0, 0, display, "Resample Original");
+            clean1 = new lineDrawCanvas(0, 0, display, "Scale Resample");
             clean1.outOfX = 1.2;
             clean1.outOfy = 1.2;
             clean1.padding = .1;
@@ -101,9 +101,9 @@ namespace penToText
             clean1.toAddCircles = true;
             thisDynamicDisplay.addCanvas(clean1);
 
-            clean2 = new lineDrawCanvas(1, 0, display, "Resample  as add");
-            clean2.outOfX = inputSize.Width;
-            clean2.outOfy = inputSize.Height;
+            clean2 = new lineDrawCanvas(1, 0, display, "Scale Resample as new");
+            clean2.outOfX = 1.2;
+            clean2.outOfy = 1.2;
             clean2.myPanel.Width = side;
             clean2.myPanel.Height = side;
             clean2.toAddCircles = true;
@@ -159,12 +159,18 @@ namespace penToText
                     {
                         timer.Start();
                         cleanedData = scaleList(new List<Point>(cleanedData));
+                       
                         timer.Stop();
                         c1 += timer.ElapsedTicks;
                         timer.Reset();
+                        timer.Start();
+                        cleanedData2 = scaleList(new List<Point>(originalData));
+                        timer.Stop();
+                        c2 += timer.ElapsedTicks;
+                        timer.Reset();
                     }
-                    cleanedData = cleanedData.Distinct().ToList();
-                    cleanedData2.Add(current);
+                    //cleanedData = cleanedData.Distinct().ToList();
+                    //cleanedData2.Add(current);
                     updateData();
                 }
             }
@@ -319,13 +325,23 @@ namespace penToText
             
             clean1.myPanel.Dispatcher.BeginInvoke(new drawingDelegate(clean1.updateDraw));
 
+            timer.Start();
+            clean2.newData(resample(new List<Point>(cleanedData2), .1));
+            timer.Stop();
+            c2 += timer.ElapsedTicks;
+            timer.Reset();
+            //clean1.titleText = "Resample original, From: "+originalData.Count+ "\nTicks: " + c1;
+            clean2.titleText = "Scaled to 1.0, with Original\n From: " + originalData.Count + "\nTicks: " + c1;
+
+            clean1.myPanel.Dispatcher.BeginInvoke(new drawingDelegate(clean1.updateDraw));
+
             //Console.WriteLine("Completed drawing 1");
 
 
 
             //List<Point> testing = cleanedData2;
             //int lines = goalPointCount-1;
-            double pointsPerLength = cleanedData2.Count / length(cleanedData2);
+           /* double pointsPerLength = cleanedData2.Count / length(cleanedData2);
 
 
             timer.Start();
@@ -424,9 +440,9 @@ namespace penToText
             clean1.outOfy = goalSize;
             clean1.updateDraw();*/
 
-            clean2.outOfX = inputSize.Width;
+            /*clean2.outOfX = inputSize.Width;
             clean2.outOfy = inputSize.Height;
-            clean2.updateDraw();
+            clean2.updateDraw();*/
 
             /*clean3.outOfX = inputSize.Width;
             clean3.outOfy = inputSize.Height;
