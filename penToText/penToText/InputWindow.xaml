@@ -6,12 +6,25 @@
         SizeChanged="update_size"
         Loaded="Window_Loaded"  >
 
-    <Grid Name="Container" ShowGridLines="True" >
-        <Canvas Name="InputCanvas" MouseDown="startDraw" MouseMove="moveDraw" StylusDown="startDraw" StylusMove="moveDraw" MouseUp="endDraw" StylusUp="endDraw">
-            <Canvas.Background>
-                <SolidColorBrush Color="White" Opacity="0"/>
-            </Canvas.Background>
-        </Canvas>
-        <Button Name="Clear" Content="Clear" Click="Clear_Click" HorizontalAlignment="Left" VerticalAlignment="Top" Width="70" Height="23" />
-    </Grid>
+    <DockPanel>
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="_File">
+                <MenuItem Header="_Clear" Click="Clear_Click"/>
+                <MenuItem Header="_Submit" Click="Submit_Click"/>
+            </MenuItem>
+            <MenuItem Header="_Windows">
+                <MenuItem Header="_Text Break Down" Click="Display_Click"/>
+                <MenuItem Header="_Overall Data" Click="Data_Click"/>
+            </MenuItem>
+        </Menu>
+            <Canvas Name="InputCanvas" MouseDown="startDraw" MouseMove="moveDraw" StylusDown="startDraw" StylusMove="moveDraw" MouseUp="endDraw" StylusUp="endDraw">
+                <Canvas.Background>
+                    <SolidColorBrush Color="White" Opacity="0"/>
+                </Canvas.Background>
+            </Canvas>
+    </DockPanel>
+
+   
+    
+    
 </Window>

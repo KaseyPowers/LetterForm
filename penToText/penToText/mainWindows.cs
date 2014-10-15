@@ -37,31 +37,16 @@ namespace penToText
 
         public InputWindow myInputWindow;
         public DisplayWindow myDisplayWindow;
-        //public DisplayWindow myDisplayWindow2;
-        //public convertToText myPenToText;
         public dynamicDisplay myDynamicDisplay;
-        //public dynamicDisplay myDynamicDisplay2;
-        public convertToText myPenToText3;
-
-        private double inputHeight = 300;
-        private double inputWidth = 300;
-
-        Point currentPoint;
-        List<Point> data;
-        List<Point> toAdd;
-
+        public static convertToText myPenToText;
 
         //threading attempt 2
         public BlockingCollection<Point> blockingData;
         private Task addingData;
 
         public mainWindows()
-        {
-            data = new List<Point>();
-            toAdd = new List<Point>();
-            currentPoint = new Point(-5, -5);            
+        {         
             myDynamicDisplay = new dynamicDisplay();
-            //myDynamicDisplay2 = new dynamicDisplay();
         }
 
         public void createWindows()
@@ -69,16 +54,13 @@ namespace penToText
             myInputWindow = new InputWindow();
             myInputWindow.manager = this;
 
-            Size inputSize = new Size();
-            inputSize.Width = myInputWindow.InputCanvas.Width;
-            inputSize.Height = myInputWindow.InputCanvas.Height;
-
-            //myPenToText = new convertToText(myDynamicDisplay, inputSize);
-            myPenToText3 = new convertToText(myDynamicDisplay, inputSize);
+            myPenToText = new convertToText(myDynamicDisplay);
             blockingData = new BlockingCollection<Point>();
-            addingData = Task.Factory.StartNew(() => myPenToText3.getData(blockingData));            
+            addingData = Task.Factory.StartNew(() => myPenToText.getData(blockingData));            
 
             myDisplayWindow = new DisplayWindow(myDynamicDisplay);
+
+            myPenToText.setDisplayActive(true);
 
             myDisplayWindow.manager = this;
             myDisplayWindow.Visibility = Visibility.Visible;
@@ -88,75 +70,63 @@ namespace penToText
 
             myDisplayWindow.Owner = myInputWindow;
 
-            /*Thread thread = new Thread(() =>
-            {
-                this.myDisplayWindow = new DisplayWindow(this.myDynamicDisplay);
-                this.myDisplayWindow.manager = this;
-
-                myDisplayWindow.Visibility = Visibility.Visible;
-
-                this.myDisplayWindow.Closed += (sender2, e2) =>
-                this.myDisplayWindow.Dispatcher.InvokeShutdown();
-                this.myDisplayWindow.Owner = this.myInputWindow;
-                this.myDisplayWindow.Top = this.myInputWindow.Top;
-                this.myDisplayWindow.Left = this.myInputWindow.Left + this.myInputWindow.ActualWidth;
-                System.Windows.Threading.Dispatcher.Run();
-            });
-            thread.SetApartmentState(ApartmentState.STA);
-            thread.Start();*/
-
-            /*myDisplayWindow2 = new DisplayWindow(myDynamicDisplay);
-
-            myDisplayWindow2.manager = this;
-            myDisplayWindow2.Visibility = Visibility.Visible;
-
-            myDisplayWindow2.Top = myInputWindow.Top + myInputWindow.ActualHeight;
-            myDisplayWindow2.Left = myInputWindow.Left;
-
-            myDisplayWindow2.Owner = myInputWindow;*/
-
             resized();
 
         }
 
+        internal static void OnDisplayWindowClose(object sender, CancelEventArgs e)
+        {
+            myPenToText.setDisplayActive(false);
+        }
+
+        public void toggleDisplayWindow()
+        {
+            if (myPenToText.getDisplayActive())
+            {
+                myDisplayWindow.Close();
+            }
+            else
+            {
+                myDisplayWindow = new DisplayWindow(myDynamicDisplay);
+
+                myPenToText.setDisplayActive(true);
+
+                myDisplayWindow.manager = this;
+                myDisplayWindow.Visibility = Visibility.Visible;
+
+                myDisplayWindow.Top = myInputWindow.Top;
+                myDisplayWindow.Left = myInputWindow.Left + myInputWindow.ActualWidth;
+
+                myDisplayWindow.Owner = myInputWindow;
+            }
+        }
+
         public void resized()
         {
-            /*myPenToText.inputSize = myInputWindow.InputCanvas.RenderSize;
-            myPenToText.resize();*/
 
-            myPenToText3.inputSize = myInputWindow.InputCanvas.RenderSize;
-            myPenToText3.resize();
-            /*myDisplayWindow.canvasSize.Height = inputHeight;
-            myDisplayWindow.canvasSize.Width = inputWidth;
-            myDisplayWindow.resize();*/
         }
 
         
         public void newData(Point newPoint)
         {
-            //myPenToText.newData(newPoint);
-            if (!blockingData.IsAddingCompleted) { blockingData.Add(newPoint); }
-            //blockingData.Add(newPoint);
-            
+            if (!blockingData.IsAddingCompleted) { blockingData.Add(newPoint); }            
         }       
 
         public void clear()
         {
             blockingData.CompleteAdding();
             addingData.Wait();
-            myPenToText3.clear();
+            myPenToText.clear();
             blockingData = new BlockingCollection<Point>();
 
-            data.Clear();
-            currentPoint = new Point(-5, -5);
-            //myPenToText.clear();
-
-            addingData = Task.Factory.StartNew(() => myPenToText3.getData(blockingData)); 
+            addingData = Task.Factory.StartNew(() => myPenToText.getData(blockingData)); 
         }
 
         public void endDraw()
         {
-            //myPenToText.endDraw();
+
         }
+
+       
     }
 }

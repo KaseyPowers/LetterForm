@@ -27,13 +27,9 @@ namespace penToText
 
         public DisplayWindow(dynamicDisplay display)
         {
+            Closing += mainWindows.OnDisplayWindowClose;
             InitializeComponent();
-            //this.Width = 700;
-            //this.Height = 700;
             this.display=display;
-            canvasSize = new Size();
-            canvasSize.Height = 300;
-            canvasSize.Width = 300;
             this.Content = display.getScrollView();
 
             this.SizeToContent = SizeToContent.WidthAndHeight;

@@ -28,7 +28,6 @@ namespace penToText
         private dynamicDisplay thisDynamicDisplay;
         private List<Point> originalData;
         private List<Point> cleanedData;
-        public Size inputSize;
 
         //canvas stuff
         private lineDrawCanvas clean;
@@ -37,11 +36,12 @@ namespace penToText
         //testing lists and whatnot
         private double goalClean;
         private long c1;
-        private Stopwatch timer;      
+        private Stopwatch timer;
 
-        public convertToText(dynamicDisplay display, Size inputSize)
+        private bool activeDisplay;
+
+        public convertToText(dynamicDisplay display)
         {
-            this.inputSize = inputSize;
             timer = new Stopwatch();
 
             goalClean = (1 / 15.0);
@@ -63,6 +63,16 @@ namespace penToText
             clean.myPanel.Height = side;
             clean.toAddCircles = true;
             thisDynamicDisplay.addCanvas(clean);
+        }
+
+        public void setDisplayActive(bool isActive)
+        {
+            activeDisplay = isActive;
+        }
+
+        public bool getDisplayActive()
+        {
+            return activeDisplay;
         }
 
         public void getData(BlockingCollection<Point> data)
@@ -120,16 +130,19 @@ namespace penToText
         {    
             timer.Start();
 
-            cleanedData = scaleList(new List<Point>(originalData));
-            clean.newData(resample(new List<Point>(cleanedData), .1));
+            cleanedData = resample(scaleList(new List<Point>(originalData)), .1);
+            
             timer.Stop();
 
             c1 += timer.ElapsedTicks;
             timer.Reset();
 
-
-            clean.titleText = "Scale original From: " + originalData.Count + "\nTicks: " + c1;
-            clean.myPanel.Dispatcher.BeginInvoke(new drawingDelegate(clean.updateDraw));
+            if (activeDisplay)
+            {
+                clean.newData(cleanedData);
+                clean.titleText = "Scale original From: " + originalData.Count + "\nTicks: " + c1;
+                clean.myPanel.Dispatcher.BeginInvoke(new drawingDelegate(clean.updateDraw));
+            }
         }
 
 

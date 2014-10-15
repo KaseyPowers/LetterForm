@@ -66,6 +66,21 @@ namespace penToText
             //manager.myDisplayWindow.arrows.changeLoc(0, 1);
         }
 
+         private void Submit_Click(object sender, RoutedEventArgs e)
+         {
+
+         }
+
+         private void Display_Click(object sender, RoutedEventArgs e)
+         {
+             manager.toggleDisplayWindow();
+         }
+
+         private void Data_Click(object sender, RoutedEventArgs e)
+         {
+
+         }
+
         private void startDraw(object sender, MouseEventArgs e)
         {
             if (e.StylusDevice == null)
