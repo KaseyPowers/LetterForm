@@ -34,7 +34,6 @@ namespace penToText
         public Size canvasSizes;
 
         //testing lists and whatnot
-        private double goalClean;
         private long c1;
         private Stopwatch timer;
 
@@ -43,8 +42,6 @@ namespace penToText
         public convertToText(dynamicDisplay display)
         {
             timer = new Stopwatch();
-
-            goalClean = (1 / 15.0);
 
             originalData = new List<Point>();
             cleanedData = new List<Point>();
@@ -145,6 +142,10 @@ namespace penToText
             }
         }
 
+        public List<Point> getCleanedData()
+        {
+            return cleanedData;
+        }
 
 
         public void resize()

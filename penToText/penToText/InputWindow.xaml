@@ -6,7 +6,7 @@
         SizeChanged="update_size"
         Loaded="Window_Loaded"  >
 
-    <DockPanel>
+    <DockPanel Name="Window_Container">
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="_File">
                 <MenuItem Header="_Clear" Click="Clear_Click"/>
@@ -22,6 +22,46 @@
                     <SolidColorBrush Color="White" Opacity="0"/>
                 </Canvas.Background>
             </Canvas>
+
+        <Popup Name="SubmitPopup" 
+               PlacementTarget="{Binding ElementName=Window_Container}"  
+               Placement="Center"
+               AllowsTransparency="True"
+               Width="200" Height="125">
+            <Canvas Background="Transparent">
+                <Canvas Background="White" Width="125" Height="100">
+                    <Canvas.BitmapEffect>
+                        <DropShadowBitmapEffect Softness=".5" 
+                                                ShadowDepth="5" 
+                                                Color="Black"/>
+                    </Canvas.BitmapEffect>
+                    <Label Content="Submit Letter: "
+                           Width="90"
+                           Canvas.Left="10"
+                           />
+                    <TextBox
+                            Name="SubmitText"
+                            MaxLength="1"
+                            TextAlignment="Center"
+                            Width="90"
+                            Canvas.Left="10"
+                            Canvas.Top="20"
+                        />
+                    <Button Click="submit" 
+                            Margin="10"
+                            Width="90"
+                            Canvas.Top="30"
+                            Content="Submit"/>
+                    <Button Click="cancel_submit" 
+                            Margin="10"
+                            Width="90"
+                            Canvas.Top="60"
+                            Content="Cancel"/>
+                </Canvas>
+            </Canvas>
+        </Popup>
+        
+
     </DockPanel>
 
    
