@@ -102,6 +102,11 @@ namespace penToText
             }
         }
 
+        public void toggleDataDisplayWindow()
+        {
+
+        }
+
         public void resized()
         {
 

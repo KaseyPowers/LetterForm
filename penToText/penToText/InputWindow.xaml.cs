@@ -26,13 +26,20 @@ namespace penToText
         private Polyline myLine;
         public bool loaded;
         public double aspectRatio = 0.0;
+        private submitPopup popup;
+        private char submitLetter;
 
         public InputWindow()
         {
             myLine = new Polyline();
             InitializeComponent();
             this.Show();
+            submitLetter = ' ';
 
+        }
+
+        public void setSubmitChar(char newChar){
+            submitLetter = newChar;
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -69,17 +76,22 @@ namespace penToText
 
          private void Submit_Click(object sender, RoutedEventArgs e)
          {
-             SubmitPopup.IsOpen = true;
+             if (submitLetter != ' ')
+             {
+                 manager.Submit(submitLetter);
+             }
          }
 
-         private void submit(object sender, RoutedEventArgs e)
+         private void Submit_Option_Click(object sender, RoutedEventArgs e)
          {
-             
-         }
+             //open the popup
+             popup = new submitPopup(this);
 
-         private void cancel_submit(object sender, RoutedEventArgs e)
-         {
-             SubmitPopup.IsOpen = false;
+             popup.Visibility = Visibility.Visible;
+             popup.Top = this.Top + (this.Height / 4);
+             popup.Left = this.Left + (this.Width / 4);
+
+             popup.Owner = this;
          }
 
          private void Display_Click(object sender, RoutedEventArgs e)
@@ -89,7 +101,7 @@ namespace penToText
 
          private void Data_Click(object sender, RoutedEventArgs e)
          {
-
+             manager.toggleDataDisplayWindow();
          }
 
         private void startDraw(object sender, MouseEventArgs e)

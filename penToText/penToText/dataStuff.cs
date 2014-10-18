@@ -7,7 +7,7 @@ using System.Windows;
 
 namespace penToText
 {
-    class dataStuff
+    public class dataStuff
     {
 
         public void Submit(List<Point> cleanedData, char associatedLetter)

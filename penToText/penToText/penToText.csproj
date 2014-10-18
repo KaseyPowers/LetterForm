@@ -72,7 +72,6 @@
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
     <Compile Include="convertToText.cs" />
-    <Compile Include="DataConnection.cs" />
     <Compile Include="dataStuff.cs" />
     <Compile Include="dynamicDisplay.cs" />
     <Compile Include="DisplayWindow.xaml.cs">
@@ -83,6 +82,9 @@
     </Compile>
     <Compile Include="mainWindows.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="submitPopup.xaml.cs">
+      <DependentUpon>submitPopup.xaml</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -98,6 +100,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="InputWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="submitPopup.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
