@@ -4,7 +4,8 @@
         Title="InputWindow" Width="400" Height="400"
         
         SizeChanged="update_size"
-        Loaded="Window_Loaded"  >
+        Loaded="Window_Loaded" 
+        Closing="OnWindowClosing">
 
     <DockPanel Name="Window_Container">
         <Menu DockPanel.Dock="Top">

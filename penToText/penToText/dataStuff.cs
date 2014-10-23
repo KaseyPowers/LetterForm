@@ -11,6 +11,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using System.Xml;
 
 namespace penToText
 {
@@ -20,6 +21,10 @@ namespace penToText
         private StackPanel container;
         private List<StackPanel> dataView;
         private char[] alphabet = "ABCDEFGHIJKLMNOP0123456789".ToCharArray();
+        private List<dataElement> elements;
+
+        private String file = "PenToTextData.xml";
+        
         public dataStuff()
         {
             dataView = new List<StackPanel>();
@@ -60,6 +65,8 @@ namespace penToText
                 currentBorder.Child = current;
                 container.Children.Add(currentBorder);
             }
+
+            getData();
         }
         public ScrollViewer getContent()
         {
@@ -67,12 +74,66 @@ namespace penToText
         }
         public void Submit(List<mPoint> cleanedData, char associatedLetter)
         {
+            elements.Add(new dataElement(associatedLetter, cleanedData));
+        }
+
+        public void dataUpdated()
+        {
 
         }
 
         public void getData()
         {
+            elements = new List<dataElement>();
+            //pupulate from xml
+        }
 
+        public bool writeData()
+        {
+            bool output = true;
+            XmlWriterSettings settings = new XmlWriterSettings();
+            settings.Indent = true;
+
+            XmlWriter Writer = XmlWriter.Create(file, settings);
+            Writer.WriteStartDocument();
+            Writer.WriteComment("This is written by the program");
+            for (int i = 0; i < elements.Count; i++)
+            {
+                Writer.WriteStartElement("DataElement");
+                dataElement current = elements[i];
+                Writer.WriteAttributeString("Char" , current.associatedCharacter+"");
+                for(int j=0; j<current.cleanedData.Count; j++){
+                    Writer.WriteStartElement("Point");
+                    Writer.WriteAttributeString("X", current.cleanedData[j].X + "");
+                    Writer.WriteAttributeString("Y", current.cleanedData[j].Y + "");                    
+                    Writer.WriteAttributeString("L", current.cleanedData[j].line + "");
+                    Writer.WriteEndElement();
+                }
+                Writer.WriteEndElement();
+            }
+            if (elements.Count == 0)
+            {
+                Writer.WriteStartElement("NoDataYet");
+                Writer.WriteEndElement();
+            }
+            Writer.WriteEndDocument();
+
+            Writer.Flush();
+            Writer.Close();
+
+            return output;
+        }
+    }
+
+    public class dataElement
+    {
+        public char associatedCharacter;
+        public List<mPoint> cleanedData;
+
+        public dataElement(char thisChar, List<mPoint> data)
+        {
+            cleanedData = data;
+            associatedCharacter = thisChar;
         }
     }
 }

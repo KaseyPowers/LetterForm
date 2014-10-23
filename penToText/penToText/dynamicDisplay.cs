@@ -307,8 +307,11 @@ namespace penToText
 
         public void newData(List<mPoint> data) { 
             this.data = data;
-            int numLines = data[data.Count - 1].line+1;
-            myLines = new Polyline[numLines];
+            if (data.Count != 0)
+            {
+                int numLines = data[data.Count - 1].line + 1;
+                myLines = new Polyline[numLines];
+            }
            
         }
         public List<mPoint> getData() { return data; }
@@ -318,22 +321,23 @@ namespace penToText
             myPanel.Children.Clear();
             myPanel.Children.Add(title);
 
-            for (int i = 0; i < myLines.Length; i++)
-            {
-                Polyline myLine = new Polyline();
-                myLine.Stroke = Brushes.Black;
-                myLine.StrokeThickness = 2;
-                myLines[i] = myLine;
-                myPanel.Children.Add(myLines[i]);
-            }
-            title.Text = titleText + "\n " + data.Count;
-
-            double xScale = myPanel.Width / outOfX;
-            double yScale = myPanel.Height / outOfy;
-
-            double radius = 4;
             if ((data != null) && data.Count > 1)
             {
+                for (int i = 0; i < myLines.Length; i++)
+                {
+                    Polyline myLine = new Polyline();
+                    myLine.Stroke = Brushes.Black;
+                    myLine.StrokeThickness = 2;
+                    myLines[i] = myLine;
+                    myPanel.Children.Add(myLines[i]);
+                }
+                title.Text = titleText + "\n " + data.Count;
+
+                double xScale = myPanel.Width / outOfX;
+                double yScale = myPanel.Height / outOfy;
+
+                double radius = 4;
+            
                 //Point lastPoint = data[0];
                 //if (toAddCircles) { drawCircle(lastPoint.X * xScale, lastPoint.Y * yScale, radius); }
                 for (int i = 0; i < data.Count; i++)

@@ -142,7 +142,8 @@ namespace penToText
 
         public List<mPoint> getCleanedData()
         {
-            return cleanedData;
+            updateData();
+            return new List<mPoint>(cleanedData);
         }
 
 

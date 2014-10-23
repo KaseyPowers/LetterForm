@@ -154,7 +154,12 @@ namespace penToText
         public void newData(Point newPoint)
         {
             if (!blockingData.IsAddingCompleted) { blockingData.Add(new mPoint(newPoint, currentLine)); }            
-        }       
+        }
+
+        public void closing()
+        {
+            myDataStuff.writeData();
+        }
 
         public void clear()
         {

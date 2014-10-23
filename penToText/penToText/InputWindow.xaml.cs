@@ -38,6 +38,11 @@ namespace penToText
 
         }
 
+        public void OnWindowClosing(object sender, CancelEventArgs e) 
+        {
+            manager.closing();
+        }
+
         public void setSubmitChar(char newChar){
             submitLetter = newChar;
         }
@@ -79,6 +84,11 @@ namespace penToText
              if (submitLetter != ' ')
              {
                  manager.Submit(submitLetter);
+                 InputCanvas.Children.Clear();
+             }
+             else
+             {
+                 Submit_Option_Click(sender, e);
              }
          }
 
