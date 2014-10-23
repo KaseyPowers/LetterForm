@@ -72,6 +72,9 @@
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
     <Compile Include="convertToText.cs" />
+    <Compile Include="DataDisplay.xaml.cs">
+      <DependentUpon>DataDisplay.xaml</DependentUpon>
+    </Compile>
     <Compile Include="dataStuff.cs" />
     <Compile Include="dynamicDisplay.cs" />
     <Compile Include="DisplayWindow.xaml.cs">
@@ -94,6 +97,10 @@
     <Page Include="App.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="DataDisplay.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="DisplayWindow.xaml">
       <SubType>Designer</SubType>

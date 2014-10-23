@@ -33,6 +33,7 @@ namespace penToText
             this.Content = display.getScrollView();
 
             this.SizeToContent = SizeToContent.WidthAndHeight;
+            this.ShowActivated = false;
             this.Show();
         }
 

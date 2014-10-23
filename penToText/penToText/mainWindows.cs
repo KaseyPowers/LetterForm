@@ -37,6 +37,7 @@ namespace penToText
 
         public InputWindow myInputWindow;
         public DisplayWindow myDisplayWindow;
+        public DataDisplay myDataDisplay;
         public dynamicDisplay myDynamicDisplay;
         public static convertToText myPenToText;
         public dataStuff myDataStuff;
@@ -56,6 +57,7 @@ namespace penToText
             myInputWindow.manager = this;
 
             myPenToText = new convertToText(myDynamicDisplay);
+            myDataStuff = new dataStuff();
             blockingData = new BlockingCollection<Point>();
             addingData = Task.Factory.StartNew(() => myPenToText.getData(blockingData));            
 
@@ -70,6 +72,13 @@ namespace penToText
             myDisplayWindow.Left = myInputWindow.Left + myInputWindow.ActualWidth;
 
             myDisplayWindow.Owner = myInputWindow;
+
+            myDataDisplay = new DataDisplay(myDataStuff);
+            myDataDisplay.Visibility = Visibility.Visible;
+            myDataDisplay.Top = myInputWindow.Top + myInputWindow.ActualHeight;
+            myDataDisplay.Left = myInputWindow.Left;
+            myDataDisplay.Owner = myInputWindow;
+
 
             resized();
 
@@ -104,7 +113,24 @@ namespace penToText
 
         public void toggleDataDisplayWindow()
         {
-
+            if (myDataDisplay.IsVisible)
+            {
+                myDataDisplay.Visibility = Visibility.Hidden;
+            }
+            else if(myDataDisplay !=null )
+            {
+                myDataDisplay.Visibility = Visibility.Visible;
+                myDataDisplay.Left = myInputWindow.Left;
+                myDataDisplay.Owner = myInputWindow;
+            }
+            else
+            {
+                myDataDisplay = new DataDisplay(myDataStuff);
+                myDataDisplay.Visibility = Visibility.Visible;
+                myDataDisplay.Top = myInputWindow.Top + myInputWindow.ActualHeight;
+                myDataDisplay.Left = myInputWindow.Left;
+                myDataDisplay.Owner = myInputWindow;
+            }
         }
 
         public void resized()
