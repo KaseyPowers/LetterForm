@@ -65,7 +65,7 @@ namespace penToText
         {
             return content;
         }
-        public void Submit(List<Point> cleanedData, char associatedLetter)
+        public void Submit(List<mPoint> cleanedData, char associatedLetter)
         {
 
         }

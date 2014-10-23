@@ -39,11 +39,11 @@ namespace penToText
         public DisplayWindow myDisplayWindow;
         public DataDisplay myDataDisplay;
         public dynamicDisplay myDynamicDisplay;
-        public static convertToText myPenToText;
+        public static convertToText2 myPenToText;
         public dataStuff myDataStuff;
 
         //threading attempt 2
-        public BlockingCollection<Point> blockingData;
+        public BlockingCollection<mPoint> blockingData;
         private Task addingData;
 
         public mainWindows()
@@ -56,9 +56,9 @@ namespace penToText
             myInputWindow = new InputWindow();
             myInputWindow.manager = this;
 
-            myPenToText = new convertToText(myDynamicDisplay);
+            myPenToText = new convertToText2(myDynamicDisplay);
             myDataStuff = new dataStuff();
-            blockingData = new BlockingCollection<Point>();
+            blockingData = new BlockingCollection<mPoint>();
             addingData = Task.Factory.StartNew(() => myPenToText.getData(blockingData));            
 
             myDisplayWindow = new DisplayWindow(myDynamicDisplay);
@@ -75,7 +75,7 @@ namespace penToText
 
             myDataDisplay = new DataDisplay(myDataStuff);
             myDataDisplay.Visibility = Visibility.Visible;
-            myDataDisplay.Top = myInputWindow.Top + myInputWindow.ActualHeight;
+            myDataDisplay.Top = myInputWindow.Top + myInputWindow.Height;
             myDataDisplay.Left = myInputWindow.Left;
             myDataDisplay.Owner = myInputWindow;
 
@@ -120,6 +120,7 @@ namespace penToText
             else if(myDataDisplay !=null )
             {
                 myDataDisplay.Visibility = Visibility.Visible;
+                myDataDisplay.Top = myInputWindow.Top + myInputWindow.Height;
                 myDataDisplay.Left = myInputWindow.Left;
                 myDataDisplay.Owner = myInputWindow;
             }
@@ -127,7 +128,7 @@ namespace penToText
             {
                 myDataDisplay = new DataDisplay(myDataStuff);
                 myDataDisplay.Visibility = Visibility.Visible;
-                myDataDisplay.Top = myInputWindow.Top + myInputWindow.ActualHeight;
+                myDataDisplay.Top = myInputWindow.Top + myInputWindow.Height;
                 myDataDisplay.Left = myInputWindow.Left;
                 myDataDisplay.Owner = myInputWindow;
             }
@@ -144,29 +145,31 @@ namespace penToText
             addingData.Wait();
             myDataStuff.Submit(myPenToText.getCleanedData(), associatedCharacter);
             myPenToText.clear();
-            blockingData = new BlockingCollection<Point>();
+            blockingData = new BlockingCollection<mPoint>();
 
             addingData = Task.Factory.StartNew(() => myPenToText.getData(blockingData)); 
         }
-        
+
+        private int currentLine;
         public void newData(Point newPoint)
         {
-            if (!blockingData.IsAddingCompleted) { blockingData.Add(newPoint); }            
+            if (!blockingData.IsAddingCompleted) { blockingData.Add(new mPoint(newPoint, currentLine)); }            
         }       
 
         public void clear()
         {
+            currentLine = 0;
             blockingData.CompleteAdding();
             addingData.Wait();
             myPenToText.clear();
-            blockingData = new BlockingCollection<Point>();
+            blockingData = new BlockingCollection<mPoint>();
 
             addingData = Task.Factory.StartNew(() => myPenToText.getData(blockingData)); 
         }
 
         public void endDraw()
         {
-
+            currentLine++;
         }
 
        

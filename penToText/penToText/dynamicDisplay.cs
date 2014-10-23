@@ -263,4 +263,107 @@ namespace penToText
             myPanel.Children.Add(circle);
         }
     }
+
+    public class multiLineDrawCanvas : dynamicView
+    {
+        private List<mPoint> data;
+        public TextBox title;
+        public string titleText;
+        public bool toAddCircles;
+        private Polyline[] myLines;
+        public double padding = 0;
+        public double outOfX;
+        public double outOfy;
+        public multiLineDrawCanvas(int xPos, int yPos, dynamicDisplay parent, string titleText)
+        {
+            toAddCircles = false;
+            this.data = new List<mPoint>();
+            this.xPos = xPos;
+            this.yPos = yPos;
+            this.parent = parent;
+            this.titleText = titleText;
+            //Grid holder = new Grid(); 
+
+            myPanel = new Canvas();
+            myPanel.Name = "InputCopyCanvas";
+            myPanel.HorizontalAlignment = HorizontalAlignment.Left;
+            myPanel.VerticalAlignment = VerticalAlignment.Top;
+            myPanel.Width = default_sizeX;
+            myPanel.Height = default_sizeY;
+
+            title = new TextBox();
+            title.Text = titleText;
+            title.HorizontalAlignment = HorizontalAlignment.Left;
+            title.VerticalAlignment = VerticalAlignment.Top;
+            title.Width = Double.NaN;
+            title.Height = Double.NaN;
+            myPanel.Children.Add(title);
+
+            /*myLine = new Polyline();
+            myLine.Stroke = Brushes.Black;
+            myLine.StrokeThickness = 2;
+            myPanel.Children.Add(myLine);*/
+        }
+
+        public void newData(List<mPoint> data) { 
+            this.data = data;
+            int numLines = data[data.Count - 1].line+1;
+            myLines = new Polyline[numLines];
+           
+        }
+        public List<mPoint> getData() { return data; }
+
+        public override void updateDraw()
+        {
+            myPanel.Children.Clear();
+            myPanel.Children.Add(title);
+
+            for (int i = 0; i < myLines.Length; i++)
+            {
+                Polyline myLine = new Polyline();
+                myLine.Stroke = Brushes.Black;
+                myLine.StrokeThickness = 2;
+                myLines[i] = myLine;
+                myPanel.Children.Add(myLines[i]);
+            }
+            title.Text = titleText + "\n " + data.Count;
+
+            double xScale = myPanel.Width / outOfX;
+            double yScale = myPanel.Height / outOfy;
+
+            double radius = 4;
+            if ((data != null) && data.Count > 1)
+            {
+                //Point lastPoint = data[0];
+                //if (toAddCircles) { drawCircle(lastPoint.X * xScale, lastPoint.Y * yScale, radius); }
+                for (int i = 0; i < data.Count; i++)
+                {
+                    mPoint currentPoint = data[i];
+
+                    currentPoint.X += padding;
+                    currentPoint.Y += padding;
+
+                    currentPoint.X *= xScale;
+                    currentPoint.Y *= yScale;
+
+                    if (toAddCircles) { drawCircle(currentPoint.X, currentPoint.Y, radius); }
+                    myLines[currentPoint.line].Points.Add(currentPoint.getPoint());
+                }
+            }
+        }
+
+        public void drawCircle(double centerX, double centerY, double r)
+        {
+            Ellipse circle = new Ellipse();
+            circle.Width = r;
+            circle.Height = r;
+            circle.Stroke = Brushes.Black;
+            circle.StrokeThickness = 2;
+            double left = centerX - (r / 2.0);
+            double top = centerY - (r / 2.0);
+            Canvas.SetLeft(circle, left);
+            Canvas.SetTop(circle, top);
+            myPanel.Children.Add(circle);
+        }
+    }
 }
