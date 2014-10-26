@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -22,11 +23,17 @@ namespace penToText
         private List<StackPanel> dataView;
         private char[] alphabet = "ABCDEFGHIJKLMNOP0123456789".ToCharArray();
         private List<dataElement> elements;
+        private char currentChar;
 
         private String file = "PenToTextData.xml";
         
         public dataStuff()
         {
+            if (!File.Exists(file))
+            {
+                File.Create(file);
+            }
+            currentChar = ' ';
             dataView = new List<StackPanel>();
             content = new ScrollViewer();
             content.VerticalScrollBarVisibility = ScrollBarVisibility.Visible;
@@ -74,24 +81,34 @@ namespace penToText
         }
         public void Submit(List<mPoint> cleanedData, char associatedLetter)
         {
+            if (currentChar != associatedLetter)
+            {
+                pullData(associatedLetter);
+            }
+            currentChar = associatedLetter;
             elements.Add(new dataElement(associatedLetter, cleanedData));
         }
 
         public void dataUpdated()
         {
-
+            for (int i = 0; i < alphabet.Length; i++)
+            {
+                pullData(alphabet[i]);
+                ((TextBlock)dataView[i].Children[0]).Text = alphabet[i] + ": " + elements.Count;
+            }
         }
 
         public void getData()
         {
             elements = new List<dataElement>();
             //pupulate from xml
+            dataUpdated();
         }
 
         public bool writeData()
         {
             bool output = true;
-            XmlWriterSettings settings = new XmlWriterSettings();
+            /*XmlWriterSettings settings = new XmlWriterSettings();
             settings.Indent = true;
 
             XmlWriter Writer = XmlWriter.Create(file, settings);
@@ -119,11 +136,78 @@ namespace penToText
             Writer.WriteEndDocument();
 
             Writer.Flush();
-            Writer.Close();
+            Writer.Close();*/
+            writeNewData();
 
             return output;
         }
+
+
+        public void writeNewData()
+        {
+            XmlDocument myXmlDocument = new XmlDocument();
+            try
+            {
+                myXmlDocument.Load(file);
+            }
+            catch (XmlException exception)
+            {
+                //file not setup
+                XmlDeclaration dec = myXmlDocument.CreateXmlDeclaration("1.0", null, null);
+                myXmlDocument.AppendChild(dec);
+                myXmlDocument.AppendChild(myXmlDocument.CreateElement("myData"));
+            }
+
+            while (elements.Count != 0)
+            {
+                dataElement current = elements[0];
+                elements.RemoveAt(0);
+
+                myXmlDocument.DocumentElement.AppendChild(current.addNodeForElement(myXmlDocument));
+            }
+            myXmlDocument.Save(file);
+        }
+
+        public void pullData(char toPull)
+        {
+            if (elements.Count != 0)
+            {
+                writeNewData();
+            }
+            XmlDocument myXmlDocument = new XmlDocument();
+            try
+            {
+                myXmlDocument.Load(file);
+            }
+            catch (XmlException exception)
+            {
+                //file not setup
+                XmlDeclaration dec = myXmlDocument.CreateXmlDeclaration("1.0", null, null);
+                myXmlDocument.AppendChild(dec);
+                myXmlDocument.AppendChild(myXmlDocument.CreateElement("myData"));
+            }
+            
+            XmlNodeList currentLetters = myXmlDocument.DocumentElement.SelectNodes("DataElement");
+
+            for(int i=0; i< currentLetters.Count; i++)
+            {
+                string innerText = currentLetters[i].InnerText;
+                XmlElement element = myXmlDocument.CreateElement("DataElement");
+                element.SetAttribute("Char", currentLetters[i].Attributes[0].Value);
+                element.InnerText = innerText;
+                //make data element from node
+
+                if (element.GetAttribute("Char").Equals(""+toPull))
+                {
+                    elements.Add(new dataElement(element));
+                    myXmlDocument.DocumentElement.RemoveChild(element);
+                }
+            }
+            
+        }
     }
+
+    
 
     public class dataElement
     {
@@ -134,6 +218,39 @@ namespace penToText
         {
             cleanedData = data;
             associatedCharacter = thisChar;
+        }
+
+        public dataElement(XmlElement buildFrom)
+        {
+            associatedCharacter = buildFrom.Attributes[0].InnerText.ToCharArray()[0];
+            cleanedData = new List<mPoint>();
+            if (buildFrom.HasChildNodes)
+            {
+                XmlNodeList points = buildFrom.ChildNodes;
+
+                foreach (XmlNode point in points)
+                {
+                    mPoint temp = new mPoint(Double.Parse(point.Attributes[0].Value), Double.Parse(point.Attributes[1].Value), int.Parse(point.Attributes[2].Value));
+                    cleanedData.Add(temp);
+                }
+            }
+        }
+
+        public XmlElement addNodeForElement(XmlDocument myXmlDoc)
+        {
+            XmlElement output = myXmlDoc.CreateElement("DataElement");
+
+            output.SetAttribute("Char", ""+associatedCharacter);
+
+            foreach(mPoint point in cleanedData){
+                XmlElement pointNode = myXmlDoc.CreateElement("Point");
+                pointNode.SetAttribute("X", point.X+"");
+                pointNode.SetAttribute("Y", "" + point.Y);
+                pointNode.SetAttribute("Line", "" + point.line);
+                output.AppendChild(pointNode);
+            }
+
+            return output;
         }
     }
 }
