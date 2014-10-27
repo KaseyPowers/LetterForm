@@ -1,11 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -13,9 +14,8 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Threading;
 using System.Windows.Shapes;
-using System.Diagnostics;
+using System.Windows.Threading;
 
 namespace penToText
 {
@@ -31,6 +31,7 @@ namespace penToText
 
         //canvas stuff
         private multiLineDrawCanvas clean;
+        private multiLineDrawCanvas clean2;
         public Size canvasSizes;
 
         //testing lists and whatnot
@@ -60,6 +61,15 @@ namespace penToText
             clean.myPanel.Height = side;
             clean.toAddCircles = true;
             thisDynamicDisplay.addCanvas(clean);
+
+            clean2 = new multiLineDrawCanvas(1, 0, display, "SectionTest");
+            clean2.outOfX = 1.2;
+            clean2.outOfy = 1.2;
+            clean2.padding = .1;
+            clean2.myPanel.Width = side;
+            clean2.myPanel.Height = side;
+            clean2.toAddCircles = true;
+            thisDynamicDisplay.addCanvas(clean2);
         }
 
         public void setDisplayActive(bool isActive)
@@ -134,9 +144,32 @@ namespace penToText
 
             if (activeDisplay)
             {
-                clean.newData(cleanedData);
+                clean.newData(new List<mPoint>(cleanedData));
                 clean.titleText = "Scale original From: " + originalData.Count + "\nTicks: " + c1;
                 clean.myPanel.Dispatcher.BeginInvoke(new drawingDelegate(clean.updateDraw));
+            }
+            if (cleanedData.Count > 1)
+            {
+                List<mPoint> sectionData = Dominique2(resample(scaleList(new List<mPoint>(originalData)), .1));
+                /*List<mLetterPortion> sections = Dominique(resample(scaleList(new List<mPoint>(originalData)), .1));
+                if (sections.Count > 1) { 
+                    for (int i = 0; i < sections.Count; i++)
+                    {
+                        if (i != 0 && sections[i].startPoint.line != sections[i - 1].endPoint.line)
+                        {
+                            sectionData.Add(sections[i - 1].endPoint);
+                        }
+                        sectionData.Add(sections[i].startPoint);
+                    }
+                    sectionData.Add(sections[sections.Count - 1].endPoint);*/
+
+                if (activeDisplay)
+                {
+                    clean2.newData(sectionData);
+                    clean2.titleText = "Section Test";
+                    clean2.myPanel.Dispatcher.BeginInvoke(new drawingDelegate(clean2.updateDraw));
+                }
+
             }
         }
 
@@ -162,10 +195,13 @@ namespace penToText
 
             clean.newData(new List<mPoint>());
             clean.updateDraw();
+
+            clean2.newData(new List<mPoint>());
+            clean2.updateDraw();
         }
 
 
-        private double lineDistance(mPoint a, mPoint lineA, mPoint lineB)
+       /* private double lineDistance(mPoint a, mPoint lineA, mPoint lineB)
         {
             double X0, X1, X2, Y0, Y1, Y2;
             X0 = a.X;
@@ -184,7 +220,7 @@ namespace penToText
         private double cleanliness(List<mPoint> input)
         {
             return (input.Count / length(input));
-        }
+        }*/
 
         private double length(List<mPoint> input)
         {
@@ -238,17 +274,37 @@ namespace penToText
             }
             else { return data; }
         }
-
-        /*private List<Point> Dominique2(List<Point> input)
+        private List<mLetterPortion> Dominique(List<mPoint> input)
         {
-            List<Point> output = new List<Point>();
+            List<mLetterPortion> output = new List<mLetterPortion>();
+            if (input.Count > 2)
+            {
+                int sLoc = 0;
+                for (int i = 0; i < (input.Count - 1); i++)
+                {
+                    bool sameSlope = getDirection(input[sLoc], input[sLoc + 1]) == getDirection(input[i], input[i + 1]) && input[sLoc].line == input[i].line;
+                    if (!sameSlope)
+                    {
+                        output.Add(new mLetterPortion(input[sLoc], input[i]));
+                        sLoc = i;
+                    }
+                }
+                output.Add(new mLetterPortion(input[sLoc], input[input.Count -1]));
+            }
+            return output;
+        }
+
+       
+        private List<mPoint> Dominique2(List<mPoint> input)
+        {
+            List<mPoint> output = new List<mPoint>();
             if (input.Count > 2)
             {
                 int sLoc = 0;
                 output.Add(input[0]);
                 for (int i = 0; i < (input.Count - 1); i++)
                 {
-                    bool sameSlope = ((xChange(input[sLoc], input[sLoc + 1]) == xChange(input[i], input[i + 1])) && (yChange(input[sLoc], input[sLoc + 1]) == yChange(input[i], input[i + 1])));
+                    bool sameSlope = getDirection(input[sLoc], input[sLoc + 1]) == getDirection(input[i], input[i + 1]) && input[sLoc].line == input[i].line;
                     if (!sameSlope)
                     {
                         output.Add(input[i]);
@@ -264,33 +320,63 @@ namespace penToText
             return output;
         }
 
-        private int xChange(Point a, Point b)
+        private int getDirection(mPoint startPoint, mPoint endPoint)
         {
-            //0 is same, 1 a is greater, 2 b is greater;
-            int output = 0;
-            if (a.X > b.X)
+            /*
+             * 0: up
+             * 1: down
+             * 2: left
+             * 3: right
+             * 4: up-left
+             * 5: up-right
+             * 6: down-left
+             * 7: down-right
+             */
+            int direction = -1;
+            double deltaX = xChange(startPoint, endPoint);
+            double deltaY = yChange(startPoint, endPoint);
+
+            if (deltaY < 0)
             {
-                output = 1;
+                //up
+                if (deltaX > 0)
+                {
+                    //right
+                    direction = 5;
+                }
+                else
+                {
+                    //left
+                    direction = 4;
+                }
             }
-            else if (a.X < b.X)
+            else
             {
-                output = 2;
+                //down
+                if (deltaX > 0)
+                {
+                    //right
+                    direction = 7;
+                }
+                else
+                {
+                    //left
+                    direction = 6;
+                }
             }
-            return output;
+            
+            return direction;
         }
 
-        private int yChange(Point a, Point b)
+        private double xChange(mPoint a, mPoint b)
         {
-            int output = 0;
-            if (a.Y > b.Y)
-            {
-                output = 1;
-            }
-            else if (a.Y < b.Y)
-            {
-                output = 2;
-            }
-            return output;
-        }*/
+
+            return (a.X - b.X);
+        }
+
+        private double yChange(mPoint a, mPoint b)
+        {
+            return (a.Y - b.Y);
+        }
     }
 }
