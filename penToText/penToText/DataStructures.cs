@@ -32,4 +32,11 @@ namespace penToText
         }
 
     }
+
+    public class mLetterPortion
+    {
+        mPoint startPoint;
+        mPoint endPoint;
+        double length;
+    }
 }

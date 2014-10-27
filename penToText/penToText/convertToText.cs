@@ -26,11 +26,11 @@ namespace penToText
 
         //general data storage
         private dynamicDisplay thisDynamicDisplay;
-        private List<Point> originalData;
-        private List<Point> cleanedData;
+        private List<mPoint> originalData;
+        private List<mPoint> cleanedData;
 
         //canvas stuff
-        private lineDrawCanvas clean;
+        private multiLineDrawCanvas clean;
         public Size canvasSizes;
 
         //testing lists and whatnot
@@ -43,8 +43,8 @@ namespace penToText
         {
             timer = new Stopwatch();
 
-            originalData = new List<Point>();
-            cleanedData = new List<Point>();
+            originalData = new List<mPoint>();
+            cleanedData = new List<mPoint>();
 
             c1 = 0;
 
@@ -52,7 +52,7 @@ namespace penToText
 
             double side = 350;
 
-            clean = new lineDrawCanvas(0, 0, display, "Resample Original");
+            clean = new multiLineDrawCanvas(0, 0, display, "Resample Original");
             clean.outOfX = 1.2;
             clean.outOfy = 1.2;
             clean.padding = .1;
@@ -72,11 +72,11 @@ namespace penToText
             return activeDisplay;
         }
 
-        public void getData(BlockingCollection<Point> data)
+        public void getData(BlockingCollection<mPoint> data)
         {
             foreach (var item in data.GetConsumingEnumerable())
             {
-                Point current = item;
+                mPoint current = item;
 
                 if (originalData.Count == 0 || !current.Equals(originalData[originalData.Count - 1]))
                 {
@@ -86,12 +86,12 @@ namespace penToText
             }
         }
 
-        public List<Point> scaleList(List<Point> data)
+        public List<mPoint> scaleList(List<mPoint> data)
         {
             double newScale;
             bool worked = true;
             double xMin = double.PositiveInfinity, yMin = double.PositiveInfinity, xMax = 0, yMax = 0;
-            List<Point> output = new List<Point>();
+            List<mPoint> output = new List<mPoint>();
             if (data.Count > 1)
             {
                 for (int i = 0; i < data.Count; i++)
@@ -107,11 +107,9 @@ namespace penToText
                 worked = !double.IsNaN(newScale) && !double.IsInfinity(newScale) && newScale != 0.0;
                 for (int i = 0; i < data.Count && worked; i++)
                 {
-                    Point temp = new Point();
-                    temp.X = ((data[i].X - xMin) / newScale);
-                    temp.Y = ((data[i].Y - yMin) / newScale);
+                    mPoint temp = new mPoint(((data[i].X - xMin) / newScale), ((data[i].Y - yMin) / newScale), data[i].line);
                     output.Add(temp);
-                }                
+                }
             }
             else { worked = false; }
 
@@ -124,11 +122,11 @@ namespace penToText
         }
 
         public void updateData()
-        {    
+        {
             timer.Start();
 
-            cleanedData = resample(scaleList(new List<Point>(originalData)), .1);
-            
+            cleanedData = resample(scaleList(new List<mPoint>(originalData)), .1);
+
             timer.Stop();
 
             c1 += timer.ElapsedTicks;
@@ -142,9 +140,10 @@ namespace penToText
             }
         }
 
-        public List<Point> getCleanedData()
+        public List<mPoint> getCleanedData()
         {
-            return cleanedData;
+            updateData();
+            return new List<mPoint>(cleanedData);
         }
 
 
@@ -157,16 +156,16 @@ namespace penToText
         {
             //reset data
             originalData.Clear();
-            cleanedData.Clear();         
+            cleanedData.Clear();
 
             c1 = 0;
 
-            clean.newData(new List<Point>());
+            clean.newData(new List<mPoint>());
             clean.updateDraw();
         }
 
-       
-        private double lineDistance(Point a, Point lineA, Point lineB)
+
+        private double lineDistance(mPoint a, mPoint lineA, mPoint lineB)
         {
             double X0, X1, X2, Y0, Y1, Y2;
             X0 = a.X;
@@ -182,12 +181,12 @@ namespace penToText
             return (numerator / denominator);
         }
 
-        private double cleanliness(List<Point> input)
+        private double cleanliness(List<mPoint> input)
         {
             return (input.Count / length(input));
         }
 
-        private double length(List<Point> input)
+        private double length(List<mPoint> input)
         {
             double length = 0;
             if (input.Count > 1)
@@ -200,35 +199,38 @@ namespace penToText
             return length;
         }
 
-        private double distance(Point a, Point b)
+        private double distance(mPoint a, mPoint b)
         {
             return Math.Sqrt(Math.Pow((a.X - b.X), 2) + Math.Pow((a.Y - b.Y), 2));
         }
 
-        private List<Point> resample(List<Point> data, double spaceBetweenPoints)
+        private List<mPoint> resample(List<mPoint> data, double spaceBetweenPoints)
         {
             if (length(data) > 3 * spaceBetweenPoints)
             {
                 double bigD = 0;
                 double lilD = 0;
-                List<Point> output = new List<Point>();
+                List<mPoint> output = new List<mPoint>();
                 output.Add(data[0]);
                 for (int i = 1; i < data.Count; i++)
                 {
-                    lilD = distance(data[i], data[i - 1]);
-                    if (bigD + lilD > spaceBetweenPoints)
+                    if (data[i].line == data[i - 1].line)
                     {
-                        Point temp = new Point();
-                        temp.X = data[i - 1].X + ((spaceBetweenPoints - bigD) / lilD) * (data[i].X - data[i - 1].X);
-                        temp.Y = data[i - 1].Y + ((spaceBetweenPoints - bigD) / lilD) * (data[i].Y - data[i - 1].Y);
-                        output.Add(temp);
-                        data.Insert(i, temp);
-                        bigD = 0;
-                    }
-                    else
-                    {
-                        if (i == data.Count - 1) { output.Add(data[i]); }
-                        bigD += lilD;
+                        lilD = distance(data[i], data[i - 1]);
+                        if (bigD + lilD > spaceBetweenPoints)
+                        {
+                            mPoint temp = new mPoint((data[i - 1].X + ((spaceBetweenPoints - bigD) / lilD) * (data[i].X - data[i - 1].X)),
+                                (data[i - 1].Y + ((spaceBetweenPoints - bigD) / lilD) * (data[i].Y - data[i - 1].Y)),
+                                data[i].line);
+                            output.Add(temp);
+                            data.Insert(i, temp);
+                            bigD = 0;
+                        }
+                        else
+                        {
+                            if (i == data.Count - 1) { output.Add(data[i]); }
+                            bigD += lilD;
+                        }
                     }
                 }
 
@@ -237,7 +239,7 @@ namespace penToText
             else { return data; }
         }
 
-        private List<Point> Dominique2(List<Point> input)
+        /*private List<Point> Dominique2(List<Point> input)
         {
             List<Point> output = new List<Point>();
             if (input.Count > 2)
@@ -289,6 +291,6 @@ namespace penToText
                 output = 2;
             }
             return output;
-        }
+        }*/
     }
 }

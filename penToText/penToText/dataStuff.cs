@@ -21,7 +21,7 @@ namespace penToText
         private ScrollViewer content;
         private StackPanel container;
         private List<StackPanel> dataView;
-        private char[] alphabet = "ABCDEFGHIJKLMNOP0123456789".ToCharArray();
+        private char[] alphabet = "abcdefghijklmnopqrstuvwxyz0123456789".ToCharArray();
         private List<dataElement> elements;
         private char currentChar;
 
@@ -87,6 +87,7 @@ namespace penToText
             }
             currentChar = associatedLetter;
             elements.Add(new dataElement(associatedLetter, cleanedData));
+            dataUpdated();
         }
 
         public void dataUpdated()
@@ -188,16 +189,18 @@ namespace penToText
             }
             
             XmlNodeList currentLetters = myXmlDocument.DocumentElement.SelectNodes("DataElement");
-
-            for(int i=0; i< currentLetters.Count; i++)
+            foreach(XmlElement element in currentLetters)
             {
-                string innerText = currentLetters[i].InnerText;
+                //XmlNode node = currentLetters[i];
+                //char letter = node.Attributes[0].Value.ToCharArray()[0];
+
+                /*string innerText = currentLetters[i].InnerText;
                 XmlElement element = myXmlDocument.CreateElement("DataElement");
                 element.SetAttribute("Char", currentLetters[i].Attributes[0].Value);
                 element.InnerText = innerText;
                 //make data element from node
-
-                if (element.GetAttribute("Char").Equals(""+toPull))
+                */
+                if (element.GetAttribute("Char").ToCharArray()[0] == toPull)
                 {
                     elements.Add(new dataElement(element));
                     myXmlDocument.DocumentElement.RemoveChild(element);

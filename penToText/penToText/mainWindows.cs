@@ -39,7 +39,7 @@ namespace penToText
         public DisplayWindow myDisplayWindow;
         public DataDisplay myDataDisplay;
         public dynamicDisplay myDynamicDisplay;
-        public static convertToText2 myPenToText;
+        public static convertToText myPenToText;
         public dataStuff myDataStuff;
 
         //threading attempt 2
@@ -56,7 +56,7 @@ namespace penToText
             myInputWindow = new InputWindow();
             myInputWindow.manager = this;
 
-            myPenToText = new convertToText2(myDynamicDisplay);
+            myPenToText = new convertToText(myDynamicDisplay);
             myDataStuff = new dataStuff();
             blockingData = new BlockingCollection<mPoint>();
             addingData = Task.Factory.StartNew(() => myPenToText.getData(blockingData));            
