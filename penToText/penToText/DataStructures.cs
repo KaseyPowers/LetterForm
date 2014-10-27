@@ -33,39 +33,55 @@ namespace penToText
 
     }
 
-    public class mLetterPortion
+    public class mLetterSections
     {
-        public mPoint startPoint;
-        public mPoint endPoint;
-        public double length;
-        public int direction;
+        public List<mPoint> points;
 
-        public mLetterPortion(mPoint start){
-            startPoint = start;
-            endPoint = null;
-            length = 0;
-        }
-
-        public mLetterPortion(mPoint start, mPoint end)
+        public mLetterSections(List<mPoint> points)
         {
-            startPoint = start;
-            endPoint = end;
-            length = distance(startPoint, endPoint);
-            setDirection();
+            this.points = points;
         }
 
-        public void setEnd(mPoint end){
-            endPoint = end;
-            length = distance(startPoint, endPoint);
-            setDirection();
-        }
-
-        private double distance(mPoint a, mPoint b)
+        public String getString( bool length)
         {
-            return Math.Sqrt(Math.Pow((a.X - b.X), 2) + Math.Pow((a.Y - b.Y), 2));
-        }
+            String output = "";
+            double firstLength = 0;
 
-        private void setDirection()
+            for (int i = 0; i < points.Count - 1; i++)
+            {
+                double thisLength = distance(points[i], points[i + 1]);
+                if (i == 0)
+                {
+                    firstLength = distance(points[i], points[i + 1]);
+                }
+
+                int direction = getDirection(points[i], points[i + 1]);
+                switch (direction)
+                {
+                    case 4:
+                        output += "A";
+                        break;
+                    case 5:
+                        output += "B";
+                        break;
+                    case 6:
+                        output += "C";
+                        break;
+                    case 7:
+                        output += "D";
+                        break;
+
+                }
+                if (length)
+                {
+                    output += (thisLength / firstLength).ToString("F2");
+                }
+
+            }
+
+            return output;
+        }
+        private int getDirection(mPoint startPoint, mPoint endPoint)
         {
             /*
              * 0: up
@@ -77,73 +93,40 @@ namespace penToText
              * 6: down-left
              * 7: down-right
              */
-            direction = -1;
-            double threshold = .01;
+            int direction = -1;
             double deltaX = xChange(startPoint, endPoint);
             double deltaY = yChange(startPoint, endPoint);
-            bool vertical = (Math.Abs(deltaX) <= threshold);
-            bool horizontal = (Math.Abs(deltaY) <= threshold);
-            if (vertical != horizontal)
+
+            if (deltaY < 0)
             {
-                if (vertical)
+                //up
+                if (deltaX > 0)
                 {
-                    if (deltaY < 0)
-                    {
-                        //up
-                        direction = 0;
-                    }
-                    else
-                    {
-                        //down
-                        direction = 1;
-                    }
+                    //right
+                    direction = 5;
                 }
                 else
                 {
-                    if (deltaX > 0)
-                    {
-                        //right
-                        direction = 3;
-                    }
-                    else
-                    {
-                        //left
-                        direction = 2;
-                    }
+                    //left
+                    direction = 4;
                 }
             }
             else
             {
-                //has a slope
-                if (deltaY < 0)
+                //down
+                if (deltaX > 0)
                 {
-                    //up
-                    if (deltaX > 0)
-                    {
-                        //right
-                        direction = 5;
-                    }
-                    else
-                    {
-                        //left
-                        direction = 4;
-                    }
+                    //right
+                    direction = 7;
                 }
                 else
                 {
-                    //down
-                    if (deltaX > 0)
-                    {
-                        //right
-                        direction = 7;
-                    }
-                    else
-                    {
-                        //left
-                        direction = 6;
-                    }
+                    //left
+                    direction = 6;
                 }
             }
+
+            return direction;
         }
 
         private double xChange(mPoint a, mPoint b)
@@ -155,6 +138,10 @@ namespace penToText
         private double yChange(mPoint a, mPoint b)
         {
             return (a.Y - b.Y);
+        }
+        private double distance(mPoint a, mPoint b)
+        {
+            return Math.Sqrt(Math.Pow((a.X - b.X), 2) + Math.Pow((a.Y - b.Y), 2));
         }
     }
 }

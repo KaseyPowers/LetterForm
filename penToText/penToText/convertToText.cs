@@ -274,7 +274,9 @@ namespace penToText
             }
             else { return data; }
         }
-        private List<mLetterPortion> Dominique(List<mPoint> input)
+
+
+        /*private List<mLetterPortion> Dominique(List<mPoint> input)
         {
             List<mLetterPortion> output = new List<mLetterPortion>();
             if (input.Count > 2)
@@ -292,10 +294,10 @@ namespace penToText
                 output.Add(new mLetterPortion(input[sLoc], input[input.Count -1]));
             }
             return output;
-        }
+        }*/
 
        
-        private List<mPoint> Dominique2(List<mPoint> input)
+        public List<mPoint> Dominique2(List<mPoint> input)
         {
             List<mPoint> output = new List<mPoint>();
             if (input.Count > 2)

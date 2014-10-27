@@ -96,7 +96,97 @@ namespace penToText
             {
                 pullData(alphabet[i]);
                 ((TextBlock)dataView[i].Children[0]).Text = alphabet[i] + ": " + elements.Count;
+                String nextBlock = "";
+                for (int j = 0; j < elements.Count; j++)
+                {
+                    nextBlock += (new mLetterSections(Dominique2(elements[j].cleanedData)).getString(false)) + "\n";
+                }
+                ((TextBlock)dataView[i].Children[2]).Text = nextBlock;
             }
+        }
+
+        public List<mPoint> Dominique2(List<mPoint> input)
+        {
+            List<mPoint> output = new List<mPoint>();
+            if (input.Count > 2)
+            {
+                int sLoc = 0;
+                output.Add(input[0]);
+                for (int i = 0; i < (input.Count - 1); i++)
+                {
+                    bool sameSlope = getDirection(input[sLoc], input[sLoc + 1]) == getDirection(input[i], input[i + 1]) && input[sLoc].line == input[i].line;
+                    if (!sameSlope)
+                    {
+                        output.Add(input[i]);
+                        sLoc = i;
+                    }
+                }
+                output.Add(input[input.Count - 1]);
+            }
+            else
+            {
+                output = input;
+            }
+            return output;
+        }
+
+        private int getDirection(mPoint startPoint, mPoint endPoint)
+        {
+            /*
+             * 0: up
+             * 1: down
+             * 2: left
+             * 3: right
+             * 4: up-left
+             * 5: up-right
+             * 6: down-left
+             * 7: down-right
+             */
+            int direction = -1;
+            double deltaX = xChange(startPoint, endPoint);
+            double deltaY = yChange(startPoint, endPoint);
+
+            if (deltaY < 0)
+            {
+                //up
+                if (deltaX > 0)
+                {
+                    //right
+                    direction = 5;
+                }
+                else
+                {
+                    //left
+                    direction = 4;
+                }
+            }
+            else
+            {
+                //down
+                if (deltaX > 0)
+                {
+                    //right
+                    direction = 7;
+                }
+                else
+                {
+                    //left
+                    direction = 6;
+                }
+            }
+
+            return direction;
+        }
+
+        private double xChange(mPoint a, mPoint b)
+        {
+
+            return (a.X - b.X);
+        }
+
+        private double yChange(mPoint a, mPoint b)
+        {
+            return (a.Y - b.Y);
         }
 
         public void getData()
