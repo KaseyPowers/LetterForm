@@ -158,14 +158,18 @@ namespace penToText
                 myXmlDocument.AppendChild(dec);
                 myXmlDocument.AppendChild(myXmlDocument.CreateElement("myData"));
             }
-
-            while (elements.Count != 0)
+            foreach (dataElement current in elements)
+            {
+                myXmlDocument.DocumentElement.AppendChild(current.addNodeForElement(myXmlDocument));
+            }
+            elements.Clear();
+            /*while (elements.Count != 0)
             {
                 dataElement current = elements[0];
                 elements.RemoveAt(0);
 
                 myXmlDocument.DocumentElement.AppendChild(current.addNodeForElement(myXmlDocument));
-            }
+            }*/
             myXmlDocument.Save(file);
         }
 
@@ -203,10 +207,10 @@ namespace penToText
                 if (element.GetAttribute("Char").ToCharArray()[0] == toPull)
                 {
                     elements.Add(new dataElement(element));
-                    myXmlDocument.DocumentElement.RemoveChild(element);
+                    element.ParentNode.RemoveChild(element);
                 }
             }
-            
+            myXmlDocument.Save(file);
         }
     }
 
