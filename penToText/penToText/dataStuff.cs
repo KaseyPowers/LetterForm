@@ -56,6 +56,7 @@ namespace penToText
                 TextBlock part2 = new TextBlock();
                 part2.Margin = new Thickness(10, 10, 10, 10);
                 part2.FontSize = 12;
+                part2.FontFamily = new FontFamily("Courier New");
                 part2.Text = "Something for the breakdown";
 
                 Rectangle toSeperate = new Rectangle();
@@ -92,17 +93,205 @@ namespace penToText
 
         public void dataUpdated()
         {
+            Boolean withNumber = true;
+            List<String> total = new List<String>();
+            List<String> temp = new List<String>();
             for (int i = 0; i < alphabet.Length; i++)
             {
                 pullData(alphabet[i]);
                 ((TextBlock)dataView[i].Children[0]).Text = alphabet[i] + ": " + elements.Count;
-                String nextBlock = "";
+                temp = new List<String>();
                 for (int j = 0; j < elements.Count; j++)
                 {
-                    nextBlock += (new mLetterSections(Dominique2(elements[j].cleanedData)).getString(false)) + "\n";
+                    temp.Add(new mLetterSections(Dominique2(elements[j].cleanedData)).getString(withNumber));
                 }
-                ((TextBlock)dataView[i].Children[2]).Text = nextBlock;
+                temp = temp.Distinct().ToList();
+                bool unique = true;
+                String uniqueText = "";
+                String repeatedText = "";
+                int uniqueCount = 0;
+                int nonUniqueCount = 0;
+                int chunkSize = 1;
+                if (withNumber)
+                {
+                    chunkSize = 4;
+                }
+                for (int j = 0; j < temp.Count; j++)
+                {
+                    if (total.Contains(temp[j]))
+                    {
+                        unique = false;
+                        nonUniqueCount++;
+                        repeatedText = prettyOutput(temp[j], repeatedText, chunkSize);
+                    }
+                    else
+                    {
+                        total.Add(temp[j]);
+                        uniqueCount++;
+                        uniqueText = prettyOutput(temp[j], uniqueText, chunkSize);
+                    }
+                }
+                if (temp.Count == 0)
+                {
+                    ((TextBlock)dataView[i].Children[2]).Text = "No Data";
+                }else{
+                    String thisText = "Unique Data Sets:\n";
+
+                    if (uniqueCount <= elements.Count )
+                    {
+                        thisText += uniqueText;
+                    }
+                    else
+                    {
+                        thisText += " " + uniqueCount;
+                    }
+                    if (!unique)
+                    {
+                        thisText += "Non-Unique Data Sets:\n";
+                        if (nonUniqueCount <= elements.Count )
+                        {
+                            thisText += repeatedText;
+                        }
+                        else
+                        {
+                            thisText += " " + nonUniqueCount;
+                        }
+                    }
+                    
+                    
+                    ((TextBlock)dataView[i].Children[2]).Text =  thisText;
+                }
+                /*else if (unique)
+                {
+                    ((TextBlock)dataView[i].Children[2]).Text = "Unique Data: " + temp.Count + " Unique Data sets\n" + uniqueText;
+                }
+                else
+                {
+                    ((TextBlock)dataView[i].Children[2]).Text = "Not Unique: \n" + repeatedText;
+                }*/
+                
             }
+        }
+
+        public String prettyOutput(String input, String addingTo, int chunkLength)
+        {
+            List<String> asList= new List<String>();
+
+            if(addingTo.Length !=0){
+                asList = addingTo.Split(new string[] { "\n"}, StringSplitOptions.None).ToList();
+            }
+            /*for (int j = 0; j < asList.Count; j++)
+            {
+                    asList[j] = asList[j].Replace('-', ' ');
+            }*/
+
+            Boolean found = false;
+            int chunkAt =0;
+            int i = 0;
+            String emptyChunk = "";
+            String leftChunk = "";
+            for (int j = 0; j < chunkLength; j++)
+            {
+                emptyChunk += " ";
+            }
+            while (i < asList.Count && !found)
+            {
+                Boolean stringsLongEnough = asList[i].Length >= (chunkAt+1) * chunkLength && input.Length >= (chunkAt+1) * chunkLength;
+                if (stringsLongEnough)
+                {
+                    String currentChunk = asList[i].Substring(chunkAt * chunkLength, chunkLength).Replace('-', ' ');
+                    String searchString = input.Substring(chunkAt * chunkLength, chunkLength);
+                    Boolean sameChunk = currentChunk.Equals(searchString);
+
+                    if (currentChunk.Equals(emptyChunk))
+                    {
+                        i++;
+                    }
+                    else
+                    {
+                        if (chunkAt != 0)
+                        {
+                            String previousChunk = asList[i].Substring((chunkAt - 1) * chunkLength, chunkLength).Replace('-', ' ');
+                            //String leftChunk = asList[i].Substring(chunkAt-1)
+                            if (!(previousChunk.Equals(leftChunk) || previousChunk.Equals(emptyChunk)))
+                            {
+                                found = true;
+                            }
+
+                        }
+
+                        if (!found)
+                        {
+                            if (sameChunk)
+                            {
+                                chunkAt++;
+                                leftChunk = currentChunk;
+                            }
+                            else
+                            {
+                                i++;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    if (chunkAt == 0)
+                    {
+                        i++;
+                    }
+                    else
+                    {
+                        if (input.Length < asList[i].Length)
+                        {
+                            i++;
+                        }
+                        found = true;
+                    }
+                }
+            }
+            if (!found || i >= asList.Count)
+            {
+                asList.Add(makeLine(input, chunkLength, chunkAt));
+            }
+            else
+            {
+                asList.Insert(i, makeLine(input, chunkLength, chunkAt));
+            }
+            String output="";
+            for (int j = 0; j < asList.Count; j++){
+                output += asList[j];
+                if (j != asList.Count-1)
+                {
+                    output += "\n";
+                }                
+            }
+            return output;
+        }
+
+        public String makeLine(String input, int chunkSize, int chunkAt)
+        {
+            String output = "";
+            for (int i = 0; i < chunkAt * chunkSize; i++)
+            {
+                if (i != chunkAt * chunkSize - 1)
+                {
+                    output += " ";
+                }
+                else
+                {
+                    output += "-";
+                }
+            }
+            if (input.Length > (chunkAt + 1) * chunkSize)
+            {
+                output += input.Substring(chunkAt*chunkSize);
+            }
+            else
+            {
+                output += input;
+            }
+            return output;
         }
 
         public List<mPoint> Dominique2(List<mPoint> input)
@@ -114,7 +303,7 @@ namespace penToText
                 output.Add(input[0]);
                 for (int i = 0; i < (input.Count - 1); i++)
                 {
-                    bool sameSlope = getDirection(input[sLoc], input[sLoc + 1]) == getDirection(input[i], input[i + 1]) && input[sLoc].line == input[i].line;
+                    bool sameSlope =  input[sLoc].line == input[i+1].line && getDirection(input[sLoc], input[sLoc + 1]) == getDirection(input[i], input[i + 1]) && input[sLoc].line == input[i].line;
                     if (!sameSlope)
                     {
                         output.Add(input[i]);
@@ -122,11 +311,32 @@ namespace penToText
                     }
                 }
                 output.Add(input[input.Count - 1]);
+                int linePoints = 0;
+                for (int i = 1; i < output.Count-1; i++)
+                {
+                    if (output[i-1].line == output[i].line)
+                    {
+                        linePoints++;
+                    }
+                    else
+                    {
+                        if (linePoints == 0)
+                        {
+                            //do something
+                            output.Insert(i + 1, new mPoint(output[i].X, output[i].Y+.001, output[i].line));
+                        }
+                        else
+                        {
+                            linePoints = 0;
+                        }
+                    }
+                }
             }
             else
             {
                 output = input;
             }
+            
             return output;
         }
 

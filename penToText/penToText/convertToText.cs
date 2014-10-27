@@ -306,7 +306,7 @@ namespace penToText
                 output.Add(input[0]);
                 for (int i = 0; i < (input.Count - 1); i++)
                 {
-                    bool sameSlope = getDirection(input[sLoc], input[sLoc + 1]) == getDirection(input[i], input[i + 1]) && input[sLoc].line == input[i].line;
+                    bool sameSlope = input[sLoc].line == input[i + 1].line && getDirection(input[sLoc], input[sLoc + 1]) == getDirection(input[i], input[i + 1]);
                     if (!sameSlope)
                     {
                         output.Add(input[i]);

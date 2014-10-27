@@ -68,17 +68,22 @@ namespace penToText
             myDisplayWindow.manager = this;
             myDisplayWindow.Visibility = Visibility.Visible;
 
-            myDisplayWindow.Top = myInputWindow.Top;
-            myDisplayWindow.Left = myInputWindow.Left + myInputWindow.ActualWidth;
+            
 
             myDisplayWindow.Owner = myInputWindow;
 
             myDataDisplay = new DataDisplay(myDataStuff);
             myDataDisplay.Visibility = Visibility.Visible;
-            myDataDisplay.Top = myInputWindow.Top + myInputWindow.Height;
-            myDataDisplay.Left = myInputWindow.Left;
+            myDataDisplay.Top = System.Windows.SystemParameters.WorkArea.Top;
+            myDataDisplay.Left = System.Windows.SystemParameters.WorkArea.Left;
+            myDataDisplay.Height = System.Windows.SystemParameters.WorkArea.Height / 2.0;
             myDataDisplay.Owner = myInputWindow;
 
+            myInputWindow.Top = myDataDisplay.Top;
+            myInputWindow.Left = myDataDisplay.Left + myDataDisplay.Width;
+
+            myDisplayWindow.Top = myInputWindow.Top;
+            myDisplayWindow.Left = myInputWindow.Left + myInputWindow.ActualWidth;
 
             resized();
 
@@ -120,16 +125,18 @@ namespace penToText
             else if(myDataDisplay !=null )
             {
                 myDataDisplay.Visibility = Visibility.Visible;
-                myDataDisplay.Top = myInputWindow.Top + myInputWindow.Height;
-                myDataDisplay.Left = myInputWindow.Left;
+                myDataDisplay.Top = System.Windows.SystemParameters.WorkArea.Top;
+                myDataDisplay.Left = System.Windows.SystemParameters.WorkArea.Left;
+                myDataDisplay.Height = System.Windows.SystemParameters.WorkArea.Height / 2.0;
                 myDataDisplay.Owner = myInputWindow;
             }
             else
             {
                 myDataDisplay = new DataDisplay(myDataStuff);
                 myDataDisplay.Visibility = Visibility.Visible;
-                myDataDisplay.Top = myInputWindow.Top + myInputWindow.Height;
-                myDataDisplay.Left = myInputWindow.Left;
+                myDataDisplay.Top = System.Windows.SystemParameters.WorkArea.Top;
+                myDataDisplay.Left = System.Windows.SystemParameters.WorkArea.Left;
+                myDataDisplay.Height = System.Windows.SystemParameters.WorkArea.Height / 2.0;
                 myDataDisplay.Owner = myInputWindow;
             }
         }

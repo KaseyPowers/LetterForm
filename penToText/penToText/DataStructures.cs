@@ -49,34 +49,40 @@ namespace penToText
 
             for (int i = 0; i < points.Count - 1; i++)
             {
-                double thisLength = distance(points[i], points[i + 1]);
-                if (i == 0)
+                if (points[i].line == points[i + 1].line)
                 {
-                    firstLength = distance(points[i], points[i + 1]);
-                }
+                    double thisLength = Math.Round(distance(points[i], points[i + 1]),1);
+                    if (i == 0)
+                    {
+                        firstLength = thisLength;
+                    }
 
-                int direction = getDirection(points[i], points[i + 1]);
-                switch (direction)
-                {
-                    case 4:
-                        output += "A";
-                        break;
-                    case 5:
-                        output += "B";
-                        break;
-                    case 6:
-                        output += "C";
-                        break;
-                    case 7:
-                        output += "D";
-                        break;
+                    int direction = getDirection(points[i], points[i + 1]);
+                    switch (direction)
+                    {
+                        case 4:
+                            output += "A";
+                            break;
+                        case 5:
+                            output += "B";
+                            break;
+                        case 6:
+                            output += "C";
+                            break;
+                        case 7:
+                            output += "D";
+                            break;
 
+                    }
+                    if (length)
+                    {
+                        double value = (thisLength / firstLength);
+                        value *= 2;
+                        value = Math.Round(value, MidpointRounding.AwayFromZero);
+                        value /= 2;
+                        output += value.ToString("F1");
+                    }
                 }
-                if (length)
-                {
-                    output += (thisLength / firstLength).ToString("F2");
-                }
-
             }
 
             return output;
