@@ -39,7 +39,7 @@ namespace penToText
 
         public mLetterSections(List<mPoint> points)
         {
-            this.points = points;
+            this.points = points.Distinct().ToList();
             /*int min = points[0].line;
             for (int i = 0; i < points.Count; i++)
             {
@@ -50,63 +50,66 @@ namespace penToText
         public String getString( bool length)
         {
             String output = "";
-            double firstLength = 0;
-
-            for (int i = 0; i < points.Count - 1; i++)
+            double firstLength = Math.Round(distance(points[0], points[ 1]), 1);
+            if (firstLength != 0)
             {
-                if (points[i].line == points[i + 1].line)
+
+                for (int i = 0; i < points.Count - 1; i++)
                 {
-                    double thisLength = Math.Round(distance(points[i], points[i + 1]),1);
-                    if (i == 0)
+                    if (points[i].line == points[i + 1].line)
                     {
-                        firstLength = thisLength;
-                    }
-
-                    int direction = getDirection(points[i], points[i + 1]);
-                    switch (direction)
-                    {
-                        case 4:
-                            output += "A";
-                            break;
-                        case 5:
-                            output += "B";
-                            break;
-                        case 6:
-                            output += "C";
-                            break;
-                        case 7:
-                            output += "D";
-                            break;
-
-                    }
-                    if (length)
-                    {
-                        double value = (thisLength / firstLength);
-                        value = RoundToNearest(value, .2);
-                        /*if (value <= 2.5)
+                        double thisLength = Math.Round(distance(points[i], points[i + 1]), 1);
+                        if (i == 0)
                         {
-                            value = RoundToNearest(value, .5);
+                            firstLength = thisLength;
                         }
-                        else
+
+                        int direction = getDirection(points[i], points[i + 1]);
+                        switch (direction)
                         {
-                            value = RoundToNearest(value, 1);
-                        }*/
-                        output += value.ToString("F1");
-                    }
-                }
-                else
-                {
-                    if (length)
-                    {
-                        output += "Line";
+                            case 4:
+                                output += "A";
+                                break;
+                            case 5:
+                                output += "B";
+                                break;
+                            case 6:
+                                output += "C";
+                                break;
+                            case 7:
+                                output += "D";
+                                break;
+
+                        }
+                        if (length)
+                        {
+                            double value = (thisLength / firstLength);
+                            value = RoundToNearest(value, .2);
+                            /*if (value <= 2.5)
+                            {
+                                value = RoundToNearest(value, .5);
+                            }
+                            else
+                            {
+                                value = RoundToNearest(value, 1);
+                            }*/
+                            String temp = value.ToString("F2").PadLeft(5, '0');
+                            output += temp;
+                        }
                     }
                     else
                     {
-                        output += "L";
+                        if (length)
+                        {
+                            output += "Line00";
+                        }
+                        else
+                        {
+                            output += "L";
+                        }
                     }
                 }
             }
-
             return output;
         }
         public static Double RoundToNearest(Double passednumber, Double roundto)
@@ -198,6 +201,43 @@ namespace penToText
         private double distance(mPoint a, mPoint b)
         {
             return Math.Sqrt(Math.Pow((a.X - b.X), 2) + Math.Pow((a.Y - b.Y), 2));
+        }
+    }
+
+    public class mSectionNode
+    {
+        public mSectionNode parent;
+        public List<mSectionNode> children;
+        public String SectionLetter;
+        public double SectoinValue;
+        public String chars;
+        public String ifStopHere;
+
+        public mSectionNode(String letter, double value, String chars)
+        {
+            parent = null;
+            children = new List<mSectionNode>();
+            SectionLetter = letter;
+            SectoinValue = value;
+            this.chars = chars;
+        }
+
+        public void addChild(mSectionNode child)
+        {
+            child.parent = this;
+            children.Add(child);
+        }
+
+        public void addChar(char newChar)
+        {            
+            chars += newChar;
+            chars = new string(chars.ToList().Distinct().ToArray());
+        }
+
+        public void addFinalChar(char newChar)
+        {
+            ifStopHere += newChar;
+            ifStopHere = new string(ifStopHere.ToList().Distinct().ToArray());
         }
     }
 }

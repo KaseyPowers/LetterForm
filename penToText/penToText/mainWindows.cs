@@ -57,7 +57,7 @@ namespace penToText
             myInputWindow.manager = this;
 
             myPenToText = new convertToText(myDynamicDisplay);
-            myDataStuff = new dataStuff();
+            myDataStuff = new dataStuff(this);
             blockingData = new BlockingCollection<mPoint>();
             addingData = Task.Factory.StartNew(() => myPenToText.getData(blockingData));            
 
@@ -74,17 +74,19 @@ namespace penToText
 
             myDataDisplay = new DataDisplay(myDataStuff);
             myDataDisplay.Visibility = Visibility.Visible;
-            myDataDisplay.Top = System.Windows.SystemParameters.WorkArea.Top;
-            myDataDisplay.Left = System.Windows.SystemParameters.WorkArea.Left;
-            myDataDisplay.Height = System.Windows.SystemParameters.WorkArea.Height;
 
             myDataDisplay.Owner = myInputWindow;
 
-            myInputWindow.Top = myDataDisplay.Top;
-            myInputWindow.Left = myDataDisplay.Left + myDataDisplay.Width;
+            myInputWindow.Top = System.Windows.SystemParameters.WorkArea.Top;
+            myInputWindow.Left = System.Windows.SystemParameters.WorkArea.Left;
 
-            myDisplayWindow.Top = myInputWindow.Top;
-            myDisplayWindow.Left = myInputWindow.Left + myInputWindow.ActualWidth;
+            myDataDisplay.Top = myInputWindow.Top+ myInputWindow.Height;
+            myDataDisplay.Left = myInputWindow.Left;
+            myDataDisplay.Width = System.Windows.SystemParameters.WorkArea.Width - myDisplayWindow.Width;
+            myDataDisplay.Height = System.Windows.SystemParameters.WorkArea.Height - myDataDisplay.Top;
+
+            myDisplayWindow.Top = System.Windows.SystemParameters.WorkArea.Top;
+            myDisplayWindow.Left = System.Windows.SystemParameters.WorkArea.Width - myDisplayWindow.Width;
 
             resized();
 
@@ -185,6 +187,9 @@ namespace penToText
             currentLine++;
         }
 
+        public void updateTree(mSectionNode treeRoot){
+            myPenToText.setTree(treeRoot);
+        }
        
     }
 }

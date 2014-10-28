@@ -33,6 +33,8 @@ namespace penToText
         private multiLineDrawCanvas clean;
         private multiLineDrawCanvas clean2;
         private multiLineDrawCanvas clean3;
+        private multiLineDrawCanvas characters;
+        private mSectionNode root;
         public Size canvasSizes;
 
         //testing lists and whatnot
@@ -80,6 +82,14 @@ namespace penToText
             clean3.myPanel.Height = side;
             clean3.toAddCircles = true;
             thisDynamicDisplay.addCanvas(clean3);
+
+            characters = new multiLineDrawCanvas(1, 0, display, "Character Options");
+            characters.outOfX = 1.2;
+            characters.outOfy = 1.2;
+            characters.padding = .1;
+            characters.myPanel.Width = side;
+            characters.myPanel.Height = side;
+            thisDynamicDisplay.addCanvas(characters);
         }
 
         public void setDisplayActive(bool isActive)
@@ -90,6 +100,10 @@ namespace penToText
         public bool getDisplayActive()
         {
             return activeDisplay;
+        }
+
+        public void setTree(mSectionNode treeRoot){
+            root = treeRoot;
         }
 
         public void getData(BlockingCollection<mPoint> data)
@@ -164,27 +178,251 @@ namespace penToText
 
                 if (activeDisplay)
                 {
-                    clean2.newData(sectionData);
+                    clean2.newData(new List<mPoint>(sectionData));
                     clean2.titleText = "Section Test";
                     clean2.myPanel.Dispatcher.BeginInvoke(new drawingDelegate(clean2.updateDraw));
                 }
 
-                List<mPoint> sectionData2 = minimumLines(cleanSections(Dominique(resample(scaleList(new List<mPoint>(originalData)), .1))));
+                //List<mPoint> sectionData2 = minimumLines(cleanSections(Dominique(resample(scaleList(new List<mPoint>(originalData)), .1))));
 
                 if (activeDisplay)
                 {
-                    clean3.newData(sectionData2);
-                    clean3.titleText = "Section Test2";
-                    clean3.myPanel.Dispatcher.BeginInvoke(new drawingDelegate(clean3.updateDraw));
+                    String searchFor = (new mLetterSections(minimumLines(cleanSections(Dominique(resample(scaleList(new List<mPoint>(originalData)), .1)))))).getString(true);
+                    mSectionNode found = searchTree(searchFor);
+                    String options = found.chars;
+                    String ifStoppedHere = found.ifStopHere;
+
+                    clean3.newData(minimumLines(cleanSections(Dominique(resample(scaleList(new List<mPoint>(originalData)), .1)))));
+                    clean3.titleText = "Current Letter" + searchFor + "\nCurrent Options: " + options + "\nOption if you stop: " + ifStoppedHere;
+                    clean3.myPanel.Dispatcher.BeginInvoke(new drawingDelegate(clean3.updateDraw));                    
                 }
 
             }
+        }
+
+        public mSectionNode searchTree(string searchFor)
+        {
+            int chunkAt = 0;
+            int chunkLegth = 6;
+            mSectionNode output = root;
+            bool toContinue = true;
+            
+            Queue<mSectionNode> frontier = new Queue<mSectionNode>();
+            Queue<int> chunks = new Queue<int>();
+            frontier.Enqueue(root);
+            chunks.Enqueue(0);
+
+            List<mSectionNode> possibilites = new List<mSectionNode>();
+
+            while (frontier.Count != 0)
+            {
+                mSectionNode current = frontier.Dequeue();
+                chunkAt = chunks.Dequeue();
+
+                if (searchFor.Length >= ((chunkAt + 1) * chunkLegth))
+                {
+                    String thisChunk = searchFor.Substring(chunkAt * chunkLegth, chunkLegth);
+                    String searchChunk = "";
+                    double value = 0.0;
+                    if (thisChunk.Equals("Line00"))
+                    {
+                        searchChunk = thisChunk;
+                    }
+                    else
+                    {
+                        searchChunk = thisChunk.Substring(0, 1);
+                        value = Double.Parse(thisChunk.Substring(1));
+                    }
+                    bool found = false;
+                    for (int i = 0; i < current.children.Count; i++)
+                    {
+                        mSectionNode child = current.children[i];
+                        if (child.SectionLetter.Equals(searchChunk))
+                        {
+                            frontier.Enqueue(child);
+                            chunks.Enqueue(chunkAt + 1);
+                            found = true;
+                        }
+                    }
+
+                    if (!found)
+                    {
+                        possibilites.Add(current);
+                    }
+                }
+                else
+                {
+                    possibilites.Add(current);
+                }
+            }
+
+            return bestPosibility(searchFor, possibilites);
+
+           /* while (toContinue)
+            {
+                if (searchFor.Length >= ((chunkAt + 1) * chunkLegth))
+                {
+                    String thisChunk = searchFor.Substring(chunkAt * chunkLegth, chunkLegth);
+                    String searchChunk = "";
+                    double value = 0.0;
+                    if (thisChunk.Equals("Line00"))
+                    {
+                        searchChunk = thisChunk;
+                    }
+                    else
+                    {
+                        searchChunk = thisChunk.Substring(0, 1);
+                        value = Double.Parse(thisChunk.Substring(1));
+                    }
+
+                    bool found = false;
+                    bool[] validLocs = new bool[current.children.Count];
+                    for (int i = 0; i < current.children.Count && !found; i++)
+                    {
+                        mSectionNode child = current.children[i];
+                        if (child.SectionLetter.Equals(searchChunk))
+                        {
+                            validLocs[i] = true;
+                            chunkAt++;
+                            found = true;
+                        }
+                        else
+                        {
+                            validLocs[i] = false;
+                        }
+                    }
+
+                    if (!found)
+                    {
+                        toContinue = false;
+                    }
+                    else
+                    {
+                        int closestLoc = -1;
+                        double bestValue = double.PositiveInfinity;
+                        for (int i = 0; i < current.children.Count; i++)
+                        {
+                            if (validLocs[i])
+                            {
+                                double thisValue = Math.Abs(value - current.children[i].SectoinValue);
+                                if (thisValue < bestValue)
+                                {
+                                    bestValue = thisValue;
+                                    closestLoc = i;
+                                }
+                            }
+                        }
+
+                        if (closestLoc != -1)
+                        {
+                            current = current.children[closestLoc];
+                        }
+                    }
+                }
+                else
+                {
+                    toContinue = false;
+                }
+            }
+
+            return current;*/
+        }
+
+        public mSectionNode bestPosibility(String inputString, List<mSectionNode> possibilities)
+        {
+            String inputLetters = "";
+            List<double> inputValues = new List<double>();
+
+            int chunkAt = 0;
+            int chunkLength = 6;
+            while (inputString.Length >= (chunkAt + 1) * chunkLength)
+            {
+                String chunk = inputString.Substring(chunkAt * chunkLength, chunkLength);
+                if(chunk.Equals("Line00")){
+                    inputLetters+= chunk;
+                    inputValues.Add(0.0);
+                }else{
+                    inputLetters+= chunk.Substring(0,1);
+                    inputValues.Add(Double.Parse(chunk.Substring(1)));
+                }
+                chunkAt++;
+            }
+
+            int bestLoc = 0;
+            for (int i = 1; i < possibilities.Count; i++)
+            {
+                String a = getTreeString(possibilities[bestLoc]);
+                String b = getTreeString(possibilities[i]);
+                bool sameA = inputLetters.Equals(a);
+                bool sameB = inputLetters.Equals(b);
+                if (sameB && !sameA)
+                {
+                    //b is by default closer
+                    bestLoc = i;
+                }
+                else if((sameA == sameB) || a.Equals(b))
+                {
+                    //which is closer based on values
+                    double[] aValues = getValues(possibilities[bestLoc]);
+                    double[] bValues = getValues(possibilities[i]);
+                    double aClose = 0;
+                    double bClose = 0;
+                    for (int j = 0; j < inputValues.Count && j < aValues.Length; j++) 
+                    {
+                        aClose += Math.Abs(inputValues[j] - aValues[j]);
+                        bClose += Math.Abs(inputValues[j] - bValues[j]);
+                    }
+
+                    if (bClose < aClose)
+                    {
+                        bestLoc = i;
+                    }
+
+                }
+                else 
+                {
+                    //a equal and not b, neither equal to input, and not equal to each other
+                    //keep bestLoc as it
+                    if (!sameA)
+                    {
+                        if (Math.Abs(inputLetters.Length - a.Length) > Math.Abs(inputLetters.Length - b.Length))
+                        {
+                            bestLoc = i;
+                        }
+                    }
+                }
+            }
+
+            return possibilities[bestLoc];
+        }
+
+        public double[] getValues(mSectionNode start)
+        {
+            List<double> output = new List<double>();
+            mSectionNode current = start;
+            while (current.parent != null)
+            {
+                output.Insert(0, current.SectoinValue);
+                current = current.parent;
+            }
+            return output.ToArray();
         }
 
         public List<mPoint> getCleanedData()
         {
             updateData();
             return new List<mPoint>(cleanedData);
+        }
+
+        public String getTreeString(mSectionNode input){
+            String output = "";
+            mSectionNode current = input;
+            while (current.parent != null)
+            {
+                output = current.SectionLetter + output;
+                current = current.parent;
+            }
+            return output;
         }
 
 
@@ -365,14 +603,39 @@ namespace penToText
             {
                 if (input[i - 2].line == input[i - 1].line && input[i - 1].line == input[i].line) 
                 {
-                    double thisLineDistance = lineDistance(input[i - 2], input[i], input[i - 1]);
+                    /*double thisLineDistance = lineDistance(input[i - 2], input[i], input[i - 1]);
                     double lineLength = distance(input[i-2], input[i]);
-                    //lineLength = lineLength * lineLength;
+                    lineLength = lineLength * lineLength;
                     if (thisLineDistance / lineLength <= e)
                     {
                         input.RemoveAt(i - 1);
                         i--;
+                    }*/
+                    double lineDistanceA = lineDistance(input[i - 2], input[i], input[i - 1]);
+                    double lineDistanceB = lineDistance(input[i - 1], input[i], input[i - 2]);
+                    double lineLength;
+
+                    if (lineDistanceA < lineDistanceB)
+                    {
+                        lineLength = distance(input[i - 2], input[i]);
+                        if (lineDistanceA / lineLength <= e)
+                        {
+                            input.RemoveAt(i - 1);
+                            i--;
+                        }
                     }
+                    else
+                    {
+                        lineLength = distance(input[i - 1], input[i]);
+                        if (lineDistanceB / lineLength <= e)
+                        {
+                            input.RemoveAt(i - 2);
+                            i--;
+                        }
+
+                    }
+
+                    
                 }
             }
             return input;

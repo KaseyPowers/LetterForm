@@ -24,15 +24,20 @@ namespace penToText
         private char[] alphabet = "abcdefghijklmnopqrstuvwxyz0123456789".ToCharArray();
         private List<dataElement> elements;
         private char currentChar;
+        private mainWindows manager;
+
+        private mSectionNode root;
 
         private String file = "PenToTextData.xml";
         
-        public dataStuff()
+        public dataStuff(mainWindows myManager)
         {
             if (!File.Exists(file))
             {
                 File.Create(file).Dispose();
             }
+            manager = myManager;
+            root = new mSectionNode("", 0.0, "");
             currentChar = ' ';
             dataView = new List<StackPanel>();
             content = new ScrollViewer();
@@ -95,87 +100,56 @@ namespace penToText
 
         public void dataUpdated()
         {
-            Boolean withNumber = true;
+            root = new mSectionNode("", 0, "");
             List<String> total = new List<String>();
-            List<String> temp = new List<String>();
+            List<String> temp1 = new List<String>();
+            List<String> temp2 = new List<String>();
             for (int i = 0; i < alphabet.Length; i++)
             {
                 pullData(alphabet[i]);
                 ((TextBlock)dataView[i].Children[0]).Text = alphabet[i] + ": " + elements.Count;
-                temp = new List<String>();
+                temp1 = new List<String>();
+                temp2 = new List<string>();
                 for (int j = 0; j < elements.Count; j++)
                 {
-                    temp.Add(new mLetterSections(minimumLines( cleanSections(Dominique(elements[j].cleanedData)))).getString(withNumber));
+                    temp1.Add(new mLetterSections(minimumLines( cleanSections(Dominique(elements[j].cleanedData)))).getString(true));
+                    temp2.Add(new mLetterSections(minimumLines(cleanSections(Dominique(elements[j].cleanedData)))).getString(false));
                 }
-                temp = temp.Distinct().ToList();
+                temp1 = temp1.Distinct().ToList();
+                temp2 = temp2.Distinct().ToList();
                 bool unique = true;
-                String uniqueText = "";
-                String repeatedText = "";
+                // String uniqueText = "";
+                ///tring repeatedText = "";
+                String text = "";
                 int uniqueCount = 0;
                 int nonUniqueCount = 0;
-                int chunkSize = 1;
-                if (withNumber)
+                int chunkSize = 4;
+
+                for (int j = 0; j < temp1.Count; j++)
                 {
-                    chunkSize = 4;
+                    addToTree(temp1[j], alphabet[i]);
+                    
                 }
-                for (int j = 0; j < temp.Count; j++)
+                chunkSize = 1;
+                for (int j = 0; j < temp2.Count; j++)
                 {
-                    if (total.Contains(temp[j]))
-                    {
-                        unique = false;
-                        nonUniqueCount++;
-                        repeatedText = prettyOutput(temp[j], repeatedText, chunkSize);
-                    }
-                    else
-                    {
-                        total.Add(temp[j]);
-                        uniqueCount++;
-                        uniqueText = prettyOutput(temp[j], uniqueText, chunkSize);
-                    }
+                    text = prettyOutput(temp2[j], text, chunkSize);
                 }
-                if (temp.Count == 0)
+
+                if (temp1.Count == 0)
                 {
                     ((TextBlock)dataView[i].Children[2]).Text = "No Data";
-                }else{
-                    String thisText = "Unique Data Sets:\n";
-
-                    if (uniqueCount <= elements.Count )
-                    {
-                        thisText += uniqueText;
-                    }
-                    else
-                    {
-                        thisText += " " + uniqueCount;
-                    }
-                    if (!unique)
-                    {
-                        thisText += "\nNon-Unique Data Sets:\n";
-                        if (nonUniqueCount <= elements.Count )
-                        {
-                            thisText += repeatedText;
-                        }
-                        else
-                        {
-                            thisText += " " + nonUniqueCount;
-                        }
-                    }
-                    
-                    
-                    ((TextBlock)dataView[i].Children[2]).Text =  thisText;
-                }
-                /*else if (unique)
-                {
-                    ((TextBlock)dataView[i].Children[2]).Text = "Unique Data: " + temp.Count + " Unique Data sets\n" + uniqueText;
                 }
                 else
                 {
-                    ((TextBlock)dataView[i].Children[2]).Text = "Not Unique: \n" + repeatedText;
-                }*/
-                
+                    String thisText = text;
+                    ((TextBlock)dataView[i].Children[2]).Text = thisText;
+                }                
             }
+            manager.updateTree(root);
         }
 
-        public String prettyOutput(String input, String addingTo, int chunkLength)
+        public string prettyOutput(String input, String addingTo, int chunkLength)
         {
             List<String> asList= new List<String>();
 
@@ -269,6 +243,58 @@ namespace penToText
                 }                
             }
             return output;
+        }
+
+
+        public void addToTree(String newInfo, char associatedLetter)
+        {
+            int chunkAt = 0;
+            int chunkLength = 6;
+            mSectionNode current = root;
+            bool toContinue = true;
+            while(toContinue){
+                if (newInfo.Length >= (chunkAt + 1) * chunkLength)
+                {
+                    string chunk = newInfo.Substring(chunkAt * chunkLength, chunkLength);
+                    string sectionString;
+                    double value = 0.0;
+                    if (chunk.Equals("Line00"))
+                    {
+                        sectionString = chunk;
+                    }
+                    else
+                    {
+                        sectionString = chunk.Substring(0, 1);
+                        value = Double.Parse(chunk.Substring(1));
+                    }
+
+                    current.addChar(associatedLetter);
+                    bool found = false;
+                    for (int i = 0; i < current.children.Count && !found; i++)
+                    {
+                        mSectionNode child = current.children[i];
+                        if (child.SectionLetter.Equals(sectionString) && child.SectoinValue == value)
+                        {
+                            child.addChar(associatedLetter);
+                            current = child;
+                            chunkAt++;
+                            found = true;
+                        }
+                    }
+                    if (!found)
+                    {
+                        mSectionNode child = new mSectionNode(sectionString, value, ""+associatedLetter);
+                        current.addChild(child);
+                        current = child;
+                        chunkAt++;
+                    }
+                }
+                else
+                {
+                    current.addFinalChar(associatedLetter);
+                    toContinue = false;
+                }
+            }
         }
 
         public String makeLine(String input, int chunkSize, int chunkAt)
