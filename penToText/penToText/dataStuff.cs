@@ -31,7 +31,7 @@ namespace penToText
         {
             if (!File.Exists(file))
             {
-                File.Create(file);
+                File.Create(file).Dispose();
             }
             currentChar = ' ';
             dataView = new List<StackPanel>();
@@ -82,13 +82,15 @@ namespace penToText
         }
         public void Submit(List<mPoint> cleanedData, char associatedLetter)
         {
-            if (currentChar != associatedLetter)
-            {
-                pullData(associatedLetter);
+            if (cleanedData.Count > 1) { 
+                if (currentChar != associatedLetter)
+                {
+                    pullData(associatedLetter);
+                }
+                currentChar = associatedLetter;
+                elements.Add(new dataElement(associatedLetter, cleanedData));
+                dataUpdated();
             }
-            currentChar = associatedLetter;
-            elements.Add(new dataElement(associatedLetter, cleanedData));
-            dataUpdated();
         }
 
         public void dataUpdated()
@@ -103,7 +105,7 @@ namespace penToText
                 temp = new List<String>();
                 for (int j = 0; j < elements.Count; j++)
                 {
-                    temp.Add(new mLetterSections(Dominique2(elements[j].cleanedData)).getString(withNumber));
+                    temp.Add(new mLetterSections(minimumLines( cleanSections(Dominique(elements[j].cleanedData)))).getString(withNumber));
                 }
                 temp = temp.Distinct().ToList();
                 bool unique = true;
@@ -147,7 +149,7 @@ namespace penToText
                     }
                     if (!unique)
                     {
-                        thisText += "Non-Unique Data Sets:\n";
+                        thisText += "\nNon-Unique Data Sets:\n";
                         if (nonUniqueCount <= elements.Count )
                         {
                             thisText += repeatedText;
@@ -242,15 +244,15 @@ namespace penToText
                     }
                     else
                     {
-                        if (input.Length < asList[i].Length)
+                        if (input.Length >= asList[i].Length)
                         {
                             i++;
                         }
-                        found = true;
                     }
+                    found = true;
                 }
             }
-            if (!found || i >= asList.Count)
+            if (!found)
             {
                 asList.Add(makeLine(input, chunkLength, chunkAt));
             }
@@ -283,7 +285,7 @@ namespace penToText
                     output += "-";
                 }
             }
-            if (input.Length > (chunkAt + 1) * chunkSize)
+            if (input.Length >= (chunkAt + 1) * chunkSize)
             {
                 output += input.Substring(chunkAt*chunkSize);
             }
@@ -294,7 +296,7 @@ namespace penToText
             return output;
         }
 
-        public List<mPoint> Dominique2(List<mPoint> input)
+        public List<mPoint> Dominique(List<mPoint> input)
         {
             List<mPoint> output = new List<mPoint>();
             if (input.Count > 2)
@@ -303,7 +305,7 @@ namespace penToText
                 output.Add(input[0]);
                 for (int i = 0; i < (input.Count - 1); i++)
                 {
-                    bool sameSlope =  input[sLoc].line == input[i+1].line && getDirection(input[sLoc], input[sLoc + 1]) == getDirection(input[i], input[i + 1]) && input[sLoc].line == input[i].line;
+                    bool sameSlope = input[sLoc].line == input[i + 1].line && getDirection(input[sLoc], input[sLoc + 1]) == getDirection(input[i], input[i + 1]) && input[sLoc].line == input[i].line;
                     if (!sameSlope)
                     {
                         output.Add(input[i]);
@@ -311,33 +313,91 @@ namespace penToText
                     }
                 }
                 output.Add(input[input.Count - 1]);
-                int linePoints = 0;
-                for (int i = 1; i < output.Count-1; i++)
-                {
-                    if (output[i-1].line == output[i].line)
-                    {
-                        linePoints++;
-                    }
-                    else
-                    {
-                        if (linePoints == 0)
-                        {
-                            //do something
-                            output.Insert(i + 1, new mPoint(output[i].X, output[i].Y+.001, output[i].line));
-                        }
-                        else
-                        {
-                            linePoints = 0;
-                        }
-                    }
-                }
             }
             else
             {
                 output = input;
             }
-            
+
             return output;
+        }
+
+        public List<mPoint> minimumLines(List<mPoint> input)
+        {
+            int linePoints = 0;
+            for (int i = 1; i < input.Count; i++)
+            {
+                if (input[i - 1].line == input[i].line)
+                {
+                    linePoints++;
+                }
+                else
+                {
+                    if (linePoints == 0)
+                    {
+                        //do something
+                        input.Insert(i, new mPoint(input[i].X, input[i].Y + .001, input[i].line));
+                    }
+                    else
+                    {
+                        linePoints = 0;
+                        if (i == (input.Count - 1))
+                        {
+                            input.Add(new mPoint(input[i].X, input[i].Y + .001, input[i].line));
+                        }
+                    }
+                }
+            }
+            return input;
+        }
+
+        public List<mPoint> cleanSections(List<mPoint> input)
+        {
+            double e = .2; // height over length
+            for (int i = 2; i < input.Count; i++)
+            {
+                if (input[i - 2].line == input[i - 1].line && input[i - 1].line == input[i].line)
+                {
+                    double thisLineDistance = lineDistance(input[i - 2], input[i], input[i - 1]);
+                    double lineLength = distance(input[i - 2], input[i]);
+                    //lineLength = lineLength * lineLength;
+                    if (thisLineDistance / lineLength <= e)
+                    {
+                        input.RemoveAt(i - 1);
+                        i--;
+                    }
+                }
+            }
+            return input;
+        }
+
+        private double dotProduct(Point a, Point b)
+        {
+            return ((a.X * b.X) + (a.Y * b.Y));
+        }
+
+
+        private double lineDistance(mPoint a, mPoint b, mPoint c)
+        {
+            //a and b make line, return distance c from line
+            Point u = new Point(b.X - a.X, b.Y - a.Y);
+            Point v = new Point(c.X - a.X, c.Y - a.Y);
+            double value = dotProduct(u, v) / dotProduct(u, u);
+            Point p = new Point(u.X * value + a.X, u.Y * value + a.Y);
+            double output = double.PositiveInfinity;
+            if (value >= 0.0 && value <= 1.0)
+            {
+                output = distance(c, new mPoint(p, 0));
+            }
+            return output;
+
+        }
+
+        private double distance(mPoint a, mPoint b)
+        {
+            double deltaX = b.X - a.X;
+            double deltaY = b.Y - a.Y;
+            return Math.Sqrt((deltaX * deltaX) + (deltaY * deltaY));
         }
 
         private int getDirection(mPoint startPoint, mPoint endPoint)

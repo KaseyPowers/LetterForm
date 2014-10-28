@@ -323,14 +323,8 @@ namespace penToText
 
             if ((data != null) && data.Count > 1)
             {
-                for (int i = 0; i < myLines.Length; i++)
-                {
-                    Polyline myLine = new Polyline();
-                    myLine.Stroke = Brushes.Black;
-                    myLine.StrokeThickness = 2;
-                    myLines[i] = myLine;
-                    myPanel.Children.Add(myLines[i]);
-                }
+                List<Polyline> lines = new List<Polyline>();
+
                 title.Text = titleText + "\n " + data.Count;
 
                 double xScale = myPanel.Width / outOfX;
@@ -343,15 +337,25 @@ namespace penToText
                 for (int i = 0; i < data.Count; i++)
                 {
                     mPoint currentPoint = data[i];
-
+                    while (lines.Count <= currentPoint.line)
+                    {
+                        Polyline myLine = new Polyline();
+                        myLine.Stroke = Brushes.Black;
+                        myLine.StrokeThickness = 2;
+                        lines.Add(myLine);
+                        myPanel.Children.Add(myLine);
+                    }
                     currentPoint.X += padding;
                     currentPoint.Y += padding;
 
                     currentPoint.X *= xScale;
                     currentPoint.Y *= yScale;
-
+                    if (lines[currentPoint.line]==null)
+                    {
+                        int fish = 2 + 2;
+                    }
                     if (toAddCircles) { drawCircle(currentPoint.X, currentPoint.Y, radius); }
-                    myLines[currentPoint.line].Points.Add(currentPoint.getPoint());
+                    lines[currentPoint.line].Points.Add(currentPoint.getPoint());
                 }
             }
         }

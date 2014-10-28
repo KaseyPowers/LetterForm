@@ -76,7 +76,8 @@ namespace penToText
             myDataDisplay.Visibility = Visibility.Visible;
             myDataDisplay.Top = System.Windows.SystemParameters.WorkArea.Top;
             myDataDisplay.Left = System.Windows.SystemParameters.WorkArea.Left;
-            myDataDisplay.Height = System.Windows.SystemParameters.WorkArea.Height / 2.0;
+            myDataDisplay.Height = System.Windows.SystemParameters.WorkArea.Height;
+
             myDataDisplay.Owner = myInputWindow;
 
             myInputWindow.Top = myDataDisplay.Top;
@@ -127,7 +128,7 @@ namespace penToText
                 myDataDisplay.Visibility = Visibility.Visible;
                 myDataDisplay.Top = System.Windows.SystemParameters.WorkArea.Top;
                 myDataDisplay.Left = System.Windows.SystemParameters.WorkArea.Left;
-                myDataDisplay.Height = System.Windows.SystemParameters.WorkArea.Height / 2.0;
+                myDataDisplay.Height = System.Windows.SystemParameters.WorkArea.Height;
                 myDataDisplay.Owner = myInputWindow;
             }
             else
@@ -136,7 +137,7 @@ namespace penToText
                 myDataDisplay.Visibility = Visibility.Visible;
                 myDataDisplay.Top = System.Windows.SystemParameters.WorkArea.Top;
                 myDataDisplay.Left = System.Windows.SystemParameters.WorkArea.Left;
-                myDataDisplay.Height = System.Windows.SystemParameters.WorkArea.Height / 2.0;
+                myDataDisplay.Height = System.Windows.SystemParameters.WorkArea.Height;
                 myDataDisplay.Owner = myInputWindow;
             }
         }
@@ -153,7 +154,7 @@ namespace penToText
             myDataStuff.Submit(myPenToText.getCleanedData(), associatedCharacter);
             myPenToText.clear();
             blockingData = new BlockingCollection<mPoint>();
-
+            currentLine = 0;
             addingData = Task.Factory.StartNew(() => myPenToText.getData(blockingData)); 
         }
 

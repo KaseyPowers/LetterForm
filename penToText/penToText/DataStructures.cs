@@ -40,6 +40,11 @@ namespace penToText
         public mLetterSections(List<mPoint> points)
         {
             this.points = points;
+            /*int min = points[0].line;
+            for (int i = 0; i < points.Count; i++)
+            {
+                points[i].line -= min;
+            }*/
         }
 
         public String getString( bool length)
@@ -77,15 +82,60 @@ namespace penToText
                     if (length)
                     {
                         double value = (thisLength / firstLength);
-                        value *= 2;
-                        value = Math.Round(value, MidpointRounding.AwayFromZero);
-                        value /= 2;
+                        value = RoundToNearest(value, .1);
+                        /*if (value <= 2.5)
+                        {
+                            value = RoundToNearest(value, .5);
+                        }
+                        else
+                        {
+                            value = RoundToNearest(value, 1);
+                        }*/
                         output += value.ToString("F1");
+                    }
+                }
+                else
+                {
+                    if (length)
+                    {
+                        output += "Line";
+                    }
+                    else
+                    {
+                        output += "L";
                     }
                 }
             }
 
             return output;
+        }
+        public static Double RoundToNearest(Double passednumber, Double roundto)
+        {
+            // 105.5 up to nearest 1 = 106
+            // 105.5 up to nearest 10 = 110
+            // 105.5 up to nearest 7 = 112
+            // 105.5 up to nearest 100 = 200
+            // 105.5 up to nearest 0.2 = 105.6
+            // 105.5 up to nearest 0.3 = 105.6
+
+            //if no rounto then just pass original number back
+            if (roundto == 0)
+            {
+                return passednumber;
+            }
+            else
+            {
+                double up = Math.Ceiling(passednumber / roundto) * roundto;
+                double down = Math.Floor(passednumber / roundto) * roundto;
+                if (Math.Abs(up - passednumber) >= Math.Abs(down - passednumber))
+                {
+                    return down;
+                }
+                else
+                {
+                    return up;
+                }
+            }
         }
         private int getDirection(mPoint startPoint, mPoint endPoint)
         {

@@ -32,6 +32,7 @@ namespace penToText
         //canvas stuff
         private multiLineDrawCanvas clean;
         private multiLineDrawCanvas clean2;
+        private multiLineDrawCanvas clean3;
         public Size canvasSizes;
 
         //testing lists and whatnot
@@ -62,7 +63,7 @@ namespace penToText
             clean.toAddCircles = true;
             thisDynamicDisplay.addCanvas(clean);
 
-            clean2 = new multiLineDrawCanvas(1, 0, display, "SectionTest");
+            clean2 = new multiLineDrawCanvas(0, 1, display, "SectionTest");
             clean2.outOfX = 1.2;
             clean2.outOfy = 1.2;
             clean2.padding = .1;
@@ -70,6 +71,15 @@ namespace penToText
             clean2.myPanel.Height = side;
             clean2.toAddCircles = true;
             thisDynamicDisplay.addCanvas(clean2);
+
+            clean3 = new multiLineDrawCanvas(1, 1, display, "CleanedSectionTest");
+            clean3.outOfX = 1.2;
+            clean3.outOfy = 1.2;
+            clean3.padding = .1;
+            clean3.myPanel.Width = side;
+            clean3.myPanel.Height = side;
+            clean3.toAddCircles = true;
+            thisDynamicDisplay.addCanvas(clean3);
         }
 
         public void setDisplayActive(bool isActive)
@@ -150,24 +160,22 @@ namespace penToText
             }
             if (cleanedData.Count > 1)
             {
-                List<mPoint> sectionData = Dominique2(resample(scaleList(new List<mPoint>(originalData)), .1));
-                /*List<mLetterPortion> sections = Dominique(resample(scaleList(new List<mPoint>(originalData)), .1));
-                if (sections.Count > 1) { 
-                    for (int i = 0; i < sections.Count; i++)
-                    {
-                        if (i != 0 && sections[i].startPoint.line != sections[i - 1].endPoint.line)
-                        {
-                            sectionData.Add(sections[i - 1].endPoint);
-                        }
-                        sectionData.Add(sections[i].startPoint);
-                    }
-                    sectionData.Add(sections[sections.Count - 1].endPoint);*/
+                List<mPoint> sectionData = Dominique(resample(scaleList(new List<mPoint>(originalData)), .1));
 
                 if (activeDisplay)
                 {
                     clean2.newData(sectionData);
                     clean2.titleText = "Section Test";
                     clean2.myPanel.Dispatcher.BeginInvoke(new drawingDelegate(clean2.updateDraw));
+                }
+
+                List<mPoint> sectionData2 = minimumLines(cleanSections(Dominique(resample(scaleList(new List<mPoint>(originalData)), .1))));
+
+                if (activeDisplay)
+                {
+                    clean3.newData(sectionData2);
+                    clean3.titleText = "Section Test2";
+                    clean3.myPanel.Dispatcher.BeginInvoke(new drawingDelegate(clean3.updateDraw));
                 }
 
             }
@@ -295,9 +303,7 @@ namespace penToText
             }
             return output;
         }*/
-
-       
-        public List<mPoint> Dominique2(List<mPoint> input)
+        public List<mPoint> Dominique(List<mPoint> input)
         {
             List<mPoint> output = new List<mPoint>();
             if (input.Count > 2)
@@ -306,7 +312,7 @@ namespace penToText
                 output.Add(input[0]);
                 for (int i = 0; i < (input.Count - 1); i++)
                 {
-                    bool sameSlope = input[sLoc].line == input[i + 1].line && getDirection(input[sLoc], input[sLoc + 1]) == getDirection(input[i], input[i + 1]);
+                    bool sameSlope = input[sLoc].line == input[i + 1].line && getDirection(input[sLoc], input[sLoc + 1]) == getDirection(input[i], input[i + 1]) && input[sLoc].line == input[i].line;
                     if (!sameSlope)
                     {
                         output.Add(input[i]);
@@ -319,7 +325,78 @@ namespace penToText
             {
                 output = input;
             }
+
             return output;
+        }
+
+        public List<mPoint> minimumLines(List<mPoint> input)
+        {
+            int linePoints = 0;
+            for (int i = 1; i < input.Count; i++)
+            {
+                if (input[i - 1].line == input[i].line)
+                {
+                    linePoints++;
+                }
+                else
+                {
+                    if (linePoints == 0)
+                    {
+                        //do something
+                        input.Insert(i, new mPoint(input[i].X, input[i].Y + .001, input[i].line));
+                    }
+                    else
+                    {
+                        linePoints = 0;
+                        if (i == (input.Count - 1))
+                        {
+                            input.Add(new mPoint(input[i].X, input[i].Y + .001, input[i].line));
+                        }
+                    }
+                }
+            }
+            return input;
+        }
+
+        public List<mPoint> cleanSections(List<mPoint> input)
+        {
+            double e = .2; // height over length
+            for (int i = 2; i < input.Count; i++)
+            {
+                if (input[i - 2].line == input[i - 1].line && input[i - 1].line == input[i].line) 
+                {
+                    double thisLineDistance = lineDistance(input[i - 2], input[i], input[i - 1]);
+                    double lineLength = distance(input[i-2], input[i]);
+                    //lineLength = lineLength * lineLength;
+                    if (thisLineDistance / lineLength <= e)
+                    {
+                        input.RemoveAt(i - 1);
+                        i--;
+                    }
+                }
+            }
+            return input;
+        }
+
+        private double dotProduct(Point a, Point b)
+        {
+            return ((a.X * b.X) + (a.Y * b.Y));
+        }
+
+
+        private double lineDistance(mPoint a, mPoint b, mPoint c)
+        {
+            //a and b make line, return distance c from line
+            Point u = new Point(b.X - a.X, b.Y - a.Y);
+            Point v = new Point(c.X - a.X, c.Y - a.Y);
+            double value = dotProduct(u, v) / dotProduct(u, u);
+            Point p = new Point(u.X * value + a.X, u.Y * value + a.Y);
+            double output = double.PositiveInfinity;
+            if (value >= 0.0 && value <= 1.0) {
+                output = distance(c, new mPoint(p, c.line));
+            }
+            return output;
+            
         }
 
         private int getDirection(mPoint startPoint, mPoint endPoint)
