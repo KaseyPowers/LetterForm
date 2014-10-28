@@ -82,7 +82,7 @@ namespace penToText
                     if (length)
                     {
                         double value = (thisLength / firstLength);
-                        value = RoundToNearest(value, .1);
+                        value = RoundToNearest(value, .2);
                         /*if (value <= 2.5)
                         {
                             value = RoundToNearest(value, .5);
