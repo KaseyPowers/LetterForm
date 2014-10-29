@@ -187,19 +187,92 @@ namespace penToText
 
                 if (activeDisplay)
                 {
-                    String searchFor = (new mLetterSections(minimumLines(cleanSections(Dominique(resample(scaleList(new List<mPoint>(originalData)), .1)))))).getString(true);
-                    mSectionNode2 found = searchTree2(searchFor);
+                    String searchFor = (new mLetterSections(minimumLines(cleanSections(Dominique(resample(scaleList(new List<mPoint>(originalData)), .1)))))).getString(true,.01);
+                    string optionsText = getSearchString(searchFor);
+                    /*mSectionNode2 found = searchTree2(searchFor);
                     String options = found.chars;
-                    String ifStoppedHere = found.ifStopHere;
+                   String ifStoppedHere = found.ifStopHere+"";*/
 
                     clean3.newData(minimumLines(cleanSections(Dominique(resample(scaleList(new List<mPoint>(originalData)), .1)))));
-                    clean3.titleText = "Current Letter" + searchFor + "\nCurrent Options: " + options + "\nOption if you stop: " + ifStoppedHere;
+                    clean3.titleText = "Current Letter" + searchFor + "\n" + optionsText;
+                    //clean3.titleText = "Current Letter" + searchFor + "\nCurrent Options: " + options + "\nOption if you stop: " + ifStoppedHere;
                     clean3.myPanel.Dispatcher.BeginInvoke(new drawingDelegate(clean3.updateDraw));                    
                 }
 
             }
         }
+        public string getSearchString(string searchFor)
+        {
+            Queue<mSectionNode2> frontier = new Queue<mSectionNode2>();
+            Queue<int> chunkLocs = new Queue<int>();
+            List<mSectionNode2> fits = new List<mSectionNode2>();
+            int chunkLength = 6;
+            frontier.Enqueue(root);
+            chunkLocs.Enqueue(0);
+            while (frontier.Count > 0)
+            {
+                mSectionNode2 current = frontier.Dequeue();
+                int chunkAt = chunkLocs.Dequeue();
+                if (searchFor.Length >= (chunkAt + 1) * chunkLength)
+                {
+                    String thisChunk = searchFor.Substring(chunkAt * chunkLength, chunkLength);
+                    String searchChunk = "";
+                    double value = 0.0;
+                    if (thisChunk.Equals("Line00"))
+                    {
+                        searchChunk = thisChunk;
+                    }
+                    else
+                    {
+                        searchChunk = thisChunk.Substring(0, 1);
+                        value = Double.Parse(thisChunk.Substring(1));
+                    }
+                     bool found = false;
+                    for (int i = 0; i < current.children.Count && !found; i++)
+                    {
+                        mSectionNode2 child = current.children[i];
+                        if (child.SectionLetter.Equals(searchChunk) && value >= child.minValue && value <= child.maxValue)
+                        {
+                            frontier.Enqueue(child);
+                            chunkLocs.Enqueue(chunkAt + 1);
+                            found = true;
+                        }
+                    }
+                    if(!found){
+                        fits.Add(current);
+                    }
+                }else{
+                    fits.Add(current);
+                }
+            }
+            string output = "";
+            string terminalString = "";            
+            string possibileString = "";
+            for (int i = 0; i < fits.Count; i++ )
+            {
+                //found an endcase
+                if (!terminalString.Contains(fits[i].ifStopHere))
+                {
+                    terminalString += ""+fits[i].ifStopHere;
+                }
+                possibileString += fits[i].chars;
+            }
+            if (terminalString.Length != 0)
+            {
+                output = "If stopped here: " + terminalString + "\n";
+            }
+            possibileString = new string(possibileString.ToList().Distinct().ToArray());
+            output += "Possible Letters: " + possibileString;
+            
+            return output;
+        }
 
+        public string getTerminalStrings(mSectionNode2 search)
+        {
+            string output = "";
+
+            return output;
+        }
         public mSectionNode2 searchTree2(string searchFor)
         {
             int chunkAt = 0;

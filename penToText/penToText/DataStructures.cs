@@ -47,7 +47,7 @@ namespace penToText
             }*/
         }
 
-        public String getString( bool length)
+        public String getString( bool length, double roundTo)
         {
             String output = "";
             double firstLength = Math.Round(distance(points[0], points[ 1]), 1);
@@ -67,24 +67,25 @@ namespace penToText
                         int direction = getDirection(points[i], points[i + 1]);
                         switch (direction)
                         {
-                            case 4:
+                            case 7:
                                 output += "A";
                                 break;
                             case 5:
                                 output += "B";
                                 break;
-                            case 6:
+                            case 4:
                                 output += "C";
                                 break;
-                            case 7:
+                            case 6:
                                 output += "D";
                                 break;
 
                         }
                         if (length)
                         {
+
                             double value = (thisLength / firstLength);
-                            value = RoundToNearest(value, .2);
+                            value = RoundToNearest(value, roundTo);
                             /*if (value <= 2.5)
                             {
                                 value = RoundToNearest(value, .5);
@@ -249,34 +250,76 @@ namespace penToText
         public double minValue;
         public double maxValue;
         public String chars;
-        public String ifStopHere;
+        public char ifStopHere;
 
-        public mSectionNode2(String letter, double value, String chars , bool final)
+        public mSectionNode2(String letter, double value, char newChar , bool final)
         {
             parent = null;
             children = new List<mSectionNode2>();
             SectionLetter = letter;
             minValue = value;
             maxValue = value;
-            if (!final)
+            chars = "";
+            ifStopHere = ' ';
+            if (final)
             {
-                this.chars = chars;
-                this.ifStopHere = "";
+                addFinalChar(newChar);               
             }
             else
             {
-                this.chars = "";
-                this.ifStopHere = chars;
+                //addChar(newChar);  
             }
         }
 
         public bool canComabine(mSectionNode2 other)
         {
-            bool output = (this.parent == other.parent);
-            output = output  &&  (this.SectionLetter.Equals(other.SectionLetter));
-            output = output && 
-                    ((this.minValue >= other.minValue && this.maxValue <= other.maxValue) 
+            bool main = (this.parent == other.parent) && (this.SectionLetter.Equals(other.SectionLetter));
+            bool rangesMatch = ((this.minValue >= other.minValue && this.maxValue <= other.maxValue) 
                 ||  (this.minValue <= other.minValue && this.maxValue >= other.maxValue));
+            //bool matchingEndPoint = ifStopHere.Equals(other.ifStopHere) && ifStopHere.Length>0;
+            bool aCharContainB = true;
+            bool bCharContainA = true;
+            for (int i = 0; i < other.chars.Length && aCharContainB; i++)
+            {
+                aCharContainB = chars.Contains(other.chars[i]);
+            }
+            for (int i = 0; i < chars.Length && bCharContainA; i++)
+            {
+                bCharContainA = other.chars.Contains(chars[i]);
+            }
+            bool validChars = aCharContainB || bCharContainA;
+            bool validRoots = true;
+            if (ifStopHere != ' ' && other.ifStopHere != ' ')
+            {
+                validRoots = ifStopHere == other.ifStopHere;
+            }
+            return main && (rangesMatch ||validChars) && validRoots;
+        }
+
+
+        public int bestCombine(mSectionNode2 a, mSectionNode2 b)
+        {
+            int output = 0;
+
+            for (int i = 0; i < chars.Length; i++){
+                if (a.chars.Contains(chars[i]))
+                {
+                    output++;
+                }
+                if (b.chars.Contains(chars[i]))
+                {
+                    output--;
+                }
+            }
+
+            if (a.ifStopHere == ifStopHere)
+            {
+                output++;
+            }
+            else if(b.ifStopHere == ifStopHere)
+            {
+
+            }
 
             return output;
         }
@@ -306,34 +349,16 @@ namespace penToText
             chars = "";
             for (int i = 0; i < a.chars.Length; i++)
             {
-                if (!chars.Contains(a.chars[i]))
-                {
-                    chars += a.chars[i];
-                }
+                addChar(a.chars[i]);
             }
             for (int i = 0; i < b.chars.Length; i++)
             {
-                if (!chars.Contains(b.chars[i]))
-                {
-                    chars += b.chars[i];
-                }
+                addChar(b.chars[i]);
             }
 
-            ifStopHere = "";
-            for (int i = 0; i < a.ifStopHere.Length; i++)
-            {
-                if (!ifStopHere.Contains(a.ifStopHere[i]))
-                {
-                    ifStopHere += a.ifStopHere[i];
-                }
-            }
-            for (int i = 0; i < b.ifStopHere.Length; i++)
-            {
-                if (!ifStopHere.Contains(b.ifStopHere[i]))
-                {
-                    ifStopHere += b.ifStopHere[i];
-                }
-            }
+            ifStopHere = ' ';
+            addFinalChar(a.ifStopHere);
+            addFinalChar(b.ifStopHere);
 
             children = new List<mSectionNode2>();
             for (int i = 0; i < a.children.Count; i++)
@@ -358,14 +383,23 @@ namespace penToText
 
         public void addChar(char newChar)
         {
-            chars += newChar;
-            chars = new string(chars.ToList().Distinct().ToArray());
+            if (!chars.Contains(newChar))
+            {
+                chars += newChar;
+                if(parent != null){
+                    parent.addChar(newChar);
+                }
+            }
         }
+
 
         public void addFinalChar(char newChar)
         {
-            ifStopHere += newChar;
-            ifStopHere = new string(ifStopHere.ToList().Distinct().ToArray());
+            if (ifStopHere==' ')
+            {
+                ifStopHere = newChar;
+                addChar(newChar);
+            }
         }
 
         public string getString()
@@ -387,12 +421,20 @@ namespace penToText
         private List<string> getStrings()
         {
             List<string> strings = new List<string>();
-
-            String thisLine = SectionLetter + "[" + minValue.ToString("F2").PadLeft(5, '0') + "," + maxValue.ToString("F2").PadLeft(5, '0') + "]";
+            string letter = SectionLetter;
+            if (SectionLetter.Equals("Line00"))
+            {
+                letter = "L";
+            }
+            String thisLine = letter + "[" + minValue.ToString("F2").PadLeft(5, '0') + "," + maxValue.ToString("F2").PadLeft(5, '0') + "]";
             int toAdd = thisLine.Length;
-
+            
             if (children.Count > 0)
             {
+                if (ifStopHere != ' ')
+                {
+                    strings.Add(ifStopHere+"");
+                }
                 for (int i = 0; i < children.Count; i++)
                 {
                     List<string> newLines = children[i].getStrings();
