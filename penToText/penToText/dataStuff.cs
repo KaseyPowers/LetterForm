@@ -27,6 +27,7 @@ namespace penToText
         private mainWindows manager;
 
         private mSectionNode root;
+        private mSectionNode2 root2;
 
         private String file = "PenToTextData.xml";
         
@@ -101,6 +102,8 @@ namespace penToText
         public void dataUpdated()
         {
             root = new mSectionNode("", 0, "");
+            root2 = new mSectionNode2("", 0, "", false);
+
             List<String> total = new List<String>();
             List<String> temp1 = new List<String>();
             List<String> temp2 = new List<String>();
@@ -124,11 +127,11 @@ namespace penToText
                 String text2 = "";
                 int uniqueCount = 0;
                 int nonUniqueCount = 0;
-                int chunkSize = 4;
+                int chunkSize = 6;
 
                 for (int j = 0; j < temp1.Count; j++)
                 {
-                    addToTree(temp1[j], alphabet[i]);
+                    addToTree2(temp1[j], alphabet[i]);
                     text2 += temp1[j] + "\n";
                     text = prettyOutput(temp1[j], text, chunkSize);
                     
@@ -150,7 +153,8 @@ namespace penToText
                     ((TextBlock)dataView[i].Children[2]).Text = thisText;
                 }                
             }
-            manager.updateTree(root);
+            combineTree();
+            manager.updateTree(root2);
         }
 
         public string prettyOutput(String input, String addingTo, int chunkLength)
@@ -249,6 +253,90 @@ namespace penToText
             return output;
         }
 
+        public void addToTree2(String newInfo, char associatedLetter)
+        {
+            int chunkAt = 0;
+            int chunkLength = 6;
+            mSectionNode2 current = root2;
+            while (newInfo.Length >= (chunkAt + 1) * chunkLength)
+            {
+                string chunk = newInfo.Substring(chunkAt * chunkLength, chunkLength);
+                string sectionString;
+                double value = 0.0;
+                if (chunk.Equals("Line00"))
+                {
+                    sectionString = chunk;
+                }
+                else
+                {
+                    sectionString = chunk.Substring(0, 1);
+                    value = Double.Parse(chunk.Substring(1));
+                }
+
+                bool final = (newInfo.Length < (chunkAt + 2) * chunkLength);
+                mSectionNode2 next = new mSectionNode2(sectionString, value, associatedLetter+"", final);
+
+                current.addChild(next);
+                current = next;
+                chunkAt++;
+            }
+
+        }
+
+        public void combineTree()
+        {
+            Queue<mSectionNode2> frontier = new Queue<mSectionNode2>();
+            frontier.Enqueue(root2);
+
+            while (frontier.Count > 0)
+            {
+                mSectionNode2 current = frontier.Dequeue();
+                List<mSectionNode2> currentChildren = current.children;
+                List<mSectionNode2> nextCildren = new List<mSectionNode2>();
+                bool hasChanged = true;
+                while (hasChanged)
+                {
+                    hasChanged = false;
+                    int foundLoc = -1;
+                    for (int i = 0; i < currentChildren.Count; i++)
+                    {
+                        bool foundMatch = false;
+                        for (int j = 0; j < currentChildren.Count && !foundMatch && !hasChanged; j++)
+                        {
+                            if (i != j && currentChildren[i].canComabine(currentChildren[j]))
+                            {
+                                hasChanged = true;
+                                foundMatch = true;
+                                foundLoc = j;
+                                nextCildren.Add(new mSectionNode2(currentChildren[i], currentChildren[j]));
+                            }
+                        }
+                        if (!foundMatch && foundLoc != i)
+                        {
+                            nextCildren.Add(currentChildren[i]);
+                        }
+                    }
+                    /*for (int i = 1; i < currentChildren.Count; i++)
+                    {
+                        if (currentChildren[i - 1].canComabine(currentChildren[i]))
+                        {
+                            hasChanged = true;
+                            nextCildren.Add(new mSectionNode2(currentChildren[i - 1], currentChildren[i]));
+                            i++;
+                        }
+                    }*/
+                    currentChildren = new List<mSectionNode2>(nextCildren);
+                    nextCildren = new List<mSectionNode2>();
+                }
+
+                current.children = currentChildren;
+
+                for (int i = 0; i < current.children.Count; i++)
+                {
+                    frontier.Enqueue(current.children[i]);
+                }
+            }
+        }
 
         public void addToTree(String newInfo, char associatedLetter)
         {

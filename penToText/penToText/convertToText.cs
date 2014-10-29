@@ -34,7 +34,7 @@ namespace penToText
         private multiLineDrawCanvas clean2;
         private multiLineDrawCanvas clean3;
         private multiLineDrawCanvas characters;
-        private mSectionNode root;
+        private mSectionNode2 root;
         public Size canvasSizes;
 
         //testing lists and whatnot
@@ -102,7 +102,7 @@ namespace penToText
             return activeDisplay;
         }
 
-        public void setTree(mSectionNode treeRoot){
+        public void setTree(mSectionNode2 treeRoot){
             root = treeRoot;
         }
 
@@ -188,7 +188,7 @@ namespace penToText
                 if (activeDisplay)
                 {
                     String searchFor = (new mLetterSections(minimumLines(cleanSections(Dominique(resample(scaleList(new List<mPoint>(originalData)), .1)))))).getString(true);
-                    mSectionNode found = searchTree2(searchFor);
+                    mSectionNode2 found = searchTree2(searchFor);
                     String options = found.chars;
                     String ifStoppedHere = found.ifStopHere;
 
@@ -200,61 +200,45 @@ namespace penToText
             }
         }
 
-        public mSectionNode searchTree2(string searchFor)
+        public mSectionNode2 searchTree2(string searchFor)
         {
             int chunkAt = 0;
             int chunkLength = 6;
-            mSectionNode current = root;
+            mSectionNode2 current = root;
+
             bool toContinue = true;
             while (toContinue)
             {
                 if (searchFor.Length >= (chunkAt + 1) * chunkLength)
                 {
-                    String thisChunk = searchFor.Substring(chunkLength * chunkAt, chunkLength);
-                    String letter = "";
+                    String thisChunk = searchFor.Substring(chunkAt * chunkLength, chunkLength);
+                    String searchChunk = "";
                     double value = 0.0;
                     if (thisChunk.Equals("Line00"))
                     {
-                        letter = thisChunk;
+                        searchChunk = thisChunk;
                     }
                     else
                     {
-                        letter = thisChunk.Substring(0, 1);
+                        searchChunk = thisChunk.Substring(0, 1);
                         value = Double.Parse(thisChunk.Substring(1));
                     }
-
-                    List<mSectionNode> options = new List<mSectionNode>();
-                    for (int i = 0; i < current.children.Count; i++)
+                    
+                    bool found = false;
+                    for (int i = 0; i < current.children.Count && !found; i++)
                     {
-                        if (current.children[i].SectionLetter.Equals(letter))
+                        mSectionNode2 child = current.children[i];
+                        if (child.SectionLetter.Equals(searchChunk) && value >= child.minValue && value <= child.maxValue)
                         {
-                            options.Add(current.children[i]);
+                            current = child;
+                            chunkAt++;
+                            found = true;
                         }
                     }
-
-                    if (options.Count > 0)
-                    {
-                        int bestLoc = 0;
-                        double bestValue = double.PositiveInfinity;
-                        for (int i = 1; i < options.Count; i++)
-                        {
-                            double thisValue = Math.Abs(value - options[i].SectoinValue);
-                            if (bestValue > thisValue)
-                            {
-                                bestValue = thisValue;
-                                bestLoc = i;
-                            }
-                        }
-                        current = options[bestLoc];
-                        chunkAt++;
-                    }
-                    else
-                    {
+                    if(!found){
                         toContinue = false;
                     }
-                }
-                else
-                {
+                }else{
                     toContinue = false;
                 }
             }
@@ -262,7 +246,7 @@ namespace penToText
             return current;
         }
 
-        public mSectionNode searchTree(string searchFor)
+        /*public mSectionNode searchTree(string searchFor)
         {
             int chunkAt = 0;
             int chunkLegth = 6;
@@ -387,8 +371,8 @@ namespace penToText
                 }
             }
 
-            return current;*/
-        }
+            return current;
+        } */
 
         public mSectionNode bestPosibility(String inputString, List<mSectionNode> possibilities)
         {

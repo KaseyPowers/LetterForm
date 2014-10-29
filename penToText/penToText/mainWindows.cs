@@ -187,7 +187,8 @@ namespace penToText
             currentLine++;
         }
 
-        public void updateTree(mSectionNode treeRoot){
+        public void updateTree(mSectionNode2 treeRoot){
+            Console.WriteLine(treeRoot.getString());
             myPenToText.setTree(treeRoot);
         }
        

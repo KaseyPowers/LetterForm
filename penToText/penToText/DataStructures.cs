@@ -241,24 +241,113 @@ namespace penToText
         }
     }
 
-    /*public class mSectionNode2
+    public class mSectionNode2
     {
-        public mSectionNode parent;
+        public mSectionNode2 parent;
         public List<mSectionNode2> children;
-        public List<double> rangeValues;
         public String SectionLetter;
-        public double SectoinValue;
+        public double minValue;
+        public double maxValue;
         public String chars;
         public String ifStopHere;
 
-        public mSectionNode2(String letter, double value, String chars)
+        public mSectionNode2(String letter, double value, String chars , bool final)
         {
             parent = null;
-            children = new List<mSectionNode>();
-            rangeValues = new List<double>();
+            children = new List<mSectionNode2>();
             SectionLetter = letter;
-            SectoinValue = value;
-            this.chars = chars;
+            minValue = value;
+            maxValue = value;
+            if (!final)
+            {
+                this.chars = chars;
+                this.ifStopHere = "";
+            }
+            else
+            {
+                this.chars = "";
+                this.ifStopHere = chars;
+            }
+        }
+
+        public bool canComabine(mSectionNode2 other)
+        {
+            bool output = (this.parent == other.parent);
+            output = output  &&  (this.SectionLetter.Equals(other.SectionLetter));
+            output = output && 
+                    ((this.minValue >= other.minValue && this.maxValue <= other.maxValue) 
+                ||  (this.minValue <= other.minValue && this.maxValue >= other.maxValue));
+
+            return output;
+        }
+
+        public mSectionNode2(mSectionNode2 a, mSectionNode2 b)
+        {
+            this.parent = a.parent;
+            this.SectionLetter = a.SectionLetter;
+            if (a.minValue < b.minValue)
+            {
+                this.minValue = a.minValue;
+            }
+            else
+            {
+                this.minValue = b.minValue;
+            }
+
+            if (a.maxValue > b.maxValue)
+            {
+                this.maxValue = a.maxValue;
+            }
+            else
+            {
+                this.maxValue = b.maxValue;
+            }
+
+            chars = "";
+            for (int i = 0; i < a.chars.Length; i++)
+            {
+                if (!chars.Contains(a.chars[i]))
+                {
+                    chars += a.chars[i];
+                }
+            }
+            for (int i = 0; i < b.chars.Length; i++)
+            {
+                if (!chars.Contains(b.chars[i]))
+                {
+                    chars += b.chars[i];
+                }
+            }
+
+            ifStopHere = "";
+            for (int i = 0; i < a.ifStopHere.Length; i++)
+            {
+                if (!ifStopHere.Contains(a.ifStopHere[i]))
+                {
+                    ifStopHere += a.ifStopHere[i];
+                }
+            }
+            for (int i = 0; i < b.ifStopHere.Length; i++)
+            {
+                if (!ifStopHere.Contains(b.ifStopHere[i]))
+                {
+                    ifStopHere += b.ifStopHere[i];
+                }
+            }
+
+            children = new List<mSectionNode2>();
+            for (int i = 0; i < a.children.Count; i++)
+            {
+                children.Add(a.children[i]);
+            }
+            for (int i = 0; i < b.children.Count; i++)
+            {
+                children.Add(b.children[i]);
+            }
+            for (int i = 0; i < children.Count; i++)
+            {
+                children[i].parent = this;
+            }
         }
 
         public void addChild(mSectionNode2 child)
@@ -278,6 +367,66 @@ namespace penToText
             ifStopHere += newChar;
             ifStopHere = new string(ifStopHere.ToList().Distinct().ToArray());
         }
+
+        public string getString()
+        {
+            List<string> strings = this.getStrings();
+
+            string output = "";
+            for (int i = 0; i < strings.Count; i++)
+            {
+                output += strings[i];
+                if (i != strings.Count - 1)
+                {
+                    output += "\n";
+                }
+            }
+            return output;
+        }
+
+        private List<string> getStrings()
+        {
+            List<string> strings = new List<string>();
+
+            String thisLine = SectionLetter + "[" + minValue.ToString("F2").PadLeft(5, '0') + "," + maxValue.ToString("F2").PadLeft(5, '0') + "]";
+            int toAdd = thisLine.Length;
+
+            if (children.Count > 0)
+            {
+                for (int i = 0; i < children.Count; i++)
+                {
+                    List<string> newLines = children[i].getStrings();
+
+                    for (int j = 0; j < newLines.Count; j++)
+                    {
+                        strings.Add(newLines[j]);
+                    }
+                }
+
+                for (int i = 0; i < strings.Count; i++)
+                {
+                    String actualLine = "";
+                    if (i == 0)
+                    {
+                        actualLine = thisLine;
+                    }
+                    else
+                    {
+                        for (int j = 0; j < toAdd; j++)
+                        {
+                            actualLine += " ";
+                        }
+                    }
+
+                    actualLine += "-";
+                    strings[i] = actualLine + strings[i];
+                }
+            }
+            else
+            {
+                strings.Add(thisLine + " -" + ifStopHere);
+            }
+            return strings;
+        }
     }
-    */
 }
