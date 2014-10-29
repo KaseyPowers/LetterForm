@@ -121,6 +121,7 @@ namespace penToText
                 // String uniqueText = "";
                 ///tring repeatedText = "";
                 String text = "";
+                String text2 = "";
                 int uniqueCount = 0;
                 int nonUniqueCount = 0;
                 int chunkSize = 4;
@@ -128,12 +129,15 @@ namespace penToText
                 for (int j = 0; j < temp1.Count; j++)
                 {
                     addToTree(temp1[j], alphabet[i]);
+                    text2 += temp1[j] + "\n";
+                    text = prettyOutput(temp1[j], text, chunkSize);
                     
                 }
                 chunkSize = 1;
                 for (int j = 0; j < temp2.Count; j++)
                 {
-                    text = prettyOutput(temp2[j], text, chunkSize);
+                   // text2 += temp2[j] + "\n";
+                    //text = prettyOutput(temp2[j], text, chunkSize);
                 }
 
                 if (temp1.Count == 0)
@@ -142,7 +146,7 @@ namespace penToText
                 }
                 else
                 {
-                    String thisText = text;
+                    String thisText = text + "\n2:\n" + text2;
                     ((TextBlock)dataView[i].Children[2]).Text = thisText;
                 }                
             }

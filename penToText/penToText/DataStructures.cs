@@ -240,4 +240,44 @@ namespace penToText
             ifStopHere = new string(ifStopHere.ToList().Distinct().ToArray());
         }
     }
+
+    /*public class mSectionNode2
+    {
+        public mSectionNode parent;
+        public List<mSectionNode2> children;
+        public List<double> rangeValues;
+        public String SectionLetter;
+        public double SectoinValue;
+        public String chars;
+        public String ifStopHere;
+
+        public mSectionNode2(String letter, double value, String chars)
+        {
+            parent = null;
+            children = new List<mSectionNode>();
+            rangeValues = new List<double>();
+            SectionLetter = letter;
+            SectoinValue = value;
+            this.chars = chars;
+        }
+
+        public void addChild(mSectionNode2 child)
+        {
+            child.parent = this;
+            children.Add(child);
+        }
+
+        public void addChar(char newChar)
+        {
+            chars += newChar;
+            chars = new string(chars.ToList().Distinct().ToArray());
+        }
+
+        public void addFinalChar(char newChar)
+        {
+            ifStopHere += newChar;
+            ifStopHere = new string(ifStopHere.ToList().Distinct().ToArray());
+        }
+    }
+    */
 }

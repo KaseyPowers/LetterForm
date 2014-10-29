@@ -188,7 +188,7 @@ namespace penToText
                 if (activeDisplay)
                 {
                     String searchFor = (new mLetterSections(minimumLines(cleanSections(Dominique(resample(scaleList(new List<mPoint>(originalData)), .1)))))).getString(true);
-                    mSectionNode found = searchTree(searchFor);
+                    mSectionNode found = searchTree2(searchFor);
                     String options = found.chars;
                     String ifStoppedHere = found.ifStopHere;
 
@@ -198,6 +198,68 @@ namespace penToText
                 }
 
             }
+        }
+
+        public mSectionNode searchTree2(string searchFor)
+        {
+            int chunkAt = 0;
+            int chunkLength = 6;
+            mSectionNode current = root;
+            bool toContinue = true;
+            while (toContinue)
+            {
+                if (searchFor.Length >= (chunkAt + 1) * chunkLength)
+                {
+                    String thisChunk = searchFor.Substring(chunkLength * chunkAt, chunkLength);
+                    String letter = "";
+                    double value = 0.0;
+                    if (thisChunk.Equals("Line00"))
+                    {
+                        letter = thisChunk;
+                    }
+                    else
+                    {
+                        letter = thisChunk.Substring(0, 1);
+                        value = Double.Parse(thisChunk.Substring(1));
+                    }
+
+                    List<mSectionNode> options = new List<mSectionNode>();
+                    for (int i = 0; i < current.children.Count; i++)
+                    {
+                        if (current.children[i].SectionLetter.Equals(letter))
+                        {
+                            options.Add(current.children[i]);
+                        }
+                    }
+
+                    if (options.Count > 0)
+                    {
+                        int bestLoc = 0;
+                        double bestValue = double.PositiveInfinity;
+                        for (int i = 1; i < options.Count; i++)
+                        {
+                            double thisValue = Math.Abs(value - options[i].SectoinValue);
+                            if (bestValue > thisValue)
+                            {
+                                bestValue = thisValue;
+                                bestLoc = i;
+                            }
+                        }
+                        current = options[bestLoc];
+                        chunkAt++;
+                    }
+                    else
+                    {
+                        toContinue = false;
+                    }
+                }
+                else
+                {
+                    toContinue = false;
+                }
+            }
+
+            return current;
         }
 
         public mSectionNode searchTree(string searchFor)
@@ -611,31 +673,36 @@ namespace penToText
                         input.RemoveAt(i - 1);
                         i--;
                     }*/
-                    double lineDistanceA = lineDistance(input[i - 2], input[i], input[i - 1]);
-                    double lineDistanceB = lineDistance(input[i - 1], input[i], input[i - 2]);
-                    double lineLength;
-
-                    if (lineDistanceA < lineDistanceB)
+                    if (getDirection(input[i - 2], input[i - 1]) == getDirection(input[i - 1], input[i]))
                     {
-                        lineLength = distance(input[i - 2], input[i]);
-                        if (lineDistanceA / lineLength <= e)
-                        {
-                            input.RemoveAt(i - 1);
-                            i--;
-                        }
+                        input.RemoveAt(i - 1);
+                        i = 2;
                     }
                     else
                     {
-                        lineLength = distance(input[i - 1], input[i]);
-                        if (lineDistanceB / lineLength <= e)
+                        double lineDistanceA = lineDistance(input[i - 2], input[i], input[i - 1]);
+                        double lineDistanceB = lineDistance(input[i - 1], input[i], input[i - 2]);
+                        double lineLength;
+
+                        if (lineDistanceA < lineDistanceB)
                         {
-                            input.RemoveAt(i - 2);
-                            i--;
+                            lineLength = distance(input[i - 2], input[i]);
+                            if (lineDistanceA / lineLength <= e)
+                            {
+                                input.RemoveAt(i - 1);
+                                i = 2;
+                            }
                         }
-
-                    }
-
-                    
+                        else
+                        {
+                            lineLength = distance(input[i - 1], input[i]);
+                            if (lineDistanceB / lineLength <= e)
+                            {
+                                input.RemoveAt(i - 2);
+                                i = 2;
+                            }
+                        }
+                    }                    
                 }
             }
             return input;
