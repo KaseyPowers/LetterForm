@@ -89,7 +89,7 @@ namespace penToText
             myDisplayWindow.Left = System.Windows.SystemParameters.WorkArea.Width - myDisplayWindow.Width;
 
             resized();
-
+            //toggleDataDisplayWindow();
         }
 
         internal static void OnDisplayWindowClose(object sender, CancelEventArgs e)

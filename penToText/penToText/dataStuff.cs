@@ -106,49 +106,27 @@ namespace penToText
             root2 = new mSectionNode2("", 0, ' ', false);
 
             List<String> total = new List<String>();
-            List<String> temp1 = new List<String>();
-            List<String> temp2 = new List<String>();
+            List<String> LetterNodeStrings = new List<String>();
             mSectionNode2[] roots = new mSectionNode2[alphabet.Length];
             for (int i = 0; i < alphabet.Length; i++)
             {
                 pullData(alphabet[i]);
                 roots[i] = new mSectionNode2("", 0, ' ', false);
                 ((TextBlock)dataView[i].Children[0]).Text = alphabet[i] + ": " + elements.Count;
-                temp1 = new List<String>();
-                temp2 = new List<string>();
+                LetterNodeStrings = new List<String>();
                 for (int j = 0; j < elements.Count; j++)
                 {
-                    temp1.Add(new mLetterSections(minimumLines( cleanSections(Dominique(elements[j].cleanedData)))).getString(true, .01));
+                    LetterNodeStrings.Add(new mLetterSections(minimumLines( cleanSections(Dominique(elements[j].cleanedData)))).getString(true, .01));
                 }
-                temp1 = temp1.Distinct().ToList();
-                temp2 = temp2.Distinct().ToList();
-                bool unique = true;
-                // String uniqueText = "";
-                ///tring repeatedText = "";
-                String text = "";
-                String text2 = "";
-                int uniqueCount = 0;
-                int nonUniqueCount = 0;
-                int chunkSize = 6;
+                LetterNodeStrings = LetterNodeStrings.Distinct().ToList();              
 
-                for (int j = 0; j < temp1.Count; j++)
+                for (int j = 0; j < LetterNodeStrings.Count; j++)
                 {
-                    addToThisTree(roots[i], temp1[j], alphabet[i]);
-                    combineTree(roots[i]);
-                    //addToTree2(temp1[j], alphabet[i]);
-                    //combineTree();
-                    //text2 += temp1[j] + "\n";
-                    //text = prettyOutput(temp1[j], text, chunkSize);
-                    
-                }
-                chunkSize = 1;
-                for (int j = 0; j < temp2.Count; j++)
-                {
-                   // text2 += temp2[j] + "\n";
-                    //text = prettyOutput(temp2[j], text, chunkSize);
+                    addToThisTree(roots[i], LetterNodeStrings[j], alphabet[i]);
+                    combineTree(roots[i]);                    
                 }
 
-                if (temp1.Count == 0)
+                if (LetterNodeStrings.Count == 0)
                 {
                     ((TextBlock)dataView[i].Children[2]).Text = "No Data";
                 }
@@ -688,6 +666,7 @@ namespace penToText
             catch (XmlException exception)
             {
                 //file not setup
+                Console.WriteLine("Exception Reading XML: " + exception.ToString());
                 XmlDeclaration dec = myXmlDocument.CreateXmlDeclaration("1.0", null, null);
                 myXmlDocument.AppendChild(dec);
                 myXmlDocument.AppendChild(myXmlDocument.CreateElement("myData"));
@@ -721,6 +700,7 @@ namespace penToText
             catch (XmlException exception)
             {
                 //file not setup
+                Console.WriteLine("Exception Reading XML: " + exception.ToString());
                 XmlDeclaration dec = myXmlDocument.CreateXmlDeclaration("1.0", null, null);
                 myXmlDocument.AppendChild(dec);
                 myXmlDocument.AppendChild(myXmlDocument.CreateElement("myData"));
