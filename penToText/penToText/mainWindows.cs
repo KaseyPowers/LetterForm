@@ -20,15 +20,17 @@ namespace penToText
     class program
     {
         private static mainWindows manager;
+        private static Core core;
         [STAThread]
         static void Main(string[] args)
         {
-            manager = new mainWindows();
-            manager.createWindows();
-           
             App app = new App();
-            app.Run(manager.myInputWindow);
+            //manager = new mainWindows();
+            //manager.createWindows();
+            //app.Run(manager.myInputWindow);
 
+            core = new Core();
+            app.Run(core.getWindow());
         }
     }
     public class mainWindows

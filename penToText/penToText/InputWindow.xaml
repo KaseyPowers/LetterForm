@@ -10,13 +10,13 @@
     <DockPanel Name="Window_Container">
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="_File">
-                <MenuItem Header="_Clear" Click="Clear_Click"/>
-                <MenuItem Header="_Submit" Click="Submit_Click"/>
+                <MenuItem  Header="_Clear" Click="Clear_Click"/>
+                <MenuItem  Header="_Submit" Click="Submit_Click"/>
             </MenuItem>
             <MenuItem Header="_Windows">
-                <MenuItem Header="_Text Break Down" Click="Display_Click"/>
-                <MenuItem Header="_Overall Data" Click="Data_Click"/>
-                <MenuItem Header="_Set Letter" Click="Submit_Option_Click" />
+                <MenuItem  Header="_Text Break Down" Click="Display_Click"/>
+                <MenuItem  Header="_Overall Data" Click="Data_Click"/>
+                <MenuItem  Header="_Set Letter" Click="Submit_Option_Click" />
             </MenuItem>
         </Menu>
         <Canvas Name="InputCanvas" MouseDown="startDraw" MouseMove="moveDraw" StylusDown="startDraw" StylusMove="moveDraw" MouseUp="endDraw" StylusUp="endDraw">

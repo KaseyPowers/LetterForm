@@ -72,6 +72,7 @@
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
     <Compile Include="convertToText.cs" />
+    <Compile Include="Core.cs" />
     <Compile Include="DataDisplay.xaml.cs">
       <DependentUpon>DataDisplay.xaml</DependentUpon>
     </Compile>
@@ -80,11 +81,15 @@
     <Compile Include="DisplayWindow.xaml.cs">
       <DependentUpon>DisplayWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="dynamicDisplay2.cs" />
     <Compile Include="InputWindow.xaml.cs">
       <DependentUpon>InputWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="mainWindows.cs" />
     <Compile Include="DataStructures.cs" />
+    <Compile Include="PenToText.xaml.cs">
+      <DependentUpon>PenToText.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="submitPopup.xaml.cs">
       <DependentUpon>submitPopup.xaml</DependentUpon>
@@ -108,6 +113,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="InputWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="PenToText.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

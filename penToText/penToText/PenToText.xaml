@@ -1,0 +1,18 @@
+﻿<Window x:Class="penToText.PenToText"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="PenToText" Height="300" Width="300">
+    <DockPanel Name="Window_Container">
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="_File">
+                <MenuItem Name ="Clear" Header="_Clear"/>
+                <MenuItem Name ="Submit" Header="_Submit"/>
+            </MenuItem>
+            <MenuItem Header="_Windows">
+                <MenuItem Name ="TextBreakDown" Header="_Text Break Down"/>
+                <MenuItem Name ="OverallData" Header="_Overall Data"/>
+                <MenuItem Name ="SetLetter" Header="_Set Letter"/>
+            </MenuItem>
+        </Menu>    
+    </DockPanel>
+</Window>
