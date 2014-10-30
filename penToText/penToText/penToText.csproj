@@ -72,6 +72,7 @@
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
     <Compile Include="convertToText.cs" />
+    <Compile Include="ConvertToText2.cs" />
     <Compile Include="Core.cs" />
     <Compile Include="DataDisplay.xaml.cs">
       <DependentUpon>DataDisplay.xaml</DependentUpon>

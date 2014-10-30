@@ -19,6 +19,10 @@ namespace penToText
 {
     public class Core
     {
+
+        public BlockingCollection<mPoint> blockingData;
+        private Task addingData;
+
         /*store dynamic windows:
          * input
          * display outputs
@@ -31,12 +35,17 @@ namespace penToText
         private PenToText mainWindow;
         private dynamicDisplay2 display;
         private inputView input;
-        private List<multiLineDrawCanvas2> TextBreakDown;
+        public List<multiLineDrawCanvas2> TextBreakDown;
+        private convertToText2 myTextConverter;
         private static long pause = (long)(.25 * 1000);
         public Core()
         {
             display = new dynamicDisplay2(this);
             mainWindow = new PenToText();
+
+            myTextConverter = new convertToText2(this);
+            blockingData = new BlockingCollection<mPoint>();
+            addingData = Task.Factory.StartNew(() => myTextConverter.getData(blockingData));  
 
             mainWindow.Clear.Click += new RoutedEventHandler(Clear_Click);
             mainWindow.Submit.Click += new RoutedEventHandler(Submit_Click);
@@ -60,40 +69,35 @@ namespace penToText
             multiLineDrawCanvas2 nextCanvas;
 
             nextCanvas = new multiLineDrawCanvas2(2, 0, 1, 1, display, "Resample Original", true);
-            nextCanvas.outOfX = 1.2;
-            nextCanvas.outOfy = 1.2;
+            nextCanvas.outOf = 1.2;
             nextCanvas.padding = .1;
             nextCanvas.toAddCircles = true;
             display.addCanvas(nextCanvas);
             TextBreakDown.Add(nextCanvas);
 
             nextCanvas = new multiLineDrawCanvas2(3, 0, 1, 1, display, "SectionTest", true);
-            nextCanvas.outOfX = 1.2;
-            nextCanvas.outOfy = 1.2;
+            nextCanvas.outOf = 1.2;
             nextCanvas.padding = .1;
             nextCanvas.toAddCircles = true;
             display.addCanvas(nextCanvas);
             TextBreakDown.Add(nextCanvas);
 
             nextCanvas = new multiLineDrawCanvas2(2, 1, 1, 1, display, "Current Section Clean", true);
-            nextCanvas.outOfX = 1.2;
-            nextCanvas.outOfy = 1.2;
+            nextCanvas.outOf = 1.2;
             nextCanvas.padding = .1;
             nextCanvas.toAddCircles = true;
             display.addCanvas(nextCanvas);
             TextBreakDown.Add(nextCanvas);
 
             nextCanvas = new multiLineDrawCanvas2(3, 1, 1, 1, display, "Kasey Section Clean", true);
-            nextCanvas.outOfX = 1.2;
-            nextCanvas.outOfy = 1.2;
+            nextCanvas.outOf = 1.2;
             nextCanvas.padding = .1;
             nextCanvas.toAddCircles = true;
             display.addCanvas(nextCanvas);
             TextBreakDown.Add(nextCanvas);
 
             nextCanvas = new multiLineDrawCanvas2(4, 1, 1, 1, display, "Dominique Section Clean", true);
-            nextCanvas.outOfX = 1.2;
-            nextCanvas.outOfy = 1.2;
+            nextCanvas.outOf = 1.2;
             nextCanvas.padding = .1;
             nextCanvas.toAddCircles = true;
             display.addCanvas(nextCanvas);
@@ -109,12 +113,22 @@ namespace penToText
 
         public void addData(mPoint newPoint)
         {
-
+            if (!blockingData.IsAddingCompleted)
+            {
+                blockingData.Add(newPoint);
+            }
         }
 
         private void Clear_Click(object sender, RoutedEventArgs e)
         {
             display.clear();
+
+            blockingData.CompleteAdding();
+            addingData.Wait();
+            myTextConverter.clear();
+            blockingData = new BlockingCollection<mPoint>();
+
+            addingData = Task.Factory.StartNew(() => myTextConverter.getData(blockingData)); 
         }
 
         private void Submit_Click(object sender, RoutedEventArgs e)
@@ -136,5 +150,20 @@ namespace penToText
         {
 
         }
+
+        public void draw()
+        {
+            display.draw();
+        }
+        /*public void drawBreakDown()
+        {
+            for (int i = 0; i < TextBreakDown.Count; i++)
+            {
+                if (TextBreakDown[i].active)
+                {
+                    TextBreakDown[i].myPanel.Dispatcher.BeginInvoke(new drawingDelegate(TextBreakDown[i].draw));
+                }
+            }
+        }*/
     }
 }

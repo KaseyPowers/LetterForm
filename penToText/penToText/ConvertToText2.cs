@@ -19,35 +19,26 @@ using System.Windows.Threading;
 
 namespace penToText
 {
-    public class convertToText
+    public class convertToText2
     {
 
-        private delegate void drawingDelegate();
 
         //general data storage
-        private dynamicDisplay thisDynamicDisplay;
         private List<mPoint> originalData;
         private List<mPoint> cleanedData;
 
         //canvas stuff
-        private multiLineDrawCanvas clean;
-        private multiLineDrawCanvas clean2;
-        private multiLineDrawCanvas sectionClean1;
-        private multiLineDrawCanvas sectionClean2;
-        private multiLineDrawCanvas sectionClean3;
+        private Core core;
         private mSectionNode2 root;
-        public Size canvasSizes;
 
         //testing lists and whatnot
         private long[] tickCounts;
         private Stopwatch timer;
 
-        private bool activeDisplay;
-
-        public convertToText(dynamicDisplay display)
+        public convertToText2(Core core)
         {
             timer = new Stopwatch();
-
+            this.core = core;
             originalData = new List<mPoint>();
             cleanedData = new List<mPoint>();
 
@@ -56,69 +47,18 @@ namespace penToText
             {
                 tickCounts[i] = 0;
             }
+            /*
+             * id 0: Rescaled Original
+             * id 1: Original Sections
+             * id 2: Current Section Clean
+             * id 3: Kasey Section Clean
+             * if 4: Dominique Section Clean
+             */           
 
-            thisDynamicDisplay = display;
-
-            double side = 350;
-
-            clean = new multiLineDrawCanvas(0, 0, display, "Resample Original");
-            clean.outOfX = 1.2;
-            clean.outOfy = 1.2;
-            clean.padding = .1;
-            clean.myPanel.Width = side;
-            clean.myPanel.Height = side;
-            clean.toAddCircles = true;
-            thisDynamicDisplay.addCanvas(clean);
-
-            clean2 = new multiLineDrawCanvas(0, 1, display, "SectionTest");
-            clean2.outOfX = 1.2;
-            clean2.outOfy = 1.2;
-            clean2.padding = .1;
-            clean2.myPanel.Width = side;
-            clean2.myPanel.Height = side;
-            clean2.toAddCircles = true;
-            thisDynamicDisplay.addCanvas(clean2);
-
-            sectionClean1 = new multiLineDrawCanvas(0, 2, display, "Current Section Clean");
-            sectionClean1.outOfX = 1.2;
-            sectionClean1.outOfy = 1.2;
-            sectionClean1.padding = .1;
-            sectionClean1.myPanel.Width = side;
-            sectionClean1.myPanel.Height = side;
-            sectionClean1.toAddCircles = true;
-            thisDynamicDisplay.addCanvas(sectionClean1);
-
-            sectionClean2 = new multiLineDrawCanvas(1, 0, display, "Kasey Section Clean");
-            sectionClean2.outOfX = 1.2;
-            sectionClean2.outOfy = 1.2;
-            sectionClean2.padding = .1;
-            sectionClean2.myPanel.Width = side;
-            sectionClean2.myPanel.Height = side;
-            sectionClean2.toAddCircles = true;
-            thisDynamicDisplay.addCanvas(sectionClean2);
-
-            sectionClean3 = new multiLineDrawCanvas(1, 1, display, "Dominique Section Clean");
-            sectionClean3.outOfX = 1.2;
-            sectionClean3.outOfy = 1.2;
-            sectionClean3.padding = .1;
-            sectionClean3.myPanel.Width = side;
-            sectionClean3.myPanel.Height = side;
-            sectionClean3.toAddCircles = true;
-            thisDynamicDisplay.addCanvas(sectionClean3);
-            
         }
 
-        public void setDisplayActive(bool isActive)
+        public void setTree(mSectionNode2 treeRoot)
         {
-            activeDisplay = isActive;
-        }
-
-        public bool getDisplayActive()
-        {
-            return activeDisplay;
-        }
-
-        public void setTree(mSectionNode2 treeRoot){
             root = treeRoot;
         }
 
@@ -127,9 +67,16 @@ namespace penToText
             foreach (var item in data.GetConsumingEnumerable())
             {
                 mPoint current = item;
-
-                if (originalData.Count == 0 || !current.Equals(originalData[originalData.Count - 1]))
+                
+                mPoint last = null;
+                if (originalData.Count > 0)
                 {
+                    last = originalData[originalData.Count - 1];
+                }
+
+                if (originalData.Count == 0 || !(current.X == last.X && current.Y == last.Y && current.line == last.line))
+                {
+                    
                     originalData.Add(current);
                     updateData();
                 }
@@ -140,7 +87,7 @@ namespace penToText
         {
             double newScale;
             bool worked = true;
-            double xMin = double.PositiveInfinity, yMin = double.PositiveInfinity, xMax = 0, yMax = 0;
+            double xMin = double.PositiveInfinity, yMin = double.PositiveInfinity, xMax = double.NegativeInfinity, yMax = double.NegativeInfinity;
             List<mPoint> output = new List<mPoint>();
             if (data.Count > 1)
             {
@@ -173,18 +120,23 @@ namespace penToText
 
         public void updateData()
         {
-            //Original Resampled "clean" id= 0
+            /*
+             * id 0: Rescaled Original
+             * id 1: Original Sections
+             * id 2: Current Section Clean
+             * id 3: Kasey Section Clean
+             * if 4: Dominique Section Clean
+             */   
+
             timer.Start();
             cleanedData = resample(scaleList(new List<mPoint>(originalData)), .1);
             timer.Stop();
             tickCounts[0] += timer.ElapsedTicks;
             timer.Reset();
-            if (activeDisplay)
-            {
-                clean.newData(new List<mPoint>(cleanedData));
-                clean.titleText = "Original Resample From: " + originalData.Count + "\nTo: " + cleanedData.Count + "\nTicks: " + tickCounts[0];
-                clean.myPanel.Dispatcher.BeginInvoke(new drawingDelegate(clean.updateDraw));
-            }
+            core.TextBreakDown[0].newData(new List<mPoint>(cleanedData));
+            core.TextBreakDown[0].titleText = "Original Resample From: " + originalData.Count + "\nTo: " + cleanedData.Count + "\nTicks: " + tickCounts[0];
+            //core.TextBreakDown[0].myPanel.Dispatcher.BeginInvoke(new drawingDelegate(core.TextBreakDown[0].draw));
+  
 
             //Make Initial Segments "clean2" id=1
             timer.Start();
@@ -192,52 +144,44 @@ namespace penToText
             timer.Stop();
             tickCounts[1] += timer.ElapsedTicks;
             timer.Reset();
-            if (activeDisplay)
-            {
-                clean2.newData(new List<mPoint>(segments));
-                clean2.titleText = "Initial Segments\nTicks: " + tickCounts[1];
-                clean2.myPanel.Dispatcher.BeginInvoke(new drawingDelegate(clean2.updateDraw));
-            }
+            core.TextBreakDown[1].newData(new List<mPoint>(segments));
+            core.TextBreakDown[1].titleText = "Initial Segments\nTicks: " + tickCounts[1];
+            //core.TextBreakDown[1].myPanel.Dispatcher.BeginInvoke(new drawingDelegate(core.TextBreakDown[1].draw));
+            
 
             List<mPoint> cleanedSections;
             //Current Section Cleaning "SectionClean1" id =2
             timer.Start();
-            cleanedSections = cleanSections(new List<mPoint>(segments));
+            cleanedSections = minimumLines(cleanSections(new List<mPoint>(segments)));
             timer.Stop();
             tickCounts[2] += timer.ElapsedTicks;
             timer.Reset();
-            if (activeDisplay)
-            {
-                sectionClean1.newData(new List<mPoint>(cleanedSections));
-                sectionClean1.titleText = "Current section Cleaning\nTicks: " + tickCounts[2];
-                sectionClean1.myPanel.Dispatcher.BeginInvoke(new drawingDelegate(sectionClean1.updateDraw));
-            }
+            core.TextBreakDown[2].newData(new List<mPoint>(cleanedSections));
+            core.TextBreakDown[2].titleText = "Current section Cleaning\nTicks: " + tickCounts[2];
+            //sectionClean1.myPanel.Dispatcher.BeginInvoke(new drawingDelegate(sectionClean1.updateDraw));
 
             //Kasey Section Cleaning "SectionClean2" id=3
             timer.Start();
-            cleanedSections = kaseySectionClean(new List<mPoint>(segments));
+            cleanedSections = minimumLines(kaseySectionClean(new List<mPoint>(segments)));
             timer.Stop();
             tickCounts[3] += timer.ElapsedTicks;
             timer.Reset();
-            if (activeDisplay)
-            {
-                sectionClean2.newData(new List<mPoint>(cleanedSections));
-                sectionClean2.titleText = "Kasey section Cleaning\nTicks: " + tickCounts[3];
-                sectionClean2.myPanel.Dispatcher.BeginInvoke(new drawingDelegate(sectionClean2.updateDraw));
-            }
+            core.TextBreakDown[3].newData(new List<mPoint>(cleanedSections));
+            core.TextBreakDown[3].titleText = "Kasey section Cleaning\nTicks: " + tickCounts[3];
+            //sectionClean2.myPanel.Dispatcher.BeginInvoke(new drawingDelegate(sectionClean2.updateDraw));
 
             //Dominique Section Cleaning "SectionClean3" id=4
             timer.Start();
-            cleanedSections = dominiqueSectionClean(new List<mPoint>(segments));
+            cleanedSections = minimumLines(dominiqueSectionClean(new List<mPoint>(segments)));
             timer.Stop();
             tickCounts[4] += timer.ElapsedTicks;
             timer.Reset();
-            if (activeDisplay)
-            {
-                sectionClean3.newData(new List<mPoint>(cleanedSections));
-                sectionClean3.titleText = "Dominique section Cleaning\nTicks: " + tickCounts[4];
-                sectionClean3.myPanel.Dispatcher.BeginInvoke(new drawingDelegate(sectionClean3.updateDraw));
-            }   
+            core.TextBreakDown[4].newData(new List<mPoint>(cleanedSections));
+            core.TextBreakDown[4].titleText = "Dominique section Cleaning\nTicks: " + tickCounts[4];
+            //core.TextBreakDown[4].myPanel.Dispatcher.BeginInvoke(new drawingDelegate(sectionClean3.updateDraw));
+
+            core.draw();
+            
         }
         public string getSearchString(string searchFor)
         {
@@ -265,7 +209,7 @@ namespace penToText
                         searchChunk = thisChunk.Substring(0, 1);
                         value = Double.Parse(thisChunk.Substring(1));
                     }
-                     bool found = false;
+                    bool found = false;
                     for (int i = 0; i < current.children.Count && !found; i++)
                     {
                         mSectionNode2 child = current.children[i];
@@ -276,22 +220,25 @@ namespace penToText
                             found = true;
                         }
                     }
-                    if(!found){
+                    if (!found)
+                    {
                         fits.Add(current);
                     }
-                }else{
+                }
+                else
+                {
                     fits.Add(current);
                 }
             }
             string output = "";
-            string terminalString = "";            
+            string terminalString = "";
             string possibileString = "";
-            for (int i = 0; i < fits.Count; i++ )
+            for (int i = 0; i < fits.Count; i++)
             {
                 //found an endcase
                 if (!terminalString.Contains(fits[i].ifStopHere))
                 {
-                    terminalString += ""+fits[i].ifStopHere;
+                    terminalString += "" + fits[i].ifStopHere;
                 }
                 possibileString += fits[i].chars;
             }
@@ -301,91 +248,85 @@ namespace penToText
             }
             possibileString = new string(possibileString.ToList().Distinct().ToArray());
             output += "Possible Letters: " + possibileString;
-            
+
             return output;
         }
 
-        
-        
-       /* This might be useful later
-        public mSectionNode bestPosibility(String inputString, List<mSectionNode> possibilities)
-        {
-            String inputLetters = "";
-            List<double> inputValues = new List<double>();
 
-            int chunkAt = 0;
-            int chunkLength = 6;
-            while (inputString.Length >= (chunkAt + 1) * chunkLength)
-            {
-                String chunk = inputString.Substring(chunkAt * chunkLength, chunkLength);
-                if(chunk.Equals("Line00")){
-                    inputLetters+= chunk;
-                    inputValues.Add(0.0);
-                }else{
-                    inputLetters+= chunk.Substring(0,1);
-                    inputValues.Add(Double.Parse(chunk.Substring(1)));
-                }
-                chunkAt++;
-            }
 
-            int bestLoc = 0;
-            for (int i = 1; i < possibilities.Count; i++)
-            {
-                String a = getTreeString(possibilities[bestLoc]);
-                String b = getTreeString(possibilities[i]);
-                bool sameA = inputLetters.Equals(a);
-                bool sameB = inputLetters.Equals(b);
-                if (sameB && !sameA)
-                {
-                    //b is by default closer
-                    bestLoc = i;
-                }
-                else if((sameA == sameB) || a.Equals(b))
-                {
-                    //which is closer based on values
-                    double[] aValues = getValues(possibilities[bestLoc]);
-                    double[] bValues = getValues(possibilities[i]);
-                    double aClose = 0;
-                    double bClose = 0;
-                    for (int j = 0; j < inputValues.Count && j < aValues.Length; j++) 
-                    {
-                        aClose += Math.Abs(inputValues[j] - aValues[j]);
-                        bClose += Math.Abs(inputValues[j] - bValues[j]);
-                    }
+        /* This might be useful later
+         public mSectionNode bestPosibility(String inputString, List<mSectionNode> possibilities)
+         {
+             String inputLetters = "";
+             List<double> inputValues = new List<double>();
 
-                    if (bClose < aClose)
-                    {
-                        bestLoc = i;
-                    }
+             int chunkAt = 0;
+             int chunkLength = 6;
+             while (inputString.Length >= (chunkAt + 1) * chunkLength)
+             {
+                 String chunk = inputString.Substring(chunkAt * chunkLength, chunkLength);
+                 if(chunk.Equals("Line00")){
+                     inputLetters+= chunk;
+                     inputValues.Add(0.0);
+                 }else{
+                     inputLetters+= chunk.Substring(0,1);
+                     inputValues.Add(Double.Parse(chunk.Substring(1)));
+                 }
+                 chunkAt++;
+             }
 
-                }
-                else 
-                {
-                    //a equal and not b, neither equal to input, and not equal to each other
-                    //keep bestLoc as it
-                    if (!sameA)
-                    {
-                        if (Math.Abs(inputLetters.Length - a.Length) > Math.Abs(inputLetters.Length - b.Length))
-                        {
-                            bestLoc = i;
-                        }
-                    }
-                }
-            }
+             int bestLoc = 0;
+             for (int i = 1; i < possibilities.Count; i++)
+             {
+                 String a = getTreeString(possibilities[bestLoc]);
+                 String b = getTreeString(possibilities[i]);
+                 bool sameA = inputLetters.Equals(a);
+                 bool sameB = inputLetters.Equals(b);
+                 if (sameB && !sameA)
+                 {
+                     //b is by default closer
+                     bestLoc = i;
+                 }
+                 else if((sameA == sameB) || a.Equals(b))
+                 {
+                     //which is closer based on values
+                     double[] aValues = getValues(possibilities[bestLoc]);
+                     double[] bValues = getValues(possibilities[i]);
+                     double aClose = 0;
+                     double bClose = 0;
+                     for (int j = 0; j < inputValues.Count && j < aValues.Length; j++) 
+                     {
+                         aClose += Math.Abs(inputValues[j] - aValues[j]);
+                         bClose += Math.Abs(inputValues[j] - bValues[j]);
+                     }
 
-            return possibilities[bestLoc];
-        }
-        */
+                     if (bClose < aClose)
+                     {
+                         bestLoc = i;
+                     }
+
+                 }
+                 else 
+                 {
+                     //a equal and not b, neither equal to input, and not equal to each other
+                     //keep bestLoc as it
+                     if (!sameA)
+                     {
+                         if (Math.Abs(inputLetters.Length - a.Length) > Math.Abs(inputLetters.Length - b.Length))
+                         {
+                             bestLoc = i;
+                         }
+                     }
+                 }
+             }
+
+             return possibilities[bestLoc];
+         }
+         */
         public List<mPoint> getCleanedData()
         {
             updateData();
             return new List<mPoint>(cleanedData);
-        }
-
-
-        public void resize()
-        {
-
         }
 
         public void clear()
@@ -399,21 +340,6 @@ namespace penToText
             {
                 tickCounts[i] = 0;
             }
-
-            clean.newData(new List<mPoint>());
-            clean.updateDraw();
-
-            clean2.newData(new List<mPoint>());
-            clean2.updateDraw();
-
-            sectionClean1.newData(new List<mPoint>());
-            sectionClean1.updateDraw();
-
-            sectionClean2.newData(new List<mPoint>());
-            sectionClean2.updateDraw();
-
-            sectionClean3.newData(new List<mPoint>());
-            sectionClean3.updateDraw();
         }
 
         private double length(List<mPoint> input)
@@ -529,7 +455,7 @@ namespace penToText
             double e = .15; // height over length
             for (int i = 2; i < input.Count; i++)
             {
-                if (input[i - 2].line == input[i - 1].line && input[i - 1].line == input[i].line) 
+                if (input[i - 2].line == input[i - 1].line && input[i - 1].line == input[i].line)
                 {
                     if (getDirection(input[i - 2], input[i - 1]) == getDirection(input[i - 1], input[i]))
                     {
@@ -560,13 +486,14 @@ namespace penToText
                                 i = 2;
                             }
                         }
-                    }                    
+                    }
                 }
             }
             return input;
         }
 
-        public List<mPoint> kaseySectionClean(List<mPoint> input) {
+        public List<mPoint> kaseySectionClean(List<mPoint> input)
+        {
             return cleanSections(input);
         }
 
@@ -589,11 +516,12 @@ namespace penToText
             double value = dotProduct(u, v) / dotProduct(u, u);
             Point p = new Point(u.X * value + a.X, u.Y * value + a.Y);
             double output = double.PositiveInfinity;
-            if (value >= 0.0 && value <= 1.0) {
+            if (value >= 0.0 && value <= 1.0)
+            {
                 output = distance(c, new mPoint(p, c.line));
             }
             return output;
-            
+
         }
 
         private int getDirection(mPoint startPoint, mPoint endPoint)
@@ -640,7 +568,7 @@ namespace penToText
                     direction = 6;
                 }
             }
-            
+
             return direction;
         }
 
