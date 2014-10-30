@@ -39,9 +39,11 @@ namespace penToText
         private convertToText2 myTextConverter;
         private static long pause = (long)(.25 * 1000);
         public Core()
-        {
-            display = new dynamicDisplay2(this);
+        {            
             mainWindow = new PenToText();
+            mainWindow.WindowState = WindowState.Maximized;
+            display = new dynamicDisplay2(this);
+            mainWindow.Content = display.getContent();            
 
             myTextConverter = new convertToText2(this);
             blockingData = new BlockingCollection<mPoint>();
@@ -59,7 +61,6 @@ namespace penToText
             mainWindow.Left = System.Windows.SystemParameters.WorkArea.Left;
             mainWindow.ShowActivated = true;
             mainWindow.Show();
-            mainWindow.Window_Container.Children.Add(display.getContent());
 
             input = new inputView(0, 0, 2, 2, display, pause, true);
             display.addCanvas(input);

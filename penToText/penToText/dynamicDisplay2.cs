@@ -75,8 +75,8 @@ namespace penToText
                 yTotal += bestY;
             }
 
-            double columnWidth = System.Windows.SystemParameters.WorkArea.Width / xTotal;
-            double rowHeight = System.Windows.SystemParameters.WorkArea.Height / yTotal;
+            double columnWidth = core.getWindow().ActualWidth / xTotal;
+            double rowHeight = core.getWindow().ActualHeight / yTotal;
 
             double size = columnWidth;
             if (size > rowHeight)
@@ -358,7 +358,8 @@ namespace penToText
             currentBorder.BorderBrush = Brushes.Black;
             currentBorder.BorderThickness = new Thickness(1);
 
-            myPanel = new StackPanel();
+            myPanel = new DockPanel();
+            
             drawCanvas = new Canvas();
 
             currentBorder.Child = myPanel;
@@ -367,6 +368,7 @@ namespace penToText
 
             title = new TextBox();
             title.Text = titleText;
+            DockPanel.SetDock(title, Dock.Top);
             myPanel.Children.Add(title);
             myPanel.Children.Add(drawCanvas);
         }
@@ -387,21 +389,22 @@ namespace penToText
 
         public override void draw()
         {
+            title = new TextBox();
+            title.Text = titleText;
+            DockPanel.SetDock(title, Dock.Top);
             myPanel.Children.Clear();
-            
+            myPanel.Children.Add(title);
             myPanel.Children.Add(drawCanvas);
             drawCanvas.Children.Clear();
-            drawCanvas.Children.Add(title);
             title.Text = titleText;
 
             double radius = 4;
 
             if ((data != null) && data.Count > 1)
             {
-                List<Polyline> lines = new List<Polyline>();               
-
+                List<Polyline> lines = new List<Polyline>();
                 double Scale = drawCanvas.ActualHeight / outOf;
-                double leftPad = (Math.Abs(drawCanvas.RenderSize.Width - drawCanvas.RenderSize.Height)) / 2.0;
+                double leftPad = (Math.Abs(drawCanvas.ActualWidth - drawCanvas.ActualHeight)) / 2.0;
                 
                 for (int i = 0; i < data.Count; i++)
                 {
@@ -417,7 +420,7 @@ namespace penToText
                         drawCanvas.Children.Add(myLine);
                     }
 
-                    newX += padding+leftPad;
+                    newX += padding;
                     newY += padding;
 
                     newX *= Scale;
