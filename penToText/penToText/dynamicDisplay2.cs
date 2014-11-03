@@ -151,14 +151,13 @@ namespace penToText
 
         public void draw()
         {
-            core.getWindow().Dispatcher.BeginInvoke(new drawingDelegate(drawChildren));
-        }
-        public void drawChildren()
-        {
-            for (int i = 0; i < children.Count; i++)
-            {
-                children[i].draw();
-            }
+            core.getWindow().Dispatcher.BeginInvoke( new drawingDelegate(() =>
+                {
+                    for (int i = 0; i < children.Count; i++)
+                    {
+                        children[i].draw();
+                    }
+                }));
         }
     }
 
@@ -336,7 +335,7 @@ namespace penToText
     }
 
     public class multiLineDrawView : dynamicView2
-    {
+    {       
         private List<mPoint> data;
         public TextBox title;
         public Canvas drawCanvas;
@@ -375,9 +374,29 @@ namespace penToText
 
         }
 
-        public void newData(List<mPoint> data)
+        public void newData(List<mPoint> newData)
         {
-            this.data = new List<mPoint>(data);
+            data = new List<mPoint>();
+
+            if ((newData != null) && newData.Count > 1)
+            {
+                double Scale = drawCanvas.ActualHeight / outOf;
+                double leftPad = (Math.Abs(drawCanvas.ActualWidth - drawCanvas.ActualHeight)) / 2.0;
+
+                for (int i = 0; i < newData.Count; i++)
+                {
+                    double newX = newData[i].X;
+                    double newY = newData[i].Y;
+
+                    newX += padding;
+                    newY += padding;
+
+                    newX *= Scale;
+                    newY *= Scale;
+                    data.Add(new mPoint(newX, newY, newData[i].line));
+                }
+            }
+
         }
         public List<mPoint> getData() { return data; }
 
@@ -388,6 +407,10 @@ namespace penToText
 
         public override void draw()
         {
+            double radius = 4;            
+            List<Polyline> lines = new List<Polyline>();
+            List<Ellipse> circles = new List<Ellipse>();
+
             //title = new TextBox();
             title.Text = titleText;
             drawCanvas.Children.Clear();
@@ -395,38 +418,26 @@ namespace penToText
             //dock.Children.Add(title);
             //dock.Children.Add(drawCanvas);
 
-            double radius = 4;
-
-            if ((data != null) && data.Count > 1)
+            for (int i = 0; i < data.Count; i++)
             {
-                List<Polyline> lines = new List<Polyline>();
-                double Scale = drawCanvas.ActualHeight / outOf;
-                double leftPad = (Math.Abs(drawCanvas.ActualWidth - drawCanvas.ActualHeight)) / 2.0;
-                
-                for (int i = 0; i < data.Count; i++)
+                while (lines.Count <= data[i].line)
                 {
-                    double newX = data[i].X;
-                    double newY = data[i].Y;
-
-                    while (lines.Count <= data[i].line)
-                    {
                         Polyline myLine = new Polyline();
                         myLine.Stroke = Brushes.Black;
                         myLine.StrokeThickness = 2;
-                        lines.Add(myLine);
                         drawCanvas.Children.Add(myLine);
-                    }
-
-                    newX += padding;
-                    newY += padding;
-
-                    newX *= Scale;
-                    newY *= Scale;
-                    if (toAddCircles) { drawCircle(newX, newY, radius); }
-                    lines[data[i].line].Points.Add(new Point(newX, newY));
+                        lines.Add(myLine);
+                        
                 }
+                if (toAddCircles)
+                {
+                    drawCircle(data[i].X, data[i].Y, radius);
+                }
+                lines[data[i].line].Points.Add(data[i].getPoint());
             }
         }
+
+
 
         public void drawCircle(double centerX, double centerY, double r)
         {

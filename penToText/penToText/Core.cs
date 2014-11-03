@@ -43,11 +43,7 @@ namespace penToText
             mainWindow = new PenToText();
             mainWindow.WindowState = WindowState.Maximized;
             display = new dynamicDisplay2(this);
-            mainWindow.Window_Container.Children.Add(display.getContent());
-
-            myTextConverter = new convertToText2(this, 2);
-            blockingData = new BlockingCollection<mPoint>();
-            addingData = Task.Factory.StartNew(() => myTextConverter.getData(blockingData));  
+            mainWindow.Window_Container.Children.Add(display.getContent());            
 
             mainWindow.Clear.Click += new RoutedEventHandler(Clear_Click);
             mainWindow.Submit.Click += new RoutedEventHandler(Submit_Click);
@@ -71,14 +67,28 @@ namespace penToText
 
             multiLineDrawView nextCanvas;
 
-            nextCanvas = new multiLineDrawView(2, 0, 1, 1, display, "Resample Original", true);
+            nextCanvas = new multiLineDrawView(2, 0, 1, 1, display, "Rescale Original", true);
             nextCanvas.outOf = 1.2;
             nextCanvas.padding = .1;
             nextCanvas.toAddCircles = true;
             display.addCanvas(nextCanvas);
             TextBreakDown.Add(nextCanvas);
 
-            nextCanvas = new multiLineDrawView(3, 0, 1, 1, display, "Resample As New", true);
+            nextCanvas = new multiLineDrawView(3, 0, 1, 1, display, "Rescale As New", true);
+            nextCanvas.outOf = 1.2;
+            nextCanvas.padding = .1;
+            nextCanvas.toAddCircles = true;
+            display.addCanvas(nextCanvas);
+            TextBreakDown.Add(nextCanvas);
+
+            nextCanvas = new multiLineDrawView(2, 1, 1, 1, display, "Resample Original", true);
+            nextCanvas.outOf = 1.2;
+            nextCanvas.padding = .1;
+            nextCanvas.toAddCircles = true;
+            display.addCanvas(nextCanvas);
+            TextBreakDown.Add(nextCanvas);
+
+            nextCanvas = new multiLineDrawView(3, 1, 1, 1, display, "Resample As New", true);
             nextCanvas.outOf = 1.2;
             nextCanvas.padding = .1;
             nextCanvas.toAddCircles = true;
@@ -113,7 +123,9 @@ namespace penToText
             display.addCanvas(nextCanvas);
             TextBreakDown.Add(nextCanvas);*/
 
-            
+            myTextConverter = new convertToText2(this);
+            blockingData = new BlockingCollection<mPoint>();
+            addingData = Task.Factory.StartNew(() => myTextConverter.getData(blockingData));  
         }
 
         public PenToText getWindow()

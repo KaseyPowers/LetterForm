@@ -28,27 +28,25 @@ namespace penToText
         private List<mPoint> cleanedData;
         private List<mPoint> cleanedData2; 
         public List<mPoint> scaledList;
-        private double minX, minY, scale;
 
         //canvas stuff
         private Core core;
         private mSectionNode2 root;
 
         //testing lists and whatnot
-        private long[] miliSecondCounts;
-        private Stopwatch timer;
+        private TimeSpan[] elapsedTime;
 
-        public convertToText2(Core core, int windows)
+        public convertToText2(Core core)
         {
-            timer = new Stopwatch();
             this.core = core;
             originalData = new List<mPoint>();
             cleanedData = new List<mPoint>();
+            scaledList = new List<mPoint>();
 
-            miliSecondCounts = new long[windows];
-            for (int i = 0; i < miliSecondCounts.Length; i++)
+            elapsedTime = new TimeSpan[core.TextBreakDown.Count];
+            for (int i = 0; i < elapsedTime.Length; i++)
             {
-                miliSecondCounts[i] = 0;
+                elapsedTime[i] = TimeSpan.Zero;
             }
             /*
              * id 0: Rescaled Original
@@ -69,9 +67,9 @@ namespace penToText
         {
             foreach (var item in data.GetConsumingEnumerable())
             {
-                mPoint current = item;
-                addToScaleList(current);
+                mPoint current = item;                
                 mPoint last = null;
+
                 if (originalData.Count > 0)
                 {
                     last = originalData[originalData.Count - 1];
@@ -82,24 +80,21 @@ namespace penToText
                     
                     originalData.Add(current);
 
-                    timer.Start();
-                    addToScaleList(current);
-                    timer.Stop();
-                    miliSecondCounts[1] += timer.ElapsedMilliseconds;
-                    timer.Reset();
-
                     updateData();
                 }
             }
         }
 
         private double Xmin, Ymin, Xmax, Ymax;
-        public void addToScaleList(mPoint adding)
+        private double minX, minY, scale;
+        public bool addToScaleList(mPoint adding)
         {
+            
             if (scaledList == null)
             {
                 scaledList = new List<mPoint>();
             }
+
             if (scaledList.Count == 0)
             {
                 minX = adding.X;
@@ -110,16 +105,20 @@ namespace penToText
                 Ymin = double.PositiveInfinity;
                 scale = 1.0;
             }
+
             double yToAdd = 0.0, xToAdd = 0.0;
+
             if (minY > adding.Y) {
-                yToAdd = Math.Abs(minY - adding.Y)/scale;
+                yToAdd = (minY - adding.Y)/scale;
                 minY = adding.Y;
             }
+
             if (minX > adding.X)
             {
-                xToAdd = Math.Abs(minX - adding.X) / scale;
+                xToAdd = (minX - adding.X) / scale;
                 minX = adding.X;
             }
+
             if (xToAdd != 0.0 || yToAdd != 0.0)
             {
                 for (int i = 0; i < scaledList.Count; i++)
@@ -128,14 +127,15 @@ namespace penToText
                     scaledList[i].Y += yToAdd;
                 }
             }
+
             mPoint newPoint = new mPoint((adding.X - minX) / scale, (adding.Y - minY) / scale, adding.line);
             //newPoint.X = (newPoint.X - minX)/scale;
             //newPoint.Y = (newPoint.Y - minY)/scale;
-            
 
-            scaledList.Add(newPoint);
 
             bool changed = false;
+
+            scaledList.Add(newPoint);
 
             if (Xmin > newPoint.X) { Xmin = newPoint.X; changed = true; }
             if (Xmax < newPoint.X) { Xmax = newPoint.X; changed = true; }
@@ -146,19 +146,19 @@ namespace penToText
 
             if (scaledList.Count > 1 && changed)
             {
-                double Xmin2= double.PositiveInfinity, Ymin2 = double.PositiveInfinity, Xmax2 = double.NegativeInfinity, Ymax2 = double.NegativeInfinity;
+                double Xmin2 = double.PositiveInfinity, Ymin2 = double.PositiveInfinity, Xmax2 = double.NegativeInfinity, Ymax2 = double.NegativeInfinity;
                 double newScale = (Xmax - Xmin);
                 if (Ymax - Ymin > newScale) { newScale = Ymax - Ymin; }
                 for (int i = 0; i < scaledList.Count; i++)
                 {
-                    mPoint tempPoint = new mPoint( (scaledList[i].X - Xmin) / newScale, (scaledList[i].Y - Ymin) / newScale, scaledList[i].line);
+                    mPoint tempPoint = new mPoint((scaledList[i].X - Xmin) / newScale, (scaledList[i].Y - Ymin) / newScale, scaledList[i].line);
 
-                    if (Xmin2 > tempPoint.X) { Xmin2 = tempPoint.X;}
+                    if (Xmin2 > tempPoint.X) { Xmin2 = tempPoint.X; }
                     if (Xmax2 < tempPoint.X) { Xmax2 = tempPoint.X; }
                     if (Ymin2 > tempPoint.Y) { Ymin2 = tempPoint.Y; }
                     if (Ymax2 < tempPoint.Y) { Ymax2 = tempPoint.Y; }
-
-                    scaledList[i] = tempPoint;
+                    scaledList.RemoveAt(i);
+                    scaledList.Insert(i, tempPoint);
                 }
 
                 Xmin = Xmin2;
@@ -170,13 +170,165 @@ namespace penToText
                 //minY += (Ymin * scale);
                 scale *= newScale;
             }
+            
+            return changed;
         }
 
-        public void resampleAsNew(mPoint adding)
+        public bool addToScaleList(mPoint adding, List<mPoint> addTo)
         {
 
+            if (addTo.Count == 0)
+            {
+                minX = adding.X;
+                minY = adding.Y;
+                Xmax = double.NegativeInfinity;
+                Ymax = double.NegativeInfinity;
+                Xmin = double.PositiveInfinity;
+                Ymin = double.PositiveInfinity;
+                scale = 1.0;
+            }
+
+            double yToAdd = 0.0, xToAdd = 0.0;
+
+            if (minY > adding.Y)
+            {
+                yToAdd = (minY - adding.Y) / scale;
+                minY = adding.Y;
+            }
+
+            if (minX > adding.X)
+            {
+                xToAdd = (minX - adding.X) / scale;
+                minX = adding.X;
+            }
+
+            mPoint newPoint = new mPoint((adding.X - minX) / scale, (adding.Y - minY) / scale, adding.line);
+            //newPoint.X = (newPoint.X - minX)/scale;
+            //newPoint.Y = (newPoint.Y - minY)/scale;
+
+
+            bool changed = false;
+
+            if (xToAdd != 0.0 || yToAdd != 0.0)
+            {
+                for (int i = 0; i < addTo.Count; i++)
+                {
+                    if (xToAdd != 0)
+                    {
+                        addTo[i].X += xToAdd;
+                        if (Xmin > addTo[i].X) { Xmin = addTo[i].X; changed = true; }
+                        if (Xmax < addTo[i].X) { Xmax = addTo[i].X; changed = true; }
+                    }
+                    if (yToAdd != 0)
+                    {
+                        addTo[i].Y += yToAdd; 
+                        if (Ymin > addTo[i].Y) { Ymin = addTo[i].Y; changed = true; }
+                        if (Ymax < addTo[i].Y) { Ymax = addTo[i].Y; changed = true; }
+                    }
+                }
+            }
+
+            addTo.Add(newPoint);
+
+            if (Xmin > newPoint.X) { Xmin = newPoint.X; changed = true; }
+            if (Xmax < newPoint.X) { Xmax = newPoint.X; changed = true; }
+            if (Ymin > newPoint.Y) { Ymin = newPoint.Y; changed = true; }
+            if (Ymax < newPoint.Y) { Ymax = newPoint.Y; changed = true; }
+
+            //if (!changed && scaledList.Count == 2) { changed = true; }
+
+            if (addTo.Count > 1 && changed)
+            {
+                double Xmin2 = double.PositiveInfinity, Ymin2 = double.PositiveInfinity, Xmax2 = double.NegativeInfinity, Ymax2 = double.NegativeInfinity;
+                double newScale = (Xmax - Xmin);
+                if (Ymax - Ymin > newScale) { newScale = Ymax - Ymin; }
+                for (int i = 0; i < addTo.Count; i++)
+                {
+                    mPoint tempPoint = new mPoint((addTo[i].X - Xmin) / newScale, (addTo[i].Y - Ymin) / newScale, addTo[i].line);
+
+                    if (Xmin2 > tempPoint.X) { Xmin2 = tempPoint.X; }
+                    if (Xmax2 < tempPoint.X) { Xmax2 = tempPoint.X; }
+                    if (Ymin2 > tempPoint.Y) { Ymin2 = tempPoint.Y; }
+                    if (Ymax2 < tempPoint.Y) { Ymax2 = tempPoint.Y; }
+                    addTo.RemoveAt(i);
+                    addTo.Insert(i, tempPoint);
+                }
+
+                Xmin = Xmin2;
+                Xmax = Xmax2;
+                Ymin = Ymin2;
+                Ymax = Ymax2;
+
+                //minX += (Xmin * scale);
+                //minY += (Ymin * scale);
+                scale *= newScale;
+            }
+
+            return changed;
         }
 
+
+        private List<mPoint> resampled;
+        /*private double D;
+
+        
+        public void resampleAsNew(mPoint adding, double spaceBetweenPoints)
+        {
+            timer.Start();
+            bool changed = addToScaleList(adding);
+            timer.Stop();
+            miliSecondCounts[1] += timer.ElapsedMilliseconds;
+            timer.Reset();
+
+            if (resampled == null)
+            {
+                resampled = new List<mPoint>();
+                D = 0;
+            }
+            bool doMath = false;
+
+            if (changed || resampled.Count<2)
+            {
+                resampled = resample(new List<mPoint>(scaledList), spaceBetweenPoints);
+                doMath = true;
+                D = 0;
+            }
+            else
+            {
+                resampled.Add(scaledList[scaledList.Count-1]);
+                doMath = true;   
+            }
+
+            while (doMath)
+            {
+                int lastPos = resampled.Count - 1;
+                if (resampled[lastPos].line == resampled[lastPos - 1].line)
+                {
+                    double d = distance(resampled[lastPos], resampled[lastPos - 1]);
+                    if (D + d > spaceBetweenPoints)
+                    {
+                        mPoint toReplace = new mPoint((resampled[lastPos - 1].X + ((spaceBetweenPoints - D) / d) * (resampled[lastPos].X - resampled[lastPos - 1].X)),
+                            (resampled[lastPos - 1].Y + ((spaceBetweenPoints - D) / d) * (resampled[lastPos].Y - resampled[lastPos - 1].Y)),
+                            resampled[lastPos].line);
+                        resampled.Insert(lastPos, toReplace);
+                        D = 0;                        
+                    }
+                    else
+                    {
+                        resampled.RemoveAt(lastPos);
+                        doMath = false;
+                        D += d;
+                    }
+                }
+                else
+                {
+                    doMath = false;
+                    D = 0;
+                }
+            }
+        }
+
+        */
         public List<mPoint> scaleList(List<mPoint> data)
         {
             double newScale;
@@ -212,6 +364,7 @@ namespace penToText
             return output;
         }
 
+        
         public void updateData()
         {
             /*
@@ -221,49 +374,47 @@ namespace penToText
              * id 3: Kasey Section Clean
              * if 4: Dominique Section Clean
              */
+             
             int id = 0;
 
-
-
-            timer.Start();
-            cleanedData = scaleList(new List<mPoint>(originalData));
-            timer.Stop();
-            miliSecondCounts[id] += timer.ElapsedMilliseconds;
-            timer.Reset();
+            elapsedTime[id] += Time(() =>
+            {
+                cleanedData = scaleList(new List<mPoint>(originalData));
+            });            
             core.TextBreakDown[id].newData(new List<mPoint>(cleanedData));
-            core.TextBreakDown[id].titleText = "Original ReScale: " + "\nTime: " + (miliSecondCounts[id])+"ms";
+            core.TextBreakDown[id].titleText = "Original ReScale: From: " + originalData.Count + "\nTo: " + cleanedData.Count + "\nTime: " + (elapsedTime[id].TotalMilliseconds);
             id++;
 
 
-            timer.Start();
-            cleanedData2 =new List<mPoint>(scaledList);
-            timer.Stop();
-            miliSecondCounts[id] += timer.ElapsedMilliseconds;
-            timer.Reset();
-            core.TextBreakDown[id].newData(new List<mPoint>(cleanedData2));
-            core.TextBreakDown[id].titleText = "ReScale as new: " + "\nTime: " + (miliSecondCounts[id]) + "ms";
+            elapsedTime[id] += Time(() =>
+            {
+                addToScaleList(originalData[originalData.Count - 1], scaledList);
+            });            
+            core.TextBreakDown[id].newData(new List<mPoint>(scaledList));
+            core.TextBreakDown[id].titleText = "ReScale as new: From: " + originalData.Count + "\nTo: " + scaledList.Count + "\nTime: " + (elapsedTime[id].TotalMilliseconds);
             id++;
 
-            timer.Start();
-            List<mPoint> resample1 = resample( scaleList(new List<mPoint>(originalData)),.1);
-            timer.Stop();
-            miliSecondCounts[id] += timer.ElapsedMilliseconds;
-            timer.Reset();
+            List<mPoint> resample1 = new List<mPoint>();
+              
+            elapsedTime[id] += Time(() =>
+            {
+                resample1 = resample(new List<mPoint>(cleanedData), .1);
+            });            
             core.TextBreakDown[id].newData(new List<mPoint>(resample1));
-            core.TextBreakDown[id].titleText = "Original Resample From: " + originalData.Count + "\nTo: " + cleanedData.Count + "\nTicks: " + (miliSecondCounts[id]) + "ms";
+            core.TextBreakDown[id].titleText = "Original Resample From: " + originalData.Count + "\nTo: " + resample1.Count + "\nTime: " + (elapsedTime[id].TotalMilliseconds);
             id++;
 
 
-            /*timer.Start();
-            cleanedData2 = new List<mPoint>(scaledList);
-            timer.Stop();
-            miliSecondCounts[id] += timer.ElapsedMilliseconds;
-            timer.Reset();*/
-            core.TextBreakDown[id].newData(new List<mPoint>(cleanedData2));
-            core.TextBreakDown[id].titleText = "Resample as new, From: " + originalData.Count + "\nTo: " + cleanedData2.Count + "\nTicks: " + (miliSecondCounts[id]) + "ms";
+            elapsedTime[id] += Time(() =>
+            {
+                resampled = resample(new List<mPoint>(scaledList), .1);
+            });            
+            core.TextBreakDown[id].newData(new List<mPoint>(resampled));
+            core.TextBreakDown[id].titleText = "Resample as new, From: " + originalData.Count + "\nTo: " + resampled.Count + "\nTime: " + (elapsedTime[id].TotalMilliseconds) ;
             id++;
 
-            /*//Make Initial Segments "clean2" id=1
+            /*
+            //Make Initial Segments "clean2" id=1
             timer.Start();
             List<mPoint> segments = Dominique(new List<mPoint>(cleanedData));
             timer.Stop();
@@ -304,6 +455,15 @@ namespace penToText
             core.draw();
             
         }
+             
+        public static TimeSpan Time(Action action)
+        {
+            Stopwatch stopwatch = Stopwatch.StartNew();
+            action();
+            stopwatch.Stop();
+            return stopwatch.Elapsed;
+        }
+        
         public string getSearchString(string searchFor)
         {
             Queue<mSectionNode2> frontier = new Queue<mSectionNode2>();
@@ -446,22 +606,91 @@ namespace penToText
          */
         public List<mPoint> getCleanedData()
         {
-            updateData();
+            //updateData();
             return new List<mPoint>(cleanedData);
+        }
+
+        public void updateDataBenchmark()
+        {
+            double iterations = 1000;
+            //int id = 0;
+
+            double[] milliseconds = new double[4];
+            for (int i = 0; i < 4; i++)
+            {
+                milliseconds[i] = 0;
+            }
+
+            for (int i = 0; i < iterations; i++)
+            {
+                List<mPoint> scale1 = new List<mPoint>();
+                List<mPoint> scale2 = new List<mPoint>();
+                List<mPoint> resample1 = new List<mPoint>();
+                List<mPoint> resample2 = new List<mPoint>();
+                List<mPoint> original2 = new List<mPoint>();
+
+                for (int n = 0; n < originalData.Count; n++)
+                {
+                    original2.Add(originalData[n]);
+
+                    milliseconds[0] += Time(() =>
+                    {
+                        scale1 = scaleList(original2);
+                    }).TotalMilliseconds;
+
+                    milliseconds[1] += Time(() =>
+                    {
+                        addToScaleList(originalData[n],scale2);
+                    }).TotalMilliseconds;
+
+                    milliseconds[2] += Time(() =>
+                    {
+                        resample1 = resample(new List<mPoint>(scale1), .1);
+                    }).TotalMilliseconds;
+
+                    milliseconds[3] += Time(() =>
+                    {
+                        resample2 = resample(new List<mPoint>(scale2), .1);
+                    }).TotalMilliseconds;                    
+                }
+                if (i == 0)
+                {
+                    core.TextBreakDown[0].titleText = "Scale all";
+                    core.TextBreakDown[1].titleText = "Scale as new";
+                    core.TextBreakDown[2].titleText = "Resample all";
+                    core.TextBreakDown[3].titleText = "Resamel as new";
+                    core.TextBreakDown[0].newData(new List<mPoint>(scale1));
+                    core.TextBreakDown[1].newData(new List<mPoint>(scale2));
+                    core.TextBreakDown[2].newData(new List<mPoint>(resample1));
+                    core.TextBreakDown[3].newData(new List<mPoint>(resample2));
+                    core.draw();
+                }
+            }
+
+            core.TextBreakDown[0].titleText = "Scale all\nTime: " + milliseconds[0] + "ms";
+            core.TextBreakDown[1].titleText = "Scale as new\nTime: " + milliseconds[1] + "ms";
+            core.TextBreakDown[2].titleText = "Resample all\nTime: " + milliseconds[2] + "ms";
+            core.TextBreakDown[3].titleText = "Resamel as new\nTime: " + milliseconds[3] + "ms";
+            core.draw();
+            
+
         }
 
         public void clear()
         {
+
+            //updateDataBenchmark();
+
             //reset data
             originalData.Clear();
             cleanedData.Clear();
-            cleanedData2.Clear();
+            //cleanedData2.Clear();
             scaledList.Clear();
+            resampled.Clear();
 
-            miliSecondCounts = new long[5];
-            for (int i = 0; i < miliSecondCounts.Length; i++)
+            for (int i = 0; i < elapsedTime.Length; i++)
             {
-                miliSecondCounts[i] = 0;
+                elapsedTime[i] = TimeSpan.Zero;
             }
         }
 
@@ -510,6 +739,9 @@ namespace penToText
                             if (i == data.Count - 1) { output.Add(data[i]); }
                             bigD += lilD;
                         }
+                    }else{
+                        output.Add(data[i]);
+                        bigD = 0;
                     }
                 }
 
