@@ -388,11 +388,12 @@ namespace penToText
 
         public override void draw()
         {
-            title = new TextBox();
+            //title = new TextBox();
             title.Text = titleText;
-            DockPanel.SetDock(title, Dock.Top);
             drawCanvas.Children.Clear();
-            title.Text = titleText;
+            //DockPanel.SetDock(title, Dock.Top);
+            //dock.Children.Add(title);
+            //dock.Children.Add(drawCanvas);
 
             double radius = 4;
 

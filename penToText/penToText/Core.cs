@@ -45,7 +45,7 @@ namespace penToText
             display = new dynamicDisplay2(this);
             mainWindow.Window_Container.Children.Add(display.getContent());
 
-            myTextConverter = new convertToText2(this);
+            myTextConverter = new convertToText2(this, 2);
             blockingData = new BlockingCollection<mPoint>();
             addingData = Task.Factory.StartNew(() => myTextConverter.getData(blockingData));  
 
@@ -71,14 +71,21 @@ namespace penToText
 
             multiLineDrawView nextCanvas;
 
-            nextCanvas = new multiLineDrawView(3, 0, 1, 1, display, "Resample Original", true);
+            nextCanvas = new multiLineDrawView(2, 0, 1, 1, display, "Resample Original", true);
             nextCanvas.outOf = 1.2;
             nextCanvas.padding = .1;
             nextCanvas.toAddCircles = true;
             display.addCanvas(nextCanvas);
             TextBreakDown.Add(nextCanvas);
 
-            nextCanvas = new multiLineDrawView(4, 0, 1, 1, display, "SectionTest", true);
+            nextCanvas = new multiLineDrawView(3, 0, 1, 1, display, "Resample As New", true);
+            nextCanvas.outOf = 1.2;
+            nextCanvas.padding = .1;
+            nextCanvas.toAddCircles = true;
+            display.addCanvas(nextCanvas);
+            TextBreakDown.Add(nextCanvas);
+
+            /*nextCanvas = new multiLineDrawView(3, 0, 1, 1, display, "SectionTest", true);
             nextCanvas.outOf = 1.2;
             nextCanvas.padding = .1;
             nextCanvas.toAddCircles = true;
@@ -104,7 +111,7 @@ namespace penToText
             nextCanvas.padding = .1;
             nextCanvas.toAddCircles = true;
             display.addCanvas(nextCanvas);
-            TextBreakDown.Add(nextCanvas);
+            TextBreakDown.Add(nextCanvas);*/
 
             
         }
