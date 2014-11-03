@@ -26,8 +26,8 @@ namespace penToText
         //general data storage
         private List<mPoint> originalData;
         private List<mPoint> cleanedData;
-        private List<mPoint> cleanedData2; 
         public List<mPoint> scaledList;
+        private List<mPoint> scaledList2; 
 
         //canvas stuff
         private Core core;
@@ -42,6 +42,7 @@ namespace penToText
             originalData = new List<mPoint>();
             cleanedData = new List<mPoint>();
             scaledList = new List<mPoint>();
+            scaledList2 = new List<mPoint>();
 
             elapsedTime = new TimeSpan[core.TextBreakDown.Count];
             for (int i = 0; i < elapsedTime.Length; i++)
@@ -209,6 +210,11 @@ namespace penToText
 
             bool changed = false;
 
+            if (Xmin > newPoint.X) { Xmin = newPoint.X; changed = true; }
+            if (Xmax < newPoint.X) { Xmax = newPoint.X; changed = true; }
+            if (Ymin > newPoint.Y) { Ymin = newPoint.Y; changed = true; }
+            if (Ymax < newPoint.Y) { Ymax = newPoint.Y; changed = true; }
+
             if (xToAdd != 0.0 || yToAdd != 0.0)
             {
                 for (int i = 0; i < addTo.Count; i++)
@@ -216,13 +222,11 @@ namespace penToText
                     if (xToAdd != 0)
                     {
                         addTo[i].X += xToAdd;
-                        if (Xmin > addTo[i].X) { Xmin = addTo[i].X; changed = true; }
                         if (Xmax < addTo[i].X) { Xmax = addTo[i].X; changed = true; }
                     }
                     if (yToAdd != 0)
                     {
                         addTo[i].Y += yToAdd; 
-                        if (Ymin > addTo[i].Y) { Ymin = addTo[i].Y; changed = true; }
                         if (Ymax < addTo[i].Y) { Ymax = addTo[i].Y; changed = true; }
                     }
                 }
@@ -230,10 +234,7 @@ namespace penToText
 
             addTo.Add(newPoint);
 
-            if (Xmin > newPoint.X) { Xmin = newPoint.X; changed = true; }
-            if (Xmax < newPoint.X) { Xmax = newPoint.X; changed = true; }
-            if (Ymin > newPoint.Y) { Ymin = newPoint.Y; changed = true; }
-            if (Ymax < newPoint.Y) { Ymax = newPoint.Y; changed = true; }
+            
 
             //if (!changed && scaledList.Count == 2) { changed = true; }
 
@@ -267,8 +268,104 @@ namespace penToText
             return changed;
         }
 
+        private double minX2, minY2, scale2;
 
-        private List<mPoint> resampled;
+        private void addToCompromiseScaling(mPoint adding, List<mPoint> addTo)
+        {
+            if (addTo.Count == 0)
+            {
+                minX2 = adding.X;
+                minY2 = adding.Y;                
+                scale2 = 1.0;
+            }
+                        
+            bool changed = false;
+
+            double yToAdd = 0.0, xToAdd = 0.0;
+
+            if (minY2 > adding.Y)
+            {
+                yToAdd = (minY2 - adding.Y) / scale2;
+                minY2 = adding.Y;
+                changed = true;
+            }
+
+            if (minX2 > adding.X)
+            {
+                xToAdd = (minX2 - adding.X) / scale2;
+                minX2 = adding.X;
+                changed = true;
+            }
+            mPoint newPoint = new mPoint((adding.X - minX2) / scale2, (adding.Y - minY2) / scale2, adding.line);
+            bool changeFromMax = !changed;
+            bool newScaleX = true;
+            if (!changed)
+            {
+                if (newPoint.X > newPoint.Y && newPoint.X>1)
+                {
+                    changed = true;
+                    newScaleX = true;
+                }
+                else if (newPoint.Y > newPoint.X && newPoint.Y > 1)
+                {
+                    changed = true;
+                    newScaleX = false;
+                }
+            }
+
+            addTo.Add(newPoint);
+            if (changed)
+            {
+                double max = double.NegativeInfinity;
+
+                for (int i = 0; i < addTo.Count; i++)
+                {
+                    if (i != addTo.Count - 1)
+                    {
+                        addTo[i].X += xToAdd;
+                    }
+                    if (i != addTo.Count - 1)
+                    {
+                        addTo[i].Y += yToAdd;
+                    }
+                    if (!changeFromMax)
+                    {
+                        if (max < addTo[i].X)
+                        {
+                            max = addTo[i].X;
+                        }
+                        if (max < addTo[i].Y)
+                        {
+                            max = addTo[i].Y;
+                        }
+                    }
+                    else if (newScaleX)
+                    {
+                        if (max < addTo[i].X)
+                        {
+                            max = addTo[i].X;
+                        }
+                    }
+                    else
+                    {
+                        if (max < addTo[i].Y)
+                        {
+                            max = addTo[i].Y;
+                        }
+                    }
+                }
+
+                for (int i = 0; i < addTo.Count; i++)
+                {
+                    addTo[i].X/=max;
+                    addTo[i].Y/=max;
+                }
+                scale2 *= max;
+            }                    
+        }
+
+
+        //private List<mPoint> resampled;
         /*private double D;
 
         
@@ -394,23 +491,14 @@ namespace penToText
             core.TextBreakDown[id].titleText = "ReScale as new: From: " + originalData.Count + "\nTo: " + scaledList.Count + "\nTime: " + (elapsedTime[id].TotalMilliseconds);
             id++;
 
-            List<mPoint> resample1 = new List<mPoint>();
+
               
             elapsedTime[id] += Time(() =>
             {
-                resample1 = resample(new List<mPoint>(cleanedData), .1);
+                addToCompromiseScaling(originalData[originalData.Count - 1], scaledList2);
             });            
-            core.TextBreakDown[id].newData(new List<mPoint>(resample1));
-            core.TextBreakDown[id].titleText = "Original Resample From: " + originalData.Count + "\nTo: " + resample1.Count + "\nTime: " + (elapsedTime[id].TotalMilliseconds);
-            id++;
-
-
-            elapsedTime[id] += Time(() =>
-            {
-                resampled = resample(new List<mPoint>(scaledList), .1);
-            });            
-            core.TextBreakDown[id].newData(new List<mPoint>(resampled));
-            core.TextBreakDown[id].titleText = "Resample as new, From: " + originalData.Count + "\nTo: " + resampled.Count + "\nTime: " + (elapsedTime[id].TotalMilliseconds) ;
+            core.TextBreakDown[id].newData(new List<mPoint>(scaledList2));
+            core.TextBreakDown[id].titleText = "Scale Compromise From: " + originalData.Count + "\nTo: " + scaledList2.Count + "\nTime: " + (elapsedTime[id].TotalMilliseconds);
             id++;
 
             /*
@@ -686,7 +774,8 @@ namespace penToText
             cleanedData.Clear();
             //cleanedData2.Clear();
             scaledList.Clear();
-            resampled.Clear();
+            scaledList2.Clear();
+            //resampled.Clear();
 
             for (int i = 0; i < elapsedTime.Length; i++)
             {

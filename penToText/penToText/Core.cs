@@ -81,14 +81,14 @@ namespace penToText
             display.addCanvas(nextCanvas);
             TextBreakDown.Add(nextCanvas);
 
-            nextCanvas = new multiLineDrawView(2, 1, 1, 1, display, "Resample Original", true);
+            nextCanvas = new multiLineDrawView(2, 1, 1, 1, display, "Rescale Compromise", true);
             nextCanvas.outOf = 1.2;
             nextCanvas.padding = .1;
             nextCanvas.toAddCircles = true;
             display.addCanvas(nextCanvas);
             TextBreakDown.Add(nextCanvas);
 
-            nextCanvas = new multiLineDrawView(3, 1, 1, 1, display, "Resample As New", true);
+            /*nextCanvas = new multiLineDrawView(3, 1, 1, 1, display, "Resample As New", true);
             nextCanvas.outOf = 1.2;
             nextCanvas.padding = .1;
             nextCanvas.toAddCircles = true;
