@@ -106,12 +106,12 @@ namespace penToText
                     {
                         //current.myPanel.Width = size - .5;
                         //current.myPanel.Height = size - .5;
-                        Grid.SetColumn(current.thisView, current.xPos);
-                        Grid.SetColumnSpan(current.thisView, current.xSize);
-                        Grid.SetRow(current.thisView, current.yPos);
-                        Grid.SetRowSpan(current.thisView, current.ySize);
+                        Grid.SetColumn(current.myFrame, current.xPos);
+                        Grid.SetColumnSpan(current.myFrame, current.xSize);
+                        Grid.SetRow(current.myFrame, current.yPos);
+                        Grid.SetRowSpan(current.myFrame, current.ySize);
 
-                        flexibleGrid.Children.Add(current.thisView);
+                        flexibleGrid.Children.Add(current.myFrame);
                     }
                 }
             }
@@ -151,17 +151,20 @@ namespace penToText
 
         public void draw()
         {
+            core.getWindow().Dispatcher.BeginInvoke(new drawingDelegate(drawChildren));
+        }
+        public void drawChildren()
+        {
             for (int i = 0; i < children.Count; i++)
             {
-                children[i].myPanel.Dispatcher.BeginInvoke(new drawingDelegate(children[i].draw));
+                children[i].draw();
             }
         }
     }
 
     public abstract class dynamicView2
     {
-        public UIElement thisView;
-        public Panel myPanel;
+        public Frame myFrame;
         public int xPos;
         public int yPos;
         public int xSize;
@@ -197,6 +200,7 @@ namespace penToText
         Stopwatch timer;
         int currentLine;
         private bool first;
+        Canvas drawCanvas;
         public inputView(int xPos, int yPos, int xSize, int ySize, dynamicDisplay2 parent, long pause, bool reserved)
         {
             currentLine = 0;
@@ -215,30 +219,28 @@ namespace penToText
             currentBorder.BorderBrush = Brushes.Black;
             currentBorder.BorderThickness = new Thickness(1);
 
-            Canvas thisCanvas = new Canvas();
+            drawCanvas = new Canvas();
 
-            thisCanvas.AddHandler(Canvas.MouseDownEvent, new MouseButtonEventHandler(startMouseDraw));
-            thisCanvas.AddHandler(Canvas.StylusDownEvent , new StylusDownEventHandler(startStylusDraw));
+            drawCanvas.AddHandler(Canvas.MouseDownEvent, new MouseButtonEventHandler(startMouseDraw));
+            drawCanvas.AddHandler(Canvas.StylusDownEvent , new StylusDownEventHandler(startStylusDraw));
 
-            thisCanvas.AddHandler(Canvas.MouseMoveEvent, new MouseEventHandler(mouseMoveDraw));
-            thisCanvas.AddHandler(Canvas.StylusMoveEvent, new StylusEventHandler(stylusMoveDraw));
+            drawCanvas.AddHandler(Canvas.MouseMoveEvent, new MouseEventHandler(mouseMoveDraw));
+            drawCanvas.AddHandler(Canvas.StylusMoveEvent, new StylusEventHandler(stylusMoveDraw));
 
-            thisCanvas.AddHandler(Canvas.MouseUpEvent, new MouseButtonEventHandler(endMouseDraw));
-            thisCanvas.AddHandler(Canvas.StylusUpEvent, new StylusEventHandler(endStylusDraw));
-            thisCanvas.Background = Brushes.White;
+            drawCanvas.AddHandler(Canvas.MouseUpEvent, new MouseButtonEventHandler(endMouseDraw));
+            drawCanvas.AddHandler(Canvas.StylusUpEvent, new StylusEventHandler(endStylusDraw));
+            drawCanvas.Background = Brushes.White;
 
-            currentBorder.Child = thisCanvas;
-
-            myPanel = thisCanvas;
-            thisView = currentBorder;
-
+            currentBorder.Child = drawCanvas;
+            myFrame = new Frame();
+            myFrame.Content = currentBorder;
         }    
        
         public override void clear()
         {
             currentLine = 0;
             first = true;
-            myPanel.Children.Clear();
+            drawCanvas.Children.Clear();
         }
 
         public override void draw()
@@ -262,7 +264,7 @@ namespace penToText
                     myLine = new Polyline();
                     myLine.Stroke = System.Windows.Media.Brushes.Black;
                     myLine.StrokeThickness = 2;
-                    myPanel.Children.Add(myLine);
+                    drawCanvas.Children.Add(myLine);
                 }
                 timer.Reset();
                 Point position = e.GetPosition(parent.core.getWindow());
@@ -285,7 +287,7 @@ namespace penToText
                 myLine = new Polyline();
                 myLine.Stroke = System.Windows.Media.Brushes.Black;
                 myLine.StrokeThickness = 2;
-                myPanel.Children.Add(myLine);
+                drawCanvas.Children.Add(myLine);
             }
             timer.Reset();
             Point position = e.GetPosition(parent.core.getWindow());
@@ -333,7 +335,7 @@ namespace penToText
         }
     }
 
-    public class multiLineDrawCanvas2 : dynamicView2
+    public class multiLineDrawView : dynamicView2
     {
         private List<mPoint> data;
         public TextBox title;
@@ -343,7 +345,7 @@ namespace penToText
         public double padding = .1;
         public double outOf = 1.2;
         //public double outOfy = 1.2;
-        public multiLineDrawCanvas2(int xPos, int yPos, int xSize, int ySize, dynamicDisplay2 parent, string titleText, bool reserved)
+        public multiLineDrawView(int xPos, int yPos, int xSize, int ySize, dynamicDisplay2 parent, string titleText, bool reserved)
         {
             toAddCircles = false;
             this.reserveSpace = reserved;
@@ -354,23 +356,23 @@ namespace penToText
             this.ySize = ySize;
             this.parent = parent;
 
+            myFrame = new Frame();
             Border currentBorder = new Border();
+            DockPanel dock = new DockPanel();
             currentBorder.BorderBrush = Brushes.Black;
             currentBorder.BorderThickness = new Thickness(1);
-
-            myPanel = new DockPanel();
-            
             drawCanvas = new Canvas();
 
-            currentBorder.Child = myPanel;
+            myFrame.Content = currentBorder;
+            currentBorder.Child = dock;
 
-            thisView = currentBorder;
 
             title = new TextBox();
             title.Text = titleText;
             DockPanel.SetDock(title, Dock.Top);
-            myPanel.Children.Add(title);
-            myPanel.Children.Add(drawCanvas);
+            dock.Children.Add(title);
+            dock.Children.Add(drawCanvas);
+
         }
 
         public void newData(List<mPoint> data)
@@ -381,10 +383,7 @@ namespace penToText
 
         public override void clear()
         {
-            drawCanvas.Children.Clear();
-            myPanel.Children.Clear();
-            myPanel.Children.Add(title);
-            myPanel.Children.Add(drawCanvas);
+            drawCanvas.Children.Clear();            
         }
 
         public override void draw()
@@ -392,9 +391,6 @@ namespace penToText
             title = new TextBox();
             title.Text = titleText;
             DockPanel.SetDock(title, Dock.Top);
-            myPanel.Children.Clear();
-            myPanel.Children.Add(title);
-            myPanel.Children.Add(drawCanvas);
             drawCanvas.Children.Clear();
             title.Text = titleText;
 
@@ -443,6 +439,25 @@ namespace penToText
             Canvas.SetLeft(circle, left);
             Canvas.SetTop(circle, top);
             drawCanvas.Children.Add(circle);
+        }
+    }
+
+    public class charInputView : dynamicView2
+    {
+        TextBlock prompt;
+        TextBox input;
+        public charInputView()
+        {
+            
+        }
+
+        public override void clear()
+        {
+        }
+
+        public override void draw()
+        {
+
         }
     }
 }
