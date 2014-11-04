@@ -27,6 +27,7 @@ namespace penToText
         private List<mPoint> originalData;
         private List<mPoint> cleanedData;
         private List<mPoint> cleanedData2;
+        private List<mPoint> cleanedData3;
         public List<mPoint> scaledList;
 
         //canvas stuff
@@ -42,6 +43,7 @@ namespace penToText
             originalData = new List<mPoint>();
             cleanedData = new List<mPoint>();
             cleanedData2 = new List<mPoint>();
+            cleanedData3 = new List<mPoint>();
             scaledList = new List<mPoint>();
 
             elapsedTime = new TimeSpan[core.TextBreakDown.Count];
@@ -186,8 +188,11 @@ namespace penToText
 
         private double Xmin, Ymin, scale2, D;
 
-        private List<mPoint> addToSampledScale(mPoint adding, List<mPoint> addTo, double minDistance)
+        private List<mPoint> addToScaleAndSlope(mPoint addPoint, List<mPoint> addTo, double minDistance, double roundValue)
         {
+
+            mPoint adding = new mPoint(RoundToNearest(addPoint.X, .01), RoundToNearest(addPoint.Y, .01), addPoint.line);
+
             if (addTo.Count == 0)
             {
                 Xmin = adding.X;
@@ -213,7 +218,7 @@ namespace penToText
                 Xmin = adding.X;
                 changed = true;
             }
-            mPoint newPoint = new mPoint((adding.X - Xmin) / scale2, (adding.Y - Ymin) / scale2, adding.line);
+            mPoint newPoint = new mPoint((adding.X - Xmin) / scale2, (adding.Y - Ymin) / scale2, 0);
             bool changeFromMax = !changed;
             bool newScaleX = true;
             if (!changed)
@@ -230,7 +235,13 @@ namespace penToText
                 }
             }
 
+
+
             addTo.Add(newPoint);
+
+
+
+
             if (changed)
             {
                 double max = double.NegativeInfinity;
@@ -281,61 +292,125 @@ namespace penToText
             }
 
 
-            if (addTo.Count > 2)
+
+            if (addTo.Count >= 1)
             {
-                List<mPoint> final = new List<mPoint>();
-                final.Add(addTo[0]);
-                int startLoc = 1;
-                if (!changed)
-                {
-                    startLoc = (addTo.Count / 2);
-                    for (int i = 0; i < startLoc; i++)
-                    {
+                double bigD = 0;
+                double lilD = 0;
+                int sloc = 1;
+                List<mPoint>  output = new List<mPoint>();
+                output.Add(addTo[0]);
 
-                    }
-                     D = distance(final[final.Count - 1], final[final.Count - 2]);
-                    if (D > minDistance)
-                    {
-                        D = 0;
-                        startLoc--;
-                        final.RemoveAt(final.Count - 1);
-                    }
-                }
-
-                double d;
-                for (int i = startLoc; i < addTo.Count; i++)
+                for (int i = 1; i < addTo.Count; i++)
                 {
-                    if (addTo[i].line == addTo[i - 1].line)
+                    lilD = distance(addTo[i], addTo[i - 1]);
+                    if (bigD + lilD > minDistance)
                     {
-                        d = distance(addTo[i], addTo[i - 1]);
-                        if (D + d > minDistance)
-                        {
-                            mPoint temp = new mPoint((addTo[i - 1].X + ((minDistance - D) / d) * (addTo[i].X - addTo[i - 1].X)),
-                                (addTo[i - 1].Y + ((minDistance - D) / d) * (addTo[i].Y - addTo[i - 1].Y)),
-                                addTo[i].line);
-                            final.Add(temp);
-                            addTo.Insert(i, temp);
-                            D = 0;
-                        }
-                        else
-                        {
-                            if (i == addTo.Count - 1) { final.Add(addTo[i]); }
-                            D += d;
-                        }
+                        mPoint temp = new mPoint(
+                            (addTo[i - 1].X + ((minDistance - bigD) / lilD) * (addTo[i].X - addTo[i - 1].X)),
+                            (addTo[i - 1].Y + ((minDistance - bigD) / lilD) * (addTo[i].Y - addTo[i - 1].Y)),
+                            addTo[i].line);
+                        output.Add(temp);
+                        addTo.Insert(i, temp);
+                        bigD = 0;
                     }
                     else
                     {
-                        D = 0;
-                        final.Add(addTo[i]);
+                        if (lilD == 0 || i == addTo.Count - 1)
+                        {
+                            bigD = 0;
+                            output.Add(addTo[i]);
+                        }
+                        bigD += lilD;
                     }
                 }
-                return final;
+
+                return output;
             }
             else
             {
-                return addTo;
+                return new List<mPoint>(addTo);
             }
         }
+
+        private mPoint roundedPoint(mPoint input, double toRound)
+        {
+            return new mPoint(RoundToNearest(input.X, toRound), RoundToNearest(input.Y, toRound), input.line);
+        }
+
+        public int direction(mPoint a, mPoint b)
+        {
+            int output = 0;
+            /*
+             * 1: up
+             * 2: down
+             * 3: left
+             * 4: right
+             * 5: up-left
+             * 6: up-right
+             * 7: down-left
+             * 8: down-right
+             */
+            if (a.X == b.X)
+            {
+                //up or down
+                if (a.Y == b.Y)
+                {
+                    //no Y change
+                    output = 0;
+                }
+                else if (a.Y > b.Y)
+                {
+                    //down
+                    output = 2;
+                }
+                else if (a.Y < b.Y)
+                {
+                    //up
+                    output = 1;
+                }
+            }
+            else if (a.X < b.X)
+            {
+                //going right
+                if (a.Y == b.Y)
+                {
+                    //no Y change
+                    output = 4;
+                }
+                else if (a.Y > b.Y)
+                {
+                    //down
+                    output = 8;
+                }
+                else if (a.Y < b.Y)
+                {
+                    //up
+                    output = 6;
+                }
+            }
+            else if (a.X > b.X)
+            {
+                //going left
+                if (a.Y == b.Y)
+                {
+                    //no Y change
+                    output = 3;
+                }
+                else if (a.Y > b.Y)
+                {
+                    //down
+                    output = 5;
+                }
+                else if (a.Y < b.Y)
+                {
+                    //up
+                    output = 7;
+                }
+            }
+            return output;
+        }
+
         public List<mPoint> scaleList(List<mPoint> data)
         {
             double newScale;
@@ -405,10 +480,18 @@ namespace penToText
               
             elapsedTime[id] += Time(() =>
             {
-                cleanedData2 = addToSampledScale(originalData[originalData.Count - 1], cleanedData2, .1);
+                cleanedData2 = addToScaleAndSlope(originalData[originalData.Count - 1], new List<mPoint>(cleanedData2), .1, .01);
             });            
             core.TextBreakDown[id].newData(new List<mPoint>(cleanedData2));
             core.TextBreakDown[id].titleText = "Rescale and Resample: " + originalData.Count + "\nTo: " + cleanedData2.Count + "\nTime: " + (elapsedTime[id].TotalMilliseconds);
+            id++;
+
+            elapsedTime[id] += Time(() =>
+            {
+                cleanedData3 = resample(scaleList(new List<mPoint>(originalData)), .1);
+            });
+            core.TextBreakDown[id].newData(new List<mPoint>(cleanedData3));
+            core.TextBreakDown[id].titleText = "Rescale and Resample Original: " + originalData.Count + "\nTo: " + cleanedData3.Count + "\nTime: " + (elapsedTime[id].TotalMilliseconds);
             id++;
 
             /*
@@ -709,7 +792,12 @@ namespace penToText
 
         private double distance(mPoint a, mPoint b)
         {
-            return Math.Sqrt(Math.Pow((a.X - b.X), 2) + Math.Pow((a.Y - b.Y), 2));
+            double output = 0;
+            if (a.line == b.line)
+            {
+                output = Math.Sqrt(Math.Pow((a.X - b.X), 2) + Math.Pow((a.Y - b.Y), 2));
+            }
+            return output;
         }
 
         private List<mPoint> resample(List<mPoint> data, double spaceBetweenPoints)
@@ -722,26 +810,23 @@ namespace penToText
                 output.Add(data[0]);
                 for (int i = 1; i < data.Count; i++)
                 {
-                    if (data[i].line == data[i - 1].line)
+                    lilD = distance(data[i], data[i - 1]);
+                    if (bigD + lilD > spaceBetweenPoints)
                     {
-                        lilD = distance(data[i], data[i - 1]);
-                        if (bigD + lilD > spaceBetweenPoints)
-                        {
-                            mPoint temp = new mPoint((data[i - 1].X + ((spaceBetweenPoints - bigD) / lilD) * (data[i].X - data[i - 1].X)),
-                                (data[i - 1].Y + ((spaceBetweenPoints - bigD) / lilD) * (data[i].Y - data[i - 1].Y)),
-                                data[i].line);
-                            output.Add(temp);
-                            data.Insert(i, temp);
-                            bigD = 0;
-                        }
-                        else
-                        {
-                            if (i == data.Count - 1) { output.Add(data[i]); }
-                            bigD += lilD;
-                        }
-                    }else{
-                        output.Add(data[i]);
+                        mPoint temp = new mPoint((data[i - 1].X + ((spaceBetweenPoints - bigD) / lilD) * (data[i].X - data[i - 1].X)),
+                            (data[i - 1].Y + ((spaceBetweenPoints - bigD) / lilD) * (data[i].Y - data[i - 1].Y)),
+                            data[i].line);
+                        output.Add(temp);
+                        data.Insert(i, temp);
                         bigD = 0;
+                    }
+                    else
+                    {
+                        if (lilD == 0 || i == data.Count - 1) {
+                            bigD = 0;
+                            output.Add(data[i]);
+                        }
+                        bigD += lilD;
                     }
                 }
 
@@ -936,6 +1021,36 @@ namespace penToText
         private double yChange(mPoint a, mPoint b)
         {
             return (a.Y - b.Y);
+        }
+
+
+        public static Double RoundToNearest(Double passednumber, Double roundto)
+        {
+            // 105.5 up to nearest 1 = 106
+            // 105.5 up to nearest 10 = 110
+            // 105.5 up to nearest 7 = 112
+            // 105.5 up to nearest 100 = 200
+            // 105.5 up to nearest 0.2 = 105.6
+            // 105.5 up to nearest 0.3 = 105.6
+
+            //if no rounto then just pass original number back
+            if (roundto == 0)
+            {
+                return passednumber;
+            }
+            else
+            {
+                double up = Math.Ceiling(passednumber / roundto) * roundto;
+                double down = Math.Floor(passednumber / roundto) * roundto;
+                if (Math.Abs(up - passednumber) >= Math.Abs(down - passednumber))
+                {
+                    return down;
+                }
+                else
+                {
+                    return up;
+                }
+            }
         }
     }
 }

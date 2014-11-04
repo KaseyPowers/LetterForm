@@ -444,23 +444,24 @@ namespace penToText
                 output.Add(data[0]);
                 for (int i = 1; i < data.Count; i++)
                 {
-                    if (data[i].line == data[i - 1].line)
+                    lilD = distance(data[i], data[i - 1]);
+                    if (bigD + lilD > spaceBetweenPoints)
                     {
-                        lilD = distance(data[i], data[i - 1]);
-                        if (bigD + lilD > spaceBetweenPoints)
+                        mPoint temp = new mPoint((data[i - 1].X + ((spaceBetweenPoints - bigD) / lilD) * (data[i].X - data[i - 1].X)),
+                            (data[i - 1].Y + ((spaceBetweenPoints - bigD) / lilD) * (data[i].Y - data[i - 1].Y)),
+                            data[i].line);
+                        output.Add(temp);
+                        data.Insert(i, temp);
+                        bigD = 0;
+                    }
+                    else
+                    {
+                        if (lilD == 0 || i == data.Count - 1)
                         {
-                            mPoint temp = new mPoint((data[i - 1].X + ((spaceBetweenPoints - bigD) / lilD) * (data[i].X - data[i - 1].X)),
-                                (data[i - 1].Y + ((spaceBetweenPoints - bigD) / lilD) * (data[i].Y - data[i - 1].Y)),
-                                data[i].line);
-                            output.Add(temp);
-                            data.Insert(i, temp);
                             bigD = 0;
+                            output.Add(data[i]);
                         }
-                        else
-                        {
-                            if (i == data.Count - 1) { output.Add(data[i]); }
-                            bigD += lilD;
-                        }
+                        bigD += lilD;
                     }
                 }
 
@@ -468,6 +469,7 @@ namespace penToText
             }
             else { return data; }
         }
+        
 
         public List<mPoint> Dominique(List<mPoint> input)
         {

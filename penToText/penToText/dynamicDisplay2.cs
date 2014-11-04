@@ -47,36 +47,8 @@ namespace penToText
             flexibleGrid.ColumnDefinitions.Clear();
             flexibleGrid.RowDefinitions.Clear();
 
-            double xTotal = 0.0;
-            double yTotal = 0.0;
-            for (int x = 0; x <= x_max; x++)
-            {
-                double bestX = 0.0;
-                for (int i = 0; i < children.Count; i++)
-                {
-                    if (children[i].xPos == x && children[i].xSize > bestX && (children[i].active || children[i].reserveSpace))
-                    {
-                        bestX = children[i].xSize;
-                    }
-                }
-                xTotal += bestX;
-            }
-
-            for (int y = 0; y <= y_max; y++)
-            {
-                double bestY = 0.0;
-                for (int i = 0; i < children.Count; i++)
-                {
-                    if (children[i].yPos == y && children[i].ySize > bestY && (children[i].active || children[i].reserveSpace))
-                    {
-                        bestY = children[i].ySize;
-                    }
-                }
-                yTotal += bestY;
-            }
-
-            double columnWidth = core.getWindow().ActualWidth / xTotal;
-            double rowHeight = core.getWindow().ActualHeight / yTotal;
+            double columnWidth = core.getWindow().ActualWidth / x_max;
+            double rowHeight = core.getWindow().ActualHeight / y_max;
 
             double size = columnWidth;
             if (size > rowHeight)
@@ -84,14 +56,14 @@ namespace penToText
                 size = rowHeight;
             }
 
-            for (int x = 0; x <= xTotal; x++)
+            for (int x = 0; x <= x_max; x++)
             {
                 ColumnDefinition newColumn = new ColumnDefinition();
                 newColumn.Width = new GridLength(size);
                 flexibleGrid.ColumnDefinitions.Add(newColumn);
             }
 
-            for (int y = 0; y <= yTotal; y++)
+            for (int y = 0; y <= y_max; y++)
             {
                 RowDefinition newRow = new RowDefinition();
                 newRow.Height = new GridLength(size);
@@ -104,8 +76,6 @@ namespace penToText
                 {
                     if (current.active)
                     {
-                        //current.myPanel.Width = size - .5;
-                        //current.myPanel.Height = size - .5;
                         Grid.SetColumn(current.myFrame, current.xPos);
                         Grid.SetColumnSpan(current.myFrame, current.xSize);
                         Grid.SetRow(current.myFrame, current.yPos);
@@ -123,13 +93,13 @@ namespace penToText
             y_max = 0;
             foreach (dynamicView2 canvas in children)
             {
-                if (canvas.xPos > x_max)
+                if (canvas.xPos + canvas.xSize > x_max)
                 {
-                    x_max = canvas.xPos;
+                    x_max = canvas.xPos + canvas.xSize;
                 }
-                if (canvas.yPos > y_max)
+                if (canvas.yPos + canvas.ySize > y_max)
                 {
-                    y_max = canvas.yPos;
+                    y_max = canvas.yPos + canvas.ySize;
                 }
             }
             updateDisplay();
