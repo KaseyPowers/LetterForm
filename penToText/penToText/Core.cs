@@ -81,19 +81,13 @@ namespace penToText
             display.addCanvas(nextCanvas);
             TextBreakDown.Add(nextCanvas);
 
-            nextCanvas = new multiLineDrawView(3, 1, 1, 1, display, "Rescale and resample", true);
+            nextCanvas = new multiLineDrawView(3, 0, 1, 1, display, "Resample and Rescale", true);
             nextCanvas.outOf = 1.2;
             nextCanvas.padding = .1;
             nextCanvas.toAddCircles = true;
             display.addCanvas(nextCanvas);
             TextBreakDown.Add(nextCanvas);
 
-            nextCanvas = new multiLineDrawView(3, 0, 1, 1, display, "Rescale and resample original", true);
-            nextCanvas.outOf = 1.2;
-            nextCanvas.padding = .1;
-            nextCanvas.toAddCircles = true;
-            display.addCanvas(nextCanvas);
-            TextBreakDown.Add(nextCanvas);
 
             /*nextCanvas = new multiLineDrawView(3, 1, 1, 1, display, "Resample As New", true);
             nextCanvas.outOf = 1.2;
@@ -184,15 +178,5 @@ namespace penToText
         {
             display.draw();
         }
-        /*public void drawBreakDown()
-        {
-            for (int i = 0; i < TextBreakDown.Count; i++)
-            {
-                if (TextBreakDown[i].active)
-                {
-                    TextBreakDown[i].myPanel.Dispatcher.BeginInvoke(new drawingDelegate(TextBreakDown[i].draw));
-                }
-            }
-        }*/
     }
 }
