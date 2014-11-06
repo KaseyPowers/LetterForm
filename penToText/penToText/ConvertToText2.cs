@@ -921,81 +921,89 @@ namespace penToText
                 points = input;
                 //int sDir = KaseyClockWiseDirection(input[0], input[1]);
             }
-
-            int lineAt = 0;
-            List<mPoint> output = new List<mPoint>();
-            output.Add(points[0]);
-            mPoint lastPoint = points[0];
-            for (int i = 0; i < points.Count - 1; i++)
+            if (points.Count < 2)
             {
-                if (points[i].line == points[i + 1].line)
+                return points;
+            }
+            else
+            {
+
+                List<mPoint> output = new List<mPoint>();
+                output.Add(points[0]);
+                mPoint lastPoint = points[0];
+                double firstLine = RoundToNearest(distance(points[0], points[1]), .02);
+                for (int i = 0; i < points.Count - 1; i++)
                 {
-                    double X = points[i + 1].X - points[i].X;
-                    double Y = points[i + 1].Y - points[i].Y;
-                    Point nextPoint = smartFitPointTo45(X, Y);
-                    mPoint nextMPoint = new mPoint(nextPoint.X + lastPoint.X, nextPoint.Y + lastPoint.Y, lineAt);
-                    output.Add(nextMPoint);
-                    lastPoint = nextMPoint;
+                    if (lastPoint.line == points[i + 1].line)
+                    {
+                        double X = points[i + 1].X - points[i].X;
+                        double Y = points[i + 1].Y - points[i].Y;
+                        Point nextPoint = smartFitPointTo45(X, Y, firstLine);
+                        mPoint nextMPoint = new mPoint(nextPoint.X + lastPoint.X, nextPoint.Y + lastPoint.Y, points[i + 1].line);
+                        output.Add(nextMPoint);
+                        lastPoint = nextMPoint;
+                    }
+                    else
+                    {
+                        output.Add(points[i + 1]);
+                        lastPoint = points[i + 1];
+                    }
                 }
-                else
-                {
-                    lineAt++;
-                    output.Add(points[i + 1]);
-                    lastPoint = points[i + 1];
-                }
+
+
+                return output;
             }
 
 
-            return output;
+           /*     List<double> lengths = new List<double>();
+                List<int> directions = new List<int>();
+                List<int> newLineLocs = new List<int>();
+                newLineLocs.Add(0);
 
-            /*
-            List<double> lengths = new List<double>();
-            List<int> directions = new List<int>();
-            List<int> newLineLocs = new List<int>();
-            newLineLocs.Add(0);
-
-            for (int i = 0; i < points.Count - 1; i++)
-            {
-                if (points[i].line == points[i + 1].line)
+                for (int i = 0; i < points.Count - 1; i++)
                 {
-                    lengths.Add(distance(points[i], points[i+1]));
-                    directions.Add(KaseyCircularDirection(points[i], points[i+1]));
-                }else{
-                    //assume lenght of line would never be 0;
-                    lengths.Add(0);
-                    directions.Add(0);
-                    newLineLocs.Add(i);
+                    if (points[i].line == points[i + 1].line)
+                    {
+                        lengths.Add(distance(points[i], points[i + 1]));
+                        directions.Add(KaseyCircularDirection2(points[i], points[i + 1]));
+                    }
+                    else
+                    {
+                        //assume lenght of line would never be 0;
+                        lengths.Add(0);
+                        directions.Add(0);
+                        newLineLocs.Add(i);
+                    }
                 }
-            }
 
 
-            int lineAt = 0;
-            mPoint lastPoint = new mPoint(points[0].X, points[0].Y, lineAt);
-            List<mPoint> output = new List<mPoint>();
-            output.Add(lastPoint);
+                int lineAt = 0;
+                mPoint lastPoint = new mPoint(points[0].X, points[0].Y, lineAt);
+                List<mPoint> output = new List<mPoint>();
+                output.Add(lastPoint);
 
-            for (int i = 0; i < lengths.Count; i++)
-            {
-                if (lengths[i] != 0)
+                for (int i = 0; i < lengths.Count; i++)
                 {
-                    double angle = (Math.PI * ((directions[i] - 1) * 45)) / 180.0;
-                    double X = lastPoint.X + lengths[i] * Math.Cos(angle);
-                    double Y = lastPoint.Y + lengths[i] * Math.Sin(angle);
-                    mPoint thisPoint = new mPoint(X, Y, lineAt);
-                    output.Add(thisPoint);
-                    lastPoint = thisPoint;
+                    if (lengths[i] != 0)
+                    {
+                        double angle = (Math.PI * ((directions[i] - 1) * 45)) / 180.0;
+                        double X = lastPoint.X + lengths[i] * Math.Cos(angle);
+                        double Y = lastPoint.Y + lengths[i] * Math.Sin(angle);
+                        mPoint thisPoint = new mPoint(X, Y, lineAt);
+                        output.Add(thisPoint);
+                        lastPoint = thisPoint;
+                    }
+                    else
+                    {
+                        lineAt++;
+                        lastPoint = points[newLineLocs[lineAt]];
+                        lastPoint.line = lineAt;
+                        output.Add(lastPoint);
+                    }
                 }
-                else
-                {
-                    lineAt++;
-                    lastPoint = points[newLineLocs[lineAt]];
-                    lastPoint.line = lineAt;
-                    output.Add(lastPoint);
-                }
-            }
 
-            return output;
-             */
+                return output;
+            }*/
         }
 
         public int KaseyCircularDirection(mPoint a, mPoint b)
@@ -1049,6 +1057,7 @@ namespace penToText
             if (a.line == b.line)
             {
                 //the vector values
+
                 double X = b.X - a.X;
                 double Y = b.Y - a.Y;
                 output = smartFitTo45(X, Y);
@@ -1056,102 +1065,65 @@ namespace penToText
             return output;
         }
 
+
+        private double angleDifferent(double a, double b)
+        {
+            double difference = Math.Abs(a  - b ) % 360;
+
+            if (difference > 180)
+            {
+                difference = 360 - difference;
+            }
+
+            return difference;
+        }
+        
         private int smartFitTo45( double X, double Y)
         {
             //get the angle of theline, accounting for quadrant, in degrees
-            double degrees = Math.Atan2(Y, X) * (180.0 / Math.PI);
-            //change range from 0<angle<360 instead of -180<angle<180
-            if (degrees < 0)
-            {
-                degrees += 360;
-            }
+            double degrees = ((Math.Atan2(Y, X) * (180.0 / Math.PI))+360) % 360;
             //round angle to a 45 degree angle
-            double flatAngle = 0;
-            while (Math.Abs(flatAngle - degrees) > Math.Abs((flatAngle + 90) - degrees))
+            int flatAngle = (int)RoundToNearest(degrees, 90.0)/45;
+            /*while (angleDifferent((flatAngle + 2) * 45.0, degrees) < angleDifferent((flatAngle) * 45.0, degrees) && flatAngle < 8)
             {
-                flatAngle += 90;
-            }
-            double slopedAngle = flatAngle - 45;
+                flatAngle+=2;
+            }*/
 
-            if (Math.Abs(slopedAngle - degrees) > Math.Abs((flatAngle + 45) - degrees))
+            int slopeAngle = flatAngle;
+            if (angleDifferent((flatAngle + 1) * 45.0, degrees) < angleDifferent((flatAngle - 1) * 45.0, degrees))
             {
-                slopedAngle = flatAngle + 45;
-            }
-            double startLength = Math.Sqrt(X * X + Y * Y);
-            double slopeX = Math.Cos(degreesToRadians(slopedAngle)) * startLength;
-            double slopeY = Math.Sign(degreesToRadians(slopedAngle)) * startLength;
-            double flatX = Math.Cos(degreesToRadians(flatAngle)) * startLength;
-            double flatY = Math.Sign(degreesToRadians(flatAngle)) * startLength;
-            double flatMag = Math.Sqrt((X - slopeX) * (X - slopeX) + (Y - slopeY) * (Y - slopeY));
-            double slopeMag = Math.Sqrt((X - flatX) * (X - flatX) + (Y - flatY) * (Y - flatY));
-
-            bool useSlope = (flatMag > 2.0 * slopeMag);
-
-            //get the angle of the line, accounting for quadrant, in degrees
-            int output = 0;
-            if (useSlope)
-            {
-                output = (int)slopedAngle;
+                slopeAngle++;
             }
             else
             {
-                output = (int)flatAngle;
+                slopeAngle--;
             }
-            return (output / 45 + 1);
+
+            //slopeAngle = slopeAngle % 8;
+
+            int newAngle = flatAngle;
+
+            if (3 * angleDifferent(flatAngle * 45.0, degrees) > 2 * angleDifferent(slopeAngle * 45.0, degrees))
+            {
+                newAngle = slopeAngle;
+            }
+
+            return newAngle + 1;
+
         }
 
-        private Point smartFitPointTo45(double X, double Y)
+        private Point smartFitPointTo45(double X, double Y, double unitLength)
         {
             //get the angle of theline, accounting for quadrant, in degrees
-            double degrees = Math.Atan2(Y, X) * (180.0 / Math.PI);
-            //change range from 0<angle<360 instead of -180<angle<180
-            if (degrees < 0)
+            //double magnitude = Math.Sqrt(X * X + Y * Y);
+            double newX = X;
+            double newY = Y;
+            if (X != 0 && Y != 0)
             {
-                degrees += 360;
-            }
-            //round angle to a 45 degree angle
-            double flatAngle = 0;
-            while (Math.Abs(flatAngle - degrees) > Math.Abs((flatAngle + 90) - degrees))
-            {
-                flatAngle += 90;
-            }
-            double slopedAngle = flatAngle - 45;
-
-            if (Math.Abs(slopedAngle - degrees) > Math.Abs((flatAngle + 45) - degrees))
-            {
-                slopedAngle = flatAngle + 45;
-            }
-            double startLength = Math.Sqrt(X * X + Y * Y);
-            double slopeX = Math.Cos(degreesToRadians(slopedAngle)) * startLength;
-            double slopeY = Math.Sign(degreesToRadians(slopedAngle)) * startLength;
-            double flatX = Math.Cos(degreesToRadians(flatAngle)) * startLength;
-            double flatY = Math.Sign(degreesToRadians(flatAngle)) * startLength;
-            double flatMag = Math.Sqrt((X - slopeX) * (X - slopeX) + (Y - slopeY) * (Y - slopeY));
-            double slopeMag = Math.Sqrt((X - flatX) * (X - flatX) + (Y - flatY) * (Y - flatY));
-
-            bool useSlope = (flatMag > 2.0 * slopeMag);
-
-            //get the angle of the line, accounting for quadrant, in degrees
-            double newX = slopeX;
-            double newY = slopeY;
-            double newAngle = slopedAngle;
-            if (!useSlope)
-            {
-                newX = flatX;
-                newY = flatY;
-                newAngle = flatAngle;
-            }
-            double xDif = Math.Abs(X - newX);
-            double yDif = Math.Abs(Y - newY);
-
-            if (xDif < yDif)
-            {
-                //keep X position
-            }
-            else
-            {
-                //keey Y position
-                newX = newY * Math.Tan(degreesToRadians(newAngle));
+                double angle = degreesToRadians((smartFitTo45(X, Y) - 1) * 45.0);
+                double hypotenuse = RoundToNearest(Math.Sqrt(X * X + Y * Y), (unitLength/100.0));
+                newX = Math.Cos(angle) * hypotenuse;
+                newY = Math.Sin(angle) * hypotenuse;
             }
 
             return new Point(newX, newY);
