@@ -903,7 +903,8 @@ namespace penToText
             if (input.Count > 2)
             {
                 int sLoc = 0;
-
+                double initialRound = .05;
+                double unitScale = .01;
                 List<double> lengths = new List<double>();
                 List<int> directions = new List<int>();
                 List<mPoint> newLinePoints = new List<mPoint>();
@@ -924,11 +925,11 @@ namespace penToText
                             double length = distance(input[sLoc], input[i]);
                             if (unitLength == 0)
                             {
-                                unitLength = RoundToNearest(length, .02);
+                                unitLength = RoundToNearest(length, initialRound);
                             }
                             else
                             {
-                                length = RoundToNearest(length, (.25));
+                                length = RoundToNearest(length, unitScale* unitLength);
                             }
                             lengths.Add(length);
                             directions.Add(sDir);
@@ -946,24 +947,19 @@ namespace penToText
                     }
                 }
 
-                if (input[sLoc].line == input[input.Count-1].line)
+                
+                double length2 = distance(input[sLoc], input[input.Count - 1]);
+                if (unitLength == 0)
                 {
-                    double length = distance(input[sLoc], input[input.Count - 1]);
-                    if (unitLength == 0)
-                    {
-                        unitLength = RoundToNearest(unitLength, .01);
-                    }
-                    length = RoundToNearest(length, unitLength);
-                    lengths.Add(length);
-                    directions.Add(sDir);
+                    unitLength = RoundToNearest(length2, initialRound);
                 }
                 else
                 {
-                    //assume lenght of line would never be 0;
-                    lengths.Add(0);
-                    directions.Add(0);
-                    newLinePoints.Add(input[input.Count - 1]);
+                    length2 = RoundToNearest(length2, unitScale * unitLength);
                 }
+                lengths.Add(length2);
+                directions.Add(sDir);
+               
 
 
                 int lineAt = 0;
