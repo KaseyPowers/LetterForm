@@ -924,17 +924,20 @@ namespace penToText
                             double length = distance(input[sLoc], input[i]);
                             if (unitLength == 0)
                             {
-                                unitLength = RoundToNearest(unitLength, .01);
+                                unitLength = RoundToNearest(length, .02);
                             }
-                            length = RoundToNearest(length, unitLength);
+                            else
+                            {
+                                length = RoundToNearest(length, (.25));
+                            }
                             lengths.Add(length);
                             directions.Add(sDir);
                         }
                         else
                         {
-                            //assume lenght of line would never be 0;
-                            lengths.Add(0);
-                            directions.Add(0);
+                            //assume lenght of line would never be negative;
+                            lengths.Add(-1);
+                            directions.Add(-1);
                             newLinePoints.Add(input[i]);
                         }
 
@@ -969,7 +972,7 @@ namespace penToText
 
                 for (int i = 0; i < lengths.Count; i++)
                 {
-                    if (lengths[i] != 0)
+                    if (lengths[i] >= 0)
                     {
                         double angle = degreesToRadians((directions[i] - 1) * 45.0);
                         //double hypotenuse = RoundToNearest(Math.Sqrt(X * X + Y * Y), (unitLength / 100.0));
