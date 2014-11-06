@@ -67,62 +67,47 @@ namespace penToText
 
             multiLineDrawView nextCanvas;
 
-            nextCanvas = new multiLineDrawView(2, 0, 1, 1, display, "Rescale", true);
+            nextCanvas = new multiLineDrawView(2, 0, 1, 1, display, "Resample", true);
             nextCanvas.outOf = 1.2;
             nextCanvas.padding = .1;
             nextCanvas.toAddCircles = true;
             display.addCanvas(nextCanvas);
             TextBreakDown.Add(nextCanvas);
 
-            nextCanvas = new multiLineDrawView(2, 1, 1, 1, display, "Resample then Rescale", true);
+            nextCanvas = new multiLineDrawView(3, 0, 1, 1, display, "Sections", true);
             nextCanvas.outOf = 1.2;
             nextCanvas.padding = .1;
             nextCanvas.toAddCircles = true;
             display.addCanvas(nextCanvas);
             TextBreakDown.Add(nextCanvas);
 
-            nextCanvas = new multiLineDrawView(3, 0, 1, 1, display, "Resample and Rescale", true);
+            nextCanvas = new multiLineDrawView(4, 0, 1, 1, display, "Sections2", true);
             nextCanvas.outOf = 1.2;
             nextCanvas.padding = .1;
             nextCanvas.toAddCircles = true;
             display.addCanvas(nextCanvas);
             TextBreakDown.Add(nextCanvas);
 
-
-            /*nextCanvas = new multiLineDrawView(3, 1, 1, 1, display, "Resample As New", true);
+            nextCanvas = new multiLineDrawView(2, 1, 1, 1, display, "Current Clean", true);
             nextCanvas.outOf = 1.2;
             nextCanvas.padding = .1;
             nextCanvas.toAddCircles = true;
             display.addCanvas(nextCanvas);
             TextBreakDown.Add(nextCanvas);
 
-            /*nextCanvas = new multiLineDrawView(3, 0, 1, 1, display, "SectionTest", true);
+            nextCanvas = new multiLineDrawView(3, 1, 1, 1, display, "Dominique Clean", true);
             nextCanvas.outOf = 1.2;
             nextCanvas.padding = .1;
             nextCanvas.toAddCircles = true;
             display.addCanvas(nextCanvas);
             TextBreakDown.Add(nextCanvas);
 
-            nextCanvas = new multiLineDrawView(2, 1, 1, 1, display, "Current Section Clean", true);
+            nextCanvas = new multiLineDrawView(4, 1, 1, 1, display, "Kasey Clean", true);
             nextCanvas.outOf = 1.2;
             nextCanvas.padding = .1;
             nextCanvas.toAddCircles = true;
             display.addCanvas(nextCanvas);
             TextBreakDown.Add(nextCanvas);
-
-            nextCanvas = new multiLineDrawView(3, 1, 1, 1, display, "Kasey Section Clean", true);
-            nextCanvas.outOf = 1.2;
-            nextCanvas.padding = .1;
-            nextCanvas.toAddCircles = true;
-            display.addCanvas(nextCanvas);
-            TextBreakDown.Add(nextCanvas);
-
-            nextCanvas = new multiLineDrawView(4, 1, 1, 1, display, "Dominique Section Clean", true);
-            nextCanvas.outOf = 1.2;
-            nextCanvas.padding = .1;
-            nextCanvas.toAddCircles = true;
-            display.addCanvas(nextCanvas);
-            TextBreakDown.Add(nextCanvas);*/
 
             myTextConverter = new convertToText2(this);
             blockingData = new BlockingCollection<mPoint>();

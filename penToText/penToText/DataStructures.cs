@@ -31,6 +31,15 @@ namespace penToText
             return new Point(X, Y);
         }
 
+        public override bool Equals(Object b)
+        {
+            if (b == null || GetType() != b.GetType())
+                return false;
+
+            mPoint other = (mPoint)b;
+            return (X == other.X && Y == other.Y && line == other.line);
+        }
+
     }
 
     public class mLetterSections

@@ -85,11 +85,6 @@ namespace penToText
 
                     elapsedTime[0] += Time(() =>
                     {
-                        addToScale(current, scaledList);
-                    });
-
-                    elapsedTime[2] += Time(() =>
-                    {
                         addingToSampled(current, .1);
                     });
 
@@ -97,7 +92,6 @@ namespace penToText
                 }
             }
         }
-
 
         private double minX, minY, scale;
 
@@ -205,112 +199,6 @@ namespace penToText
             return changed;
         }
 
-        private double minX2, minY2, scale2;
-
-        private bool addToScale2(mPoint adding, List<mPoint> addTo)
-        {
-            if (addTo.Count == 0)
-            {
-                minX2 = adding.X;
-                minY2 = adding.Y;
-                scale2 = 1.0;
-            }
-
-            bool changed = false;
-
-            double yToAdd = 0.0, xToAdd = 0.0;
-
-            if (minY2 > adding.Y)
-            {
-                yToAdd = (minY2 - adding.Y) / scale2;
-                minY2 = adding.Y;
-                changed = true;
-            }
-
-            if (minX2 > adding.X)
-            {
-                xToAdd = (minX2 - adding.X) / scale2;
-                minX2 = adding.X;
-                changed = true;
-            }
-
-            mPoint newPoint = new mPoint((adding.X - minX2) / scale2, (adding.Y - minY2) / scale2, 0);
-
-            bool changeFromMax = !changed;
-            bool newScaleX = true;
-            if (!changed)
-            {
-                if (newPoint.X > newPoint.Y && newPoint.X > 1)
-                {
-                    changed = true;
-                    newScaleX = true;
-                }
-                else if (newPoint.Y > newPoint.X && newPoint.Y > 1)
-                {
-                    changed = true;
-                    newScaleX = false;
-                }
-            }
-
-
-
-            addTo.Add(newPoint);
-
-
-
-
-            if (changed)
-            {
-                double max = double.NegativeInfinity;
-
-                for (int i = 0; i < addTo.Count; i++)
-                {
-                    if (i != addTo.Count - 1)
-                    {
-                        addTo[i].X += xToAdd;
-                    }
-                    if (i != addTo.Count - 1)
-                    {
-                        addTo[i].Y += yToAdd;
-                    }
-                    if (!changeFromMax)
-                    {
-                        if (max < addTo[i].X)
-                        {
-                            max = addTo[i].X;
-                        }
-                        if (max < addTo[i].Y)
-                        {
-                            max = addTo[i].Y;
-                        }
-                    }
-                    else if (newScaleX)
-                    {
-                        if (max < addTo[i].X)
-                        {
-                            max = addTo[i].X;
-                        }
-                    }
-                    else
-                    {
-                        if (max < addTo[i].Y)
-                        {
-                            max = addTo[i].Y;
-                        }
-                    }
-                }
-
-                for (int i = 0; i < addTo.Count; i++)
-                {
-                    addTo[i].X /= max;
-                    addTo[i].Y /= max;
-                }
-                scale2 *= max;
-            }
-
-            return changed;
-        }
-
 
         private List<mPoint> scaling;
         private List<mPoint> resampling;
@@ -325,7 +213,7 @@ namespace penToText
                 resampling = new List<mPoint>();
             }
 
-            bool changed = addToScale2(adding, scaling);            
+            bool changed = addToScale(adding, scaling);            
             
             if (scaling.Count > 1 && resampling.Count > 1)
             {
@@ -396,157 +284,6 @@ namespace penToText
         }
 
 
-        /*
-        private double Xmin, Ymin, scale2, D;
-
-        private List<mPoint> addToScaleAndSlope(mPoint addPoint, List<mPoint> addTo, double minDistance, double roundValue)
-        {
-
-            mPoint adding = new mPoint(RoundToNearest(addPoint.X, .01), RoundToNearest(addPoint.Y, .01), addPoint.line);
-
-            if (addTo.Count == 0)
-            {
-                Xmin = adding.X;
-                Ymin = adding.Y;
-                scale2 = 1.0;
-                D = 0;
-            }
-
-            bool changed = false;
-
-            double yToAdd = 0.0, xToAdd = 0.0;
-
-            if (Ymin > adding.Y)
-            {
-                yToAdd = (Ymin - adding.Y) / scale2;
-                Ymin = adding.Y;
-                changed = true;
-            }
-
-            if (Xmin > adding.X)
-            {
-                xToAdd = (Xmin - adding.X) / scale2;
-                Xmin = adding.X;
-                changed = true;
-            }
-
-            mPoint newPoint = new mPoint((adding.X - Xmin) / scale2, (adding.Y - Ymin) / scale2, 0);
-
-            bool changeFromMax = !changed;
-            bool newScaleX = true;
-            if (!changed)
-            {
-                if (newPoint.X > newPoint.Y && newPoint.X > 1)
-                {
-                    changed = true;
-                    newScaleX = true;
-                }
-                else if (newPoint.Y > newPoint.X && newPoint.Y > 1)
-                {
-                    changed = true;
-                    newScaleX = false;
-                }
-            }
-
-
-
-            addTo.Add(newPoint);
-
-
-
-
-            if (changed)
-            {
-                double max = double.NegativeInfinity;
-
-                for (int i = 0; i < addTo.Count; i++)
-                {
-                    if (i != addTo.Count - 1)
-                    {
-                        addTo[i].X += xToAdd;
-                    }
-                    if (i != addTo.Count - 1)
-                    {
-                        addTo[i].Y += yToAdd;
-                    }
-                    if (!changeFromMax)
-                    {
-                        if (max < addTo[i].X)
-                        {
-                            max = addTo[i].X;
-                        }
-                        if (max < addTo[i].Y)
-                        {
-                            max = addTo[i].Y;
-                        }
-                    }
-                    else if (newScaleX)
-                    {
-                        if (max < addTo[i].X)
-                        {
-                            max = addTo[i].X;
-                        }
-                    }
-                    else
-                    {
-                        if (max < addTo[i].Y)
-                        {
-                            max = addTo[i].Y;
-                        }
-                    }
-                }
-
-                for (int i = 0; i < addTo.Count; i++)
-                {
-                    addTo[i].X /= max;
-                    addTo[i].Y /= max;
-                }
-                scale2 *= max;
-            }
-
-
-
-            if (addTo.Count >= 1)
-            {
-                double bigD = 0;
-                double lilD = 0;
-                int sloc = 1;
-                List<mPoint>  output = new List<mPoint>();
-                output.Add(addTo[0]);
-
-                for (int i = 1; i < addTo.Count; i++)
-                {
-                    lilD = distance(addTo[i], addTo[i - 1]);
-                    if (bigD + lilD > minDistance)
-                    {
-                        mPoint temp = new mPoint(
-                            (addTo[i - 1].X + ((minDistance - bigD) / lilD) * (addTo[i].X - addTo[i - 1].X)),
-                            (addTo[i - 1].Y + ((minDistance - bigD) / lilD) * (addTo[i].Y - addTo[i - 1].Y)),
-                            addTo[i].line);
-                        output.Add(temp);
-                        addTo.Insert(i, temp);
-                        bigD = 0;
-                    }
-                    else
-                    {
-                        if (lilD == 0 || i == addTo.Count - 1)
-                        {
-                            bigD = 0;
-                            output.Add(addTo[i]);
-                        }
-                        bigD += lilD;
-                    }
-                }
-
-                return output;
-            }
-            else
-            {
-                return new List<mPoint>(addTo);
-            }
-        }
-
-        */
         private mPoint roundedPoint(mPoint input, double toRound)
         {
             return new mPoint(RoundToNearest(input.X, toRound), RoundToNearest(input.Y, toRound), input.line);
@@ -556,6 +293,7 @@ namespace penToText
         {
             int output = 0;
             /*
+             * 0: invalid
              * 1: up
              * 2: down
              * 3: left
@@ -664,74 +402,65 @@ namespace penToText
         public void updateData()
         {
             /*
-             * id 0: Rescaled Original
-             * id 1: Original Sections
-             * id 2: Current Section Clean
+             * id 0: Resample
+             * id 1: Sections Sections
+             * id 2: Sections2 Section Clean
              * id 3: Kasey Section Clean
              * if 4: Dominique Section Clean
              */
              
             int id = 0;
-
             
-            core.TextBreakDown[id].newData(new List<mPoint>(scaledList));
-            core.TextBreakDown[id].titleText = "ReScale: From: " + originalData.Count + "\nTo: " + scaledList.Count + "\nTime: " + (elapsedTime[id].TotalMilliseconds);
+            core.TextBreakDown[id].newData(new List<mPoint>(resampling));
+            core.TextBreakDown[id].titleText = "Scaled Resample: " + originalData.Count + "\nTo: " + resampling.Count + "\nTime: " + (elapsedTime[id].TotalMilliseconds);
             id++;
 
-
+            List<mPoint> sections1 = new List<mPoint>();
             elapsedTime[id] += Time(() =>
             {
-                cleanedData = resample(new List<mPoint>(scaledList), .1);
+                sections1 = Dominique(new List<mPoint>(resampling));
             });            
-            core.TextBreakDown[id].newData(new List<mPoint>(cleanedData));
-            core.TextBreakDown[id].titleText = "Rescale From then Resample: " + originalData.Count + "\nTo: " + cleanedData.Count + "\nTime: " + (elapsedTime[id]+elapsedTime[id-1]).TotalMilliseconds;
-            id++;
-              
-
-          
-            core.TextBreakDown[id].newData(new List<mPoint>(resampling));
-            core.TextBreakDown[id].titleText = "Original Rescale: " + originalData.Count + "\nTo: " + resampling.Count + "\nTime: " + (elapsedTime[id].TotalMilliseconds);
+            core.TextBreakDown[id].newData(new List<mPoint>(sections1));
+            core.TextBreakDown[id].titleText = "Sections1: " + originalData.Count + "\nTo: " + sections1.Count + "\nTime: " + (elapsedTime[id]).TotalMilliseconds;
             id++;
 
-            /*
-            //Make Initial Segments "clean2" id=1
-            timer.Start();
-            List<mPoint> segments = Dominique(new List<mPoint>(cleanedData));
-            timer.Stop();
-            miliSecondCounts[id] += timer.ElapsedMilliseconds;
-            timer.Reset();
-            core.TextBreakDown[id].newData(new List<mPoint>(segments));
-            core.TextBreakDown[id].titleText = "Initial Segments\nTicks: " + miliSecondCounts[id];
-            
+            List<mPoint> sections2 = new List<mPoint>();
+            elapsedTime[id] += Time(() =>
+            {
+                sections2 = Sections(new List<mPoint>(resampling));
+            });
+            core.TextBreakDown[id].newData(new List<mPoint>(sections2));
+            core.TextBreakDown[id].titleText = "Sections2: " + originalData.Count + "\nTo: " + sections2.Count + "\nTime: " + (elapsedTime[id]).TotalMilliseconds;
+            id++;
 
-           List<mPoint> cleanedSections;
-            //Current Section Cleaning "SectionClean1" id =2
-            timer.Start();
-            cleanedSections = minimumLines(cleanSections(new List<mPoint>(segments)));
-            timer.Stop();
-            miliSecondCounts[2] += timer.ElapsedTicks;
-            timer.Reset();
-            core.TextBreakDown[2].newData(new List<mPoint>(cleanedSections));
-            core.TextBreakDown[2].titleText = "Current section Cleaning\nTicks: " + miliSecondCounts[2];
+            List<mPoint> cleaned1 = new List<mPoint>();
+            elapsedTime[id] += Time(() =>
+            {
+                cleaned1 = cleanSections(new List<mPoint>(sections1));
+            });
+            core.TextBreakDown[id].newData(new List<mPoint>(cleaned1));
+            core.TextBreakDown[id].titleText = "Current Section Clean: " + originalData.Count + "\nTo: " + cleaned1.Count + "\nTime: " + (elapsedTime[id]).TotalMilliseconds;
+            id++;
+            core.draw();
 
-            //Kasey Section Cleaning "SectionClean2" id=3
-            timer.Start();
-            cleanedSections = minimumLines(kaseySectionClean(new List<mPoint>(segments)));
-            timer.Stop();
-            miliSecondCounts[3] += timer.ElapsedTicks;
-            timer.Reset();
-            core.TextBreakDown[3].newData(new List<mPoint>(cleanedSections));
-            core.TextBreakDown[3].titleText = "Kasey section Cleaning\nTicks: " + miliSecondCounts[3];
+            List<mPoint> cleaned2 = new List<mPoint>();
+            elapsedTime[id] += Time(() =>
+            {
+                cleaned2 = kaseySectionClean(new List<mPoint>(resampling));
+            });
+            core.TextBreakDown[id].newData(new List<mPoint>(cleaned2));
+            core.TextBreakDown[id].titleText = "Kasey Section Clean: " + originalData.Count + "\nTo: " + cleaned2.Count + "\nTime: " + (elapsedTime[id]).TotalMilliseconds;
+            id++;
+            core.draw();
 
-            //Dominique Section Cleaning "SectionClean3" id=4
-            timer.Start();
-            cleanedSections = minimumLines(dominiqueSectionClean(new List<mPoint>(segments)));
-            timer.Stop();
-            miliSecondCounts[4] += timer.ElapsedTicks;
-            timer.Reset();
-            core.TextBreakDown[4].newData(new List<mPoint>(cleanedSections));
-            core.TextBreakDown[4].titleText = "Dominique section Cleaning\nTicks: " + miliSecondCounts[4];*/
-
+            List<mPoint> cleaned3 = new List<mPoint>();
+            elapsedTime[id] += Time(() =>
+            {
+                cleaned3 = dominiqueSectionClean(new List<mPoint>(sections1));
+            });
+            core.TextBreakDown[id].newData(new List<mPoint>(cleaned3));
+            core.TextBreakDown[id].titleText = "Dominique Section Clean: " + originalData.Count + "\nTo: " + cleaned3.Count + "\nTime: " + (elapsedTime[id]).TotalMilliseconds;
+            id++;
             core.draw();
             
         }
@@ -1062,6 +791,39 @@ namespace penToText
             return output;
         }
 
+        public List<mPoint> Sections(List<mPoint> input)
+        {
+            for (int i = 0; i < input.Count; i++)
+            {
+                mPoint temp = roundedPoint(input[i], .05);
+                if (i == 0 ||  !temp.Equals(input[i-1])){
+                    input[i] = temp;
+                }
+            }
+            List<mPoint> output = new List<mPoint>();
+            if (input.Count > 2)
+            {
+                int sLoc = 0;
+                output.Add(input[0]);
+                for (int i = 0; i < (input.Count - 1); i++)
+                {
+                    bool sameSlope = input[sLoc].line == input[i + 1].line && direction(input[sLoc], input[sLoc + 1]) == direction(input[i], input[i + 1]);
+                    if (!sameSlope)
+                    {
+                        output.Add(input[i]);
+                        sLoc = i;
+                    }
+                }
+                output.Add(input[input.Count - 1]);
+            }
+            else
+            {
+                output = input;
+            }
+
+            return output;
+        }
+
         public List<mPoint> minimumLines(List<mPoint> input)
         {
             int linePoints = 0;
@@ -1135,9 +897,271 @@ namespace penToText
 
         public List<mPoint> kaseySectionClean(List<mPoint> input)
         {
-            return cleanSections(input);
+            //create list of points and their directions
+            List<mPoint> points = new List<mPoint>();
+            if (input.Count > 2)
+            {
+                int sLoc = 0;
+                points.Add(input[0]);
+                int sDir = KaseyCircularDirection2(input[0], input[1]);
+                for (int i = 0; i < (input.Count - 1); i++)
+                {
+                    bool sameSlope = input[sLoc].line == input[i+1].line && sDir == KaseyCircularDirection2(input[i], input[i + 1]);
+                    if (!sameSlope)
+                    {
+                        points.Add(input[i]);
+                        sLoc = i;
+                        sDir = KaseyCircularDirection2(input[sLoc], input[sLoc+1]);
+                    }
+                }
+                points.Add(input[input.Count - 1]);
+            }
+            else
+            {
+                points = input;
+                //int sDir = KaseyClockWiseDirection(input[0], input[1]);
+            }
+
+            int lineAt = 0;
+            List<mPoint> output = new List<mPoint>();
+            output.Add(points[0]);
+            mPoint lastPoint = points[0];
+            for (int i = 0; i < points.Count - 1; i++)
+            {
+                if (points[i].line == points[i + 1].line)
+                {
+                    double X = points[i + 1].X - points[i].X;
+                    double Y = points[i + 1].Y - points[i].Y;
+                    Point nextPoint = smartFitPointTo45(X, Y);
+                    mPoint nextMPoint = new mPoint(nextPoint.X + lastPoint.X, nextPoint.Y + lastPoint.Y, lineAt);
+                    output.Add(nextMPoint);
+                    lastPoint = nextMPoint;
+                }
+                else
+                {
+                    lineAt++;
+                    output.Add(points[i + 1]);
+                    lastPoint = points[i + 1];
+                }
+            }
+
+
+            return output;
+
+            /*
+            List<double> lengths = new List<double>();
+            List<int> directions = new List<int>();
+            List<int> newLineLocs = new List<int>();
+            newLineLocs.Add(0);
+
+            for (int i = 0; i < points.Count - 1; i++)
+            {
+                if (points[i].line == points[i + 1].line)
+                {
+                    lengths.Add(distance(points[i], points[i+1]));
+                    directions.Add(KaseyCircularDirection(points[i], points[i+1]));
+                }else{
+                    //assume lenght of line would never be 0;
+                    lengths.Add(0);
+                    directions.Add(0);
+                    newLineLocs.Add(i);
+                }
+            }
+
+
+            int lineAt = 0;
+            mPoint lastPoint = new mPoint(points[0].X, points[0].Y, lineAt);
+            List<mPoint> output = new List<mPoint>();
+            output.Add(lastPoint);
+
+            for (int i = 0; i < lengths.Count; i++)
+            {
+                if (lengths[i] != 0)
+                {
+                    double angle = (Math.PI * ((directions[i] - 1) * 45)) / 180.0;
+                    double X = lastPoint.X + lengths[i] * Math.Cos(angle);
+                    double Y = lastPoint.Y + lengths[i] * Math.Sin(angle);
+                    mPoint thisPoint = new mPoint(X, Y, lineAt);
+                    output.Add(thisPoint);
+                    lastPoint = thisPoint;
+                }
+                else
+                {
+                    lineAt++;
+                    lastPoint = points[newLineLocs[lineAt]];
+                    lastPoint.line = lineAt;
+                    output.Add(lastPoint);
+                }
+            }
+
+            return output;
+             */
         }
 
+        public int KaseyCircularDirection(mPoint a, mPoint b)
+        {
+            int output = 0;
+            /*
+             * 0: invalid
+             * 1: right
+             * 2: up-right
+             * 3: up
+             * 4: up-left
+             * 5: left
+             * 6: down-left
+             * 7: down
+             * 8: down-right
+             */
+            if (a.line == b.line)
+            {
+                //the vector values
+                double X = b.X - a.X;
+                double Y = b.Y - a.Y;
+                //get the angle of theline, accounting for quadrant, in degrees
+                double angle = Math.Atan2(Y, X) * (180.0 / Math.PI);
+                //change range from 0<angle<360 instead of -180<angle<180
+                if (angle < 0)
+                {
+                    angle += 360;
+                }
+                //round angle to a 45 degree angle
+                angle = RoundToNearest(angle, 45) / 45;
+                //angles are 0 through 7 now, we want 1 through 8 as 0 is invalid operation
+                output = (int)angle + 1;
+            }
+            return output;
+        }
+        
+        public int KaseyCircularDirection2(mPoint a, mPoint b)
+        {
+            int output = 0;
+            /*
+             * 0: invalid
+             * 1: right
+             * 2: up-right
+             * 3: up
+             * 4: up-left
+             * 5: left
+             * 6: down-left
+             * 7: down
+             * 8: down-right
+             */
+            if (a.line == b.line)
+            {
+                //the vector values
+                double X = b.X - a.X;
+                double Y = b.Y - a.Y;
+                output = smartFitTo45(X, Y);
+            }
+            return output;
+        }
+
+        private int smartFitTo45( double X, double Y)
+        {
+            //get the angle of theline, accounting for quadrant, in degrees
+            double degrees = Math.Atan2(Y, X) * (180.0 / Math.PI);
+            //change range from 0<angle<360 instead of -180<angle<180
+            if (degrees < 0)
+            {
+                degrees += 360;
+            }
+            //round angle to a 45 degree angle
+            double flatAngle = 0;
+            while (Math.Abs(flatAngle - degrees) > Math.Abs((flatAngle + 90) - degrees))
+            {
+                flatAngle += 90;
+            }
+            double slopedAngle = flatAngle - 45;
+
+            if (Math.Abs(slopedAngle - degrees) > Math.Abs((flatAngle + 45) - degrees))
+            {
+                slopedAngle = flatAngle + 45;
+            }
+            double startLength = Math.Sqrt(X * X + Y * Y);
+            double slopeX = Math.Cos(degreesToRadians(slopedAngle)) * startLength;
+            double slopeY = Math.Sign(degreesToRadians(slopedAngle)) * startLength;
+            double flatX = Math.Cos(degreesToRadians(flatAngle)) * startLength;
+            double flatY = Math.Sign(degreesToRadians(flatAngle)) * startLength;
+            double flatMag = Math.Sqrt((X - slopeX) * (X - slopeX) + (Y - slopeY) * (Y - slopeY));
+            double slopeMag = Math.Sqrt((X - flatX) * (X - flatX) + (Y - flatY) * (Y - flatY));
+
+            bool useSlope = (flatMag > 2.0 * slopeMag);
+
+            //get the angle of the line, accounting for quadrant, in degrees
+            int output = 0;
+            if (useSlope)
+            {
+                output = (int)slopedAngle;
+            }
+            else
+            {
+                output = (int)flatAngle;
+            }
+            return (output / 45 + 1);
+        }
+
+        private Point smartFitPointTo45(double X, double Y)
+        {
+            //get the angle of theline, accounting for quadrant, in degrees
+            double degrees = Math.Atan2(Y, X) * (180.0 / Math.PI);
+            //change range from 0<angle<360 instead of -180<angle<180
+            if (degrees < 0)
+            {
+                degrees += 360;
+            }
+            //round angle to a 45 degree angle
+            double flatAngle = 0;
+            while (Math.Abs(flatAngle - degrees) > Math.Abs((flatAngle + 90) - degrees))
+            {
+                flatAngle += 90;
+            }
+            double slopedAngle = flatAngle - 45;
+
+            if (Math.Abs(slopedAngle - degrees) > Math.Abs((flatAngle + 45) - degrees))
+            {
+                slopedAngle = flatAngle + 45;
+            }
+            double startLength = Math.Sqrt(X * X + Y * Y);
+            double slopeX = Math.Cos(degreesToRadians(slopedAngle)) * startLength;
+            double slopeY = Math.Sign(degreesToRadians(slopedAngle)) * startLength;
+            double flatX = Math.Cos(degreesToRadians(flatAngle)) * startLength;
+            double flatY = Math.Sign(degreesToRadians(flatAngle)) * startLength;
+            double flatMag = Math.Sqrt((X - slopeX) * (X - slopeX) + (Y - slopeY) * (Y - slopeY));
+            double slopeMag = Math.Sqrt((X - flatX) * (X - flatX) + (Y - flatY) * (Y - flatY));
+
+            bool useSlope = (flatMag > 2.0 * slopeMag);
+
+            //get the angle of the line, accounting for quadrant, in degrees
+            double newX = slopeX;
+            double newY = slopeY;
+            double newAngle = slopedAngle;
+            if (!useSlope)
+            {
+                newX = flatX;
+                newY = flatY;
+                newAngle = flatAngle;
+            }
+            double xDif = Math.Abs(X - newX);
+            double yDif = Math.Abs(Y - newY);
+
+            if (xDif < yDif)
+            {
+                //keep X position
+            }
+            else
+            {
+                //keey Y position
+                newX = newY * Math.Tan(degreesToRadians(newAngle));
+            }
+
+            return new Point(newX, newY);
+        }
+
+        private double degreesToRadians(double degrees)
+        {
+            return Math.PI * degrees / 180.0;
+        }
+        
         public List<mPoint> dominiqueSectionClean(List<mPoint> input)
         {
             return cleanSections(input);
@@ -1147,7 +1171,6 @@ namespace penToText
         {
             return ((a.X * b.X) + (a.Y * b.Y));
         }
-
 
         private double lineDistance(mPoint a, mPoint b, mPoint c)
         {
@@ -1224,8 +1247,7 @@ namespace penToText
             return (a.Y - b.Y);
         }
 
-
-        public static Double RoundToNearest(Double passednumber, Double roundto)
+        private static Double RoundToNearest(Double passednumber, Double roundto)
         {
             // 105.5 up to nearest 1 = 106
             // 105.5 up to nearest 10 = 110

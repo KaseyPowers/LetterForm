@@ -381,12 +381,8 @@ namespace penToText
             List<Polyline> lines = new List<Polyline>();
             List<Ellipse> circles = new List<Ellipse>();
 
-            //title = new TextBox();
             title.Text = titleText;
             drawCanvas.Children.Clear();
-            //DockPanel.SetDock(title, Dock.Top);
-            //dock.Children.Add(title);
-            //dock.Children.Add(drawCanvas);
 
             for (int i = 0; i < data.Count; i++)
             {
