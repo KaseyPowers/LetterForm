@@ -122,7 +122,7 @@ namespace penToText
                 changed = true;
             }
 
-            mPoint newPoint = new mPoint((adding.X - minX) / scale, (adding.Y - minY) / scale, 0);
+            mPoint newPoint = new mPoint((adding.X - minX) / scale, (adding.Y - minY) / scale, adding.line);
 
             bool changeFromMax = !changed;
             bool newScaleX = true;
@@ -231,7 +231,11 @@ namespace penToText
                     bigD = distance(a, b);
                     lilD = distance(b, c);
                     output.RemoveAt(output.Count - 1);
-                    if (bigD > minDistance)
+                    if (b.line != c.line || a.line != b.line)
+                    {
+                        output.Add(b);
+                    }
+                    else if (bigD > minDistance)
                     {
                         output.Add(b);
                     }
@@ -241,10 +245,7 @@ namespace penToText
                             (b.Y + ((minDistance - bigD) / lilD) * (c.Y - b.Y)),
                             c.line);
                         output.Add(temp);
-                    } if (b.line != c.line)
-                    {
-                        output.Add(b);
-                    }
+                    } 
                     output.Add(c);
                 }
                 else
@@ -902,29 +903,102 @@ namespace penToText
             if (input.Count > 2)
             {
                 int sLoc = 0;
-                points.Add(input[0]);
+
+                List<double> lengths = new List<double>();
+                List<int> directions = new List<int>();
+                List<mPoint> newLinePoints = new List<mPoint>();
+                newLinePoints.Add(input[0]);
+                double unitLength = 0;
+
                 int sDir = KaseyCircularDirection2(input[0], input[1]);
                 for (int i = 0; i < (input.Count - 1); i++)
                 {
                     bool sameSlope = input[sLoc].line == input[i+1].line && sDir == KaseyCircularDirection2(input[i], input[i + 1]);
                     if (!sameSlope)
                     {
-                        points.Add(input[i]);
+                        //points.Add(input[i]);                        
+                        //sDir = KaseyCircularDirection2(input[sLoc], input[sLoc+1]);
+
+                        if (input[sLoc].line ==  input[i].line)
+                        {
+                            double length = distance(input[sLoc], input[i]);
+                            if (unitLength == 0)
+                            {
+                                unitLength = RoundToNearest(unitLength, .01);
+                            }
+                            length = RoundToNearest(length, unitLength);
+                            lengths.Add(length);
+                            directions.Add(sDir);
+                        }
+                        else
+                        {
+                            //assume lenght of line would never be 0;
+                            lengths.Add(0);
+                            directions.Add(0);
+                            newLinePoints.Add(input[i]);
+                        }
+
                         sLoc = i;
-                        sDir = KaseyCircularDirection2(input[sLoc], input[sLoc+1]);
+                        sDir = KaseyCircularDirection2(input[sLoc], input[sLoc + 1]);
                     }
                 }
-                points.Add(input[input.Count - 1]);
+
+                if (input[sLoc].line == input[input.Count-1].line)
+                {
+                    double length = distance(input[sLoc], input[input.Count - 1]);
+                    if (unitLength == 0)
+                    {
+                        unitLength = RoundToNearest(unitLength, .01);
+                    }
+                    length = RoundToNearest(length, unitLength);
+                    lengths.Add(length);
+                    directions.Add(sDir);
+                }
+                else
+                {
+                    //assume lenght of line would never be 0;
+                    lengths.Add(0);
+                    directions.Add(0);
+                    newLinePoints.Add(input[input.Count - 1]);
+                }
+
+
+                int lineAt = 0;
+                mPoint lastPoint = newLinePoints[lineAt];
+                points.Add(lastPoint);
+
+                for (int i = 0; i < lengths.Count; i++)
+                {
+                    if (lengths[i] != 0)
+                    {
+                        double angle = degreesToRadians((directions[i] - 1) * 45.0);
+                        //double hypotenuse = RoundToNearest(Math.Sqrt(X * X + Y * Y), (unitLength / 100.0));
+                        double newX = (Math.Cos(angle) * lengths[i]) + lastPoint.X;
+                        double newY = (Math.Sin(angle) * lengths[i]) + lastPoint.Y;
+
+                        /*double angle = (Math.PI * ((directions[i] - 1) * 45)) / 180.0;
+                        double X = lastPoint.X + lengths[i] * Math.Cos(angle);
+                        double Y = lastPoint.Y + lengths[i] * Math.Sin(angle);*/
+                        mPoint thisPoint = new mPoint(newX, newY, lineAt);
+                        points.Add(thisPoint);
+                        lastPoint = thisPoint;
+                    }
+                    else
+                    {
+                        lineAt++;
+                        lastPoint = newLinePoints[lineAt];
+                        lastPoint.line = lineAt;
+                        points.Add(lastPoint);
+                    }
+                }
             }
             else
             {
                 points = input;
                 //int sDir = KaseyClockWiseDirection(input[0], input[1]);
             }
-            if (points.Count < 2)
-            {
                 return points;
-            }
+            /*}
             else
             {
 
@@ -952,7 +1026,7 @@ namespace penToText
 
 
                 return output;
-            }
+            }*/
 
 
            /*     List<double> lengths = new List<double>();
@@ -1108,7 +1182,7 @@ namespace penToText
                 newAngle = slopeAngle;
             }
 
-            return newAngle + 1;
+            return (newAngle % 8) + 1;
 
         }
 
