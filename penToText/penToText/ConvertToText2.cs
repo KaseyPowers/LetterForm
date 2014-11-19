@@ -796,6 +796,7 @@ namespace penToText
         {
             for (int i = 0; i < input.Count; i++)
             {
+                
                 mPoint temp = roundedPoint(input[i], .05);
                 if (i == 0 ||  !temp.Equals(input[i-1])){
                     input[i] = temp;

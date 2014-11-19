@@ -582,15 +582,15 @@ namespace penToText
             
             //get sections
             timeId = 1;
-            List<mPoint> cleaned2 = new List<mPoint>();
+            List<mPoint> cleaned = new List<mPoint>();
             elapsedTime[timeId] += Time(() =>
             {
-                cleaned2 = cleanSections(Sections(new List<mPoint>(resampling)));
+                cleaned = Sections(new List<mPoint>(resampling));
             });
             if (sectionsID >= 0)
             {
-                core.TextBreakDown[sectionsID].newData(new List<mPoint>(cleaned2));
-                core.TextBreakDown[sectionsID].titleText = TAG + " Sections: " + originalData.Count + "\nTo: " + cleaned2.Count + "\nTime: " + (elapsedTime[timeId]).TotalMilliseconds;
+                core.TextBreakDown[sectionsID].newData(new List<mPoint>(cleaned));
+                core.TextBreakDown[sectionsID].titleText = TAG + " Sections: " + originalData.Count + "\nTo: " + cleaned.Count + "\nTime: " + (elapsedTime[timeId]).TotalMilliseconds;
             }
             core.draw();
         }
@@ -810,6 +810,15 @@ namespace penToText
 
         public List<mPoint> Sections(List<mPoint> input)
         {
+            for (int i = 0; i < input.Count; i++)
+            {
+
+                mPoint temp = roundedPoint(input[i], .05);
+                if (i == 0 || !temp.Equals(input[i - 1]))
+                {
+                    input[i] = temp;
+                }
+            }
             List<mPoint> output = new List<mPoint>();
             if (input.Count > 2)
             {
@@ -832,6 +841,11 @@ namespace penToText
             }
 
             return output;
+        }
+
+        private mPoint roundedPoint(mPoint input, double toRound)
+        {
+            return new mPoint(RoundToNearest(input.X, toRound), RoundToNearest(input.Y, toRound), input.line);
         }
 
         public int getDirection(mPoint a, mPoint b)
@@ -880,7 +894,7 @@ namespace penToText
                     //down
                     output = 8;
                 }
-                else if (a.Y <= b.Y)
+                else if (a.Y < b.Y)
                 {
                     //up
                     output = 6;
@@ -894,12 +908,12 @@ namespace penToText
                     //no Y change
                     output = 3;
                 }
-                else if (a.Y > b.Y)
+                else if (a.Y >= b.Y)
                 {
                     //down
                     output = 5;
                 }
-                else if (a.Y <= b.Y)
+                else if (a.Y < b.Y)
                 {
                     //up
                     output = 7;
@@ -1016,18 +1030,18 @@ namespace penToText
             }
 
             //Current Unique Stuff
-            
+
             //get sections
             timeId = 1;
-            List<mPoint> cleaned2 = new List<mPoint>();
+            List<mPoint> cleaned = new List<mPoint>();
             elapsedTime[timeId] += Time(() =>
             {
-                cleaned2 = cleanSections(Sections(new List<mPoint>(resampling)));
+                cleaned = Sections(new List<mPoint>(resampling));
             });
             if (sectionsID >= 0)
             {
-                core.TextBreakDown[sectionsID].newData(new List<mPoint>(cleaned2));
-                core.TextBreakDown[sectionsID].titleText = TAG + " Sections: " + originalData.Count + "\nTo: " + cleaned2.Count + "\nTime: " + (elapsedTime[timeId]).TotalMilliseconds;
+                core.TextBreakDown[sectionsID].newData(new List<mPoint>(cleaned));
+                core.TextBreakDown[sectionsID].titleText = TAG + " Sections: " + originalData.Count + "\nTo: " + cleaned.Count + "\nTime: " + (elapsedTime[timeId]).TotalMilliseconds;
             }
             core.draw();
         }
@@ -1247,6 +1261,15 @@ namespace penToText
 
         public List<mPoint> Sections(List<mPoint> input)
         {
+            for (int i = 0; i < input.Count; i++)
+            {
+
+                mPoint temp = roundedPoint(input[i], .05);
+                if (i == 0 || !temp.Equals(input[i - 1]))
+                {
+                    input[i] = temp;
+                }
+            }
             List<mPoint> output = new List<mPoint>();
             if (input.Count > 2)
             {
@@ -1271,6 +1294,11 @@ namespace penToText
             return output;
         }
 
+        private mPoint roundedPoint(mPoint input, double toRound)
+        {
+            return new mPoint(RoundToNearest(input.X, toRound), RoundToNearest(input.Y, toRound), input.line);
+        }
+
         public int getDirection(mPoint a, mPoint b)
         {
             int output = 0;
@@ -1285,7 +1313,7 @@ namespace penToText
              * 7: down-left
              * 8: down-right
              */
-            if (a.X == b.X && withLines)
+            if (a.X == b.X)
             {
                 //up or down
                 if (a.Y == b.Y)
@@ -1307,7 +1335,7 @@ namespace penToText
             else if (a.X < b.X)
             {
                 //going right
-                if (a.Y == b.Y && withLines)
+                if (a.Y == b.Y)
                 {
                     //no Y change
                     output = 4;
@@ -1317,16 +1345,16 @@ namespace penToText
                     //down
                     output = 8;
                 }
-                else if (a.Y <= b.Y)
+                else if (a.Y < b.Y)
                 {
                     //up
                     output = 6;
                 }
             }
-            else if (a.X >= b.X)
+            else if (a.X > b.X)
             {
                 //going left
-                if (a.Y == b.Y && withLines)
+                if (a.Y == b.Y)
                 {
                     //no Y change
                     output = 3;
@@ -1336,7 +1364,7 @@ namespace penToText
                     //down
                     output = 5;
                 }
-                else if (a.Y <= b.Y)
+                else if (a.Y < b.Y)
                 {
                     //up
                     output = 7;
