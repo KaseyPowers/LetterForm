@@ -95,6 +95,7 @@
     <Compile Include="submitPopup.xaml.cs">
       <DependentUpon>submitPopup.xaml</DependentUpon>
     </Compile>
+    <Compile Include="textConverter.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

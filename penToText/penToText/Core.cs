@@ -20,8 +20,12 @@ namespace penToText
     public class Core
     {
 
-        public BlockingCollection<mPoint> blockingData;
-        private Task addingData;
+       // public BlockingCollection<mPoint> blockingData;
+       // private Task addingData;
+
+        private List<textConverter> textConverters;
+        public BlockingCollection<mPoint>[] collections;
+        public Task[] addingThreads;
 
         /*store dynamic windows:
          * input
@@ -36,12 +40,15 @@ namespace penToText
         private dynamicDisplay2 display;
         private inputView input;
         public List<multiLineDrawView> TextBreakDown;
-        private convertToText2 myTextConverter;
+        private bool windowStarted;
+       // private convertToText2 myTextConverter;
+       // private KaseyConvertToText kaseyTextConvert;
+        //private DominiqueConvertToText dominiqueTextConvert;
         private static long pause = (long)(.25 * 1000);
         public Core()
-        {            
+        {
+            windowStarted = false;
             mainWindow = new PenToText();
-            mainWindow.WindowState = WindowState.Maximized;
             display = new dynamicDisplay2(this);
             mainWindow.Window_Container.Children.Add(display.getContent());            
 
@@ -52,66 +59,108 @@ namespace penToText
             mainWindow.SetLetter.Click += new RoutedEventHandler(Submit_Option_Click);
 
             mainWindow.InitializeComponent();
-            mainWindow.SizeToContent = SizeToContent.WidthAndHeight;
+            //mainWindow.SizeToContent = SizeToContent.WidthAndHeight;
             mainWindow.Top = System.Windows.SystemParameters.WorkArea.Top;
             mainWindow.Left = System.Windows.SystemParameters.WorkArea.Left;
+            mainWindow.Width = System.Windows.SystemParameters.WorkArea.Width;
+            mainWindow.Height = System.Windows.SystemParameters.WorkArea.Height;
             mainWindow.ShowActivated = true;
             mainWindow.Show();
+            windowStarted = true;
 
             input = new inputView(0, 0, 2, 2, display, pause, true);
             display.addCanvas(input);
-
             TextBreakDown = new List<multiLineDrawView>();
 
 
 
             multiLineDrawView nextCanvas;
 
-            nextCanvas = new multiLineDrawView(2, 0, 1, 1, display, "Resample", true);
+            int thisY = 0;
+            //Current Displays
+            nextCanvas = new multiLineDrawView(2, thisY, 1, 1, display, "Resample", true);
             nextCanvas.outOf = 1.2;
             nextCanvas.padding = .1;
             nextCanvas.toAddCircles = true;
             display.addCanvas(nextCanvas);
             TextBreakDown.Add(nextCanvas);
 
-            nextCanvas = new multiLineDrawView(3, 0, 1, 1, display, "Sections", true);
+            nextCanvas = new multiLineDrawView(3, thisY, 1, 1, display, "Sections", true);
             nextCanvas.outOf = 1.2;
             nextCanvas.padding = .1;
             nextCanvas.toAddCircles = true;
             display.addCanvas(nextCanvas);
             TextBreakDown.Add(nextCanvas);
 
-            nextCanvas = new multiLineDrawView(4, 0, 1, 1, display, "Sections2", true);
+            thisY++;
+
+            //Dominique Displays
+            nextCanvas = new multiLineDrawView(2, thisY, 1, 1, display, "Resample", true);
             nextCanvas.outOf = 1.2;
             nextCanvas.padding = .1;
             nextCanvas.toAddCircles = true;
             display.addCanvas(nextCanvas);
             TextBreakDown.Add(nextCanvas);
 
-            nextCanvas = new multiLineDrawView(2, 1, 1, 1, display, "Current Clean", true);
+            nextCanvas = new multiLineDrawView(3, thisY, 1, 1, display, "Sections", true);
             nextCanvas.outOf = 1.2;
             nextCanvas.padding = .1;
             nextCanvas.toAddCircles = true;
             display.addCanvas(nextCanvas);
             TextBreakDown.Add(nextCanvas);
 
-            nextCanvas = new multiLineDrawView(3, 1, 1, 1, display, "Dominique Clean", true);
+            thisY++;
+
+            //Kasey Windows
+            nextCanvas = new multiLineDrawView(2, thisY, 1, 1, display, "Resample", true);
             nextCanvas.outOf = 1.2;
             nextCanvas.padding = .1;
             nextCanvas.toAddCircles = true;
             display.addCanvas(nextCanvas);
             TextBreakDown.Add(nextCanvas);
 
-            nextCanvas = new multiLineDrawView(4, 1, 1, 1, display, "Kasey Clean", true);
+            nextCanvas = new multiLineDrawView(3, thisY, 1, 1, display, "Sections", true);
             nextCanvas.outOf = 1.2;
             nextCanvas.padding = .1;
             nextCanvas.toAddCircles = true;
             display.addCanvas(nextCanvas);
             TextBreakDown.Add(nextCanvas);
 
-            myTextConverter = new convertToText2(this);
-            blockingData = new BlockingCollection<mPoint>();
-            addingData = Task.Factory.StartNew(() => myTextConverter.getData(blockingData));  
+            thisY++;           
+
+            //myTextConverter = new convertToText2(this);
+           // kaseyTextConvert = new KaseyConvertToText(this, new int[] { 0, 1 });
+            //dominiqueTextConvert = new DominiqueConvertToText(this, new int[] { 2, 3 });
+
+            textConverters = new List<textConverter>();
+            textConverters.Add(new currentTextConverter(this, 0, 1));
+            textConverters.Add(new dominiqueTextConverter(this, 2, 3));
+            textConverters.Add(new kaseyTextConverter(this, 4, 5));
+
+            collections = new BlockingCollection<mPoint>[textConverters.Count];
+            addingThreads = new Task[textConverters.Count];
+           
+            for (int i = 0; i < textConverters.Count; i++ )
+            {
+                int workingVal = i;
+                collections[workingVal] = new BlockingCollection<mPoint>();
+                addingThreads[workingVal] = Task.Factory.StartNew(() => textConverters[workingVal].getData(collections[workingVal]));
+            }
+
+            /*
+            collections[0] = new BlockingCollection<mPoint>();
+            addingThreads[0] = Task.Factory.StartNew(() => kaseyTextConvert.getData(collections[0]));
+
+            collections[1] = new BlockingCollection<mPoint>();
+            addingThreads[1] = Task.Factory.StartNew(() => dominiqueTextConvert.getData(collections[1]));  */
+
+            //blockingData = new BlockingCollection<mPoint>();
+            //addingData = Task.Factory.StartNew(() => myTextConverter.getData(blockingData));  
+        }
+
+        public bool getWindowStarted()
+        {
+            return windowStarted;
         }
 
         public PenToText getWindow()
@@ -121,22 +170,52 @@ namespace penToText
 
         public void addData(mPoint newPoint)
         {
-            if (!blockingData.IsAddingCompleted)
+            for (int i = 0; i < collections.Length; i++)
+            {
+                if (!collections[i].IsAddingCompleted)
+                {
+                    collections[i].Add(newPoint);
+                }
+            }
+           /* if (!blockingData.IsAddingCompleted)
             {
                 blockingData.Add(newPoint);
-            }
+            }*/
         }
 
         private void Clear_Click(object sender, RoutedEventArgs e)
         {
             display.clear();
 
-            blockingData.CompleteAdding();
+            for (int i = 0; i < textConverters.Count; i++)
+            {
+                int workingVal = i;
+                collections[workingVal].CompleteAdding();
+                addingThreads[workingVal].Wait();
+                textConverters[workingVal].clear();
+                collections[workingVal] = new BlockingCollection<mPoint>();
+                addingThreads[workingVal] = Task.Factory.StartNew(() => textConverters[workingVal].getData(collections[workingVal]));
+
+               /* switch (i)
+                {
+                    case 0:
+                        kaseyTextConvert.clear();
+                        collections[i] = new BlockingCollection<mPoint>();
+                        addingThreads[i] = Task.Factory.StartNew(() => kaseyTextConvert.getData(collections[i]));
+                        break;
+                    case 1:
+                        dominiqueTextConvert.clear();
+                        collections[i] = new BlockingCollection<mPoint>();
+                        addingThreads[i] = Task.Factory.StartNew(() => dominiqueTextConvert.getData(collections[i]));
+                        break;
+                }*/
+            }
+/*            blockingData.CompleteAdding();
             addingData.Wait();
             myTextConverter.clear();
             blockingData = new BlockingCollection<mPoint>();
 
-            addingData = Task.Factory.StartNew(() => myTextConverter.getData(blockingData)); 
+            addingData = Task.Factory.StartNew(() => myTextConverter.getData(blockingData)); */
         }
 
         private void Submit_Click(object sender, RoutedEventArgs e)

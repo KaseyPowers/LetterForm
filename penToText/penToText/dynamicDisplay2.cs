@@ -46,14 +46,19 @@ namespace penToText
             flexibleGrid.Children.Clear();
             flexibleGrid.ColumnDefinitions.Clear();
             flexibleGrid.RowDefinitions.Clear();
+           // double columnWidth = core.getWindow().ActualWidth;
+            //double rowHeight = core.getWindow().ActualHeight;
 
-            double columnWidth = core.getWindow().ActualWidth / x_max;
-            double rowHeight = core.getWindow().ActualHeight / y_max;
+            double columnWidth = flexibleGrid.ActualWidth - 100;
+            double rowHeight = flexibleGrid.ActualHeight - 100;
 
-            double size = columnWidth;
-            if (size > rowHeight)
+            columnWidth /= x_max;
+            rowHeight /= y_max;
+
+            double size = rowHeight;
+            if (columnWidth < size)
             {
-                size = rowHeight;
+                size = columnWidth;
             }
 
             for (int x = 0; x <= x_max; x++)
@@ -429,6 +434,18 @@ namespace penToText
             
         }
 
+        public override void clear()
+        {
+        }
+
+        public override void draw()
+        {
+
+        }
+    }
+
+    public class treeView : dynamicView2
+    {
         public override void clear()
         {
         }
