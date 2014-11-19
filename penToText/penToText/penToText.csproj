@@ -78,6 +78,7 @@
       <DependentUpon>DataDisplay.xaml</DependentUpon>
     </Compile>
     <Compile Include="dataStuff.cs" />
+    <Compile Include="dataTree.cs" />
     <Compile Include="dynamicDisplay.cs" />
     <Compile Include="DisplayWindow.xaml.cs">
       <DependentUpon>DisplayWindow.xaml</DependentUpon>
