@@ -20,13 +20,15 @@ namespace penToText
     public class Core
     {
 
-       // public BlockingCollection<mPoint> blockingData;
-       // private Task addingData;
+        public BlockingCollection<mPoint> blockingData;
+        private Task addingData;
+        public List<mPoint> originalData; //this is stored just in case we want it later?
 
         private List<textConverter> textConverters;
         private List<dataTree> dataTrees;
         public BlockingCollection<mPoint>[] collections;
         public Task[] addingThreads;
+
 
         /*store dynamic windows:
          * input
@@ -140,13 +142,14 @@ namespace penToText
 
             dataTrees = new List<dataTree>();
 
-           
-            for (int i = 0; i < textConverters.Count; i++ )
+            blockingData = new BlockingCollection<mPoint>();
+            addingData = Task.Factory.StartNew(() => sendData(blockingData));
+            /*for (int i = 0; i < textConverters.Count; i++ )
             {
                 int workingVal = i;
                 collections[workingVal] = new BlockingCollection<mPoint>();
                 addingThreads[workingVal] = Task.Factory.StartNew(() => textConverters[workingVal].getData(collections[workingVal]));
-            }
+            }*/
 
         }
 
@@ -162,23 +165,52 @@ namespace penToText
 
         public void addData(mPoint newPoint)
         {
-            for (int i = 0; i < collections.Length; i++)
+            /*for (int i = 0; i < collections.Length; i++)
             {
                 if (!collections[i].IsAddingCompleted)
                 {
                     collections[i].Add(newPoint);
                 }
-            }
-           /* if (!blockingData.IsAddingCompleted)
+            }*/
+
+            if (!blockingData.IsAddingCompleted)
             {
                 blockingData.Add(newPoint);
-            }*/
+            }
+        }
+
+        public void sendData(BlockingCollection<mPoint> data)
+        {
+            mPoint last = null;
+            if (originalData == null)
+            {
+                originalData = new List<mPoint>();
+            }
+            foreach (var item in data.GetConsumingEnumerable())
+            {
+                mPoint current = item;
+
+                if (originalData.Count > 0)
+                {
+                    last = originalData[originalData.Count - 1];
+                }
+
+                if (originalData.Count == 0 || !(current.Equals(last)))
+                {
+                    originalData.Add(current);
+                    //updateData();
+                    for (int i = 0; i < textConverters.Count; i++)
+                    {
+                        textConverters[i].updateData(current);
+                    }
+                }
+            }
         }
 
         private void Clear_Click(object sender, RoutedEventArgs e)
         {
             display.clear();
-
+            /*
             for (int i = 0; i < textConverters.Count; i++)
             {
                 int workingVal = i;
@@ -187,27 +219,19 @@ namespace penToText
                 textConverters[workingVal].clear();
                 collections[workingVal] = new BlockingCollection<mPoint>();
                 addingThreads[workingVal] = Task.Factory.StartNew(() => textConverters[workingVal].getData(collections[workingVal]));
+            }*/
 
-               /* switch (i)
-                {
-                    case 0:
-                        kaseyTextConvert.clear();
-                        collections[i] = new BlockingCollection<mPoint>();
-                        addingThreads[i] = Task.Factory.StartNew(() => kaseyTextConvert.getData(collections[i]));
-                        break;
-                    case 1:
-                        dominiqueTextConvert.clear();
-                        collections[i] = new BlockingCollection<mPoint>();
-                        addingThreads[i] = Task.Factory.StartNew(() => dominiqueTextConvert.getData(collections[i]));
-                        break;
-                }*/
-            }
-/*            blockingData.CompleteAdding();
+            blockingData.CompleteAdding();
             addingData.Wait();
-            myTextConverter.clear();
-            blockingData = new BlockingCollection<mPoint>();
+            //myTextConverter.clear();
 
-            addingData = Task.Factory.StartNew(() => myTextConverter.getData(blockingData)); */
+            for (int i = 0; i < textConverters.Count; i++)
+            {
+                textConverters[i].clear();
+            }
+            originalData.Clear();
+            blockingData = new BlockingCollection<mPoint>();
+            addingData = Task.Factory.StartNew(() => sendData(blockingData)); 
         }
 
         private void Submit_Click(object sender, RoutedEventArgs e)

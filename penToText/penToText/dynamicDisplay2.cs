@@ -330,6 +330,8 @@ namespace penToText
             this.ySize = ySize;
             this.parent = parent;
 
+            data = new List<mPoint>();
+
             myFrame = new Frame();
             Border currentBorder = new Border();
             DockPanel dock = new DockPanel();

@@ -10,7 +10,6 @@ namespace penToText
 {
     public abstract class textConverter
     {
-        protected List<mPoint> originalData = new List<mPoint>();
         protected Core core;
         public int resampleID = -1;
         public int sectionsID = -1;
@@ -22,12 +21,13 @@ namespace penToText
             stopwatch.Stop();
             return stopwatch.Elapsed;
         }
+        /*
         public void getData(BlockingCollection<mPoint> data)
         {
+            mPoint last = null;
             foreach (var item in data.GetConsumingEnumerable())
             {
                 mPoint current = item;
-                mPoint last = null;
 
                 if (originalData.Count > 0)
                 {
@@ -40,9 +40,9 @@ namespace penToText
                     updateData();
                 }
             }
-        }
+        }*/
 
-        abstract public void updateData();
+        abstract public void updateData(mPoint newPoint);
 
         abstract public void clear();
 
@@ -115,13 +115,13 @@ namespace penToText
 
         public override void clear()
         {
-            originalData.Clear();
+            //originalData.Clear();
             scaling.Clear();
             resampling.Clear();
             resetTimes();
         }
 
-        public override void updateData()
+        public override void updateData(mPoint newPoint)
         {
             double minDistance = .1;
             int timeId = 0;
@@ -133,13 +133,13 @@ namespace penToText
             //add new point
             elapsedTime[timeId] += Time(() =>
             {
-                addingToSampled(originalData[originalData.Count - 1], minDistance);
+                addingToSampled(newPoint, minDistance);
             });
             //display the resampled data
             if (resampleID >= 0)
             {
                 core.TextBreakDown[resampleID].newData(new List<mPoint>(resampling));
-                core.TextBreakDown[resampleID].titleText = TAG + " Resample: " + originalData.Count + "\nTo: " + resampling.Count + "\nTime: " + (elapsedTime[timeId].TotalMilliseconds);
+                core.TextBreakDown[resampleID].titleText = TAG + " Resample: " + core.originalData.Count + "\nTo: " + resampling.Count + "\nTime: " + (elapsedTime[timeId].TotalMilliseconds);
             }
 
             //Kasey Unique Stuff
@@ -153,7 +153,7 @@ namespace penToText
             if (sectionsID >= 0)
             {
                 core.TextBreakDown[sectionsID].newData(new List<mPoint>(cleaned2));
-                core.TextBreakDown[sectionsID].titleText = "Kasey Sections: " + originalData.Count + "\nTo: " + cleaned2.Count + "\nTime: " + (elapsedTime[timeId]).TotalMilliseconds;
+                core.TextBreakDown[sectionsID].titleText = "Kasey Sections: " + core.originalData.Count + "\nTo: " + cleaned2.Count + "\nTime: " + (elapsedTime[timeId]).TotalMilliseconds;
             }
             core.draw();
         }
@@ -557,7 +557,7 @@ namespace penToText
             resetTimes();
         }
 
-        public override void updateData()
+        public override void updateData(mPoint newPoint)
         {
             double minDistance = .1;
             int timeId = 0;
@@ -569,13 +569,13 @@ namespace penToText
             //add new point
             elapsedTime[timeId] += Time(() =>
             {
-                addingToSampled(originalData[originalData.Count - 1], minDistance);
+                addingToSampled(newPoint, minDistance);
             });
             //display the resampled data
             if (resampleID >= 0)
             {
                 core.TextBreakDown[resampleID].newData(new List<mPoint>(resampling));
-                core.TextBreakDown[resampleID].titleText = TAG + " Resample: " + originalData.Count + "\nTo: " + resampling.Count + "\nTime: " + (elapsedTime[timeId].TotalMilliseconds);
+                core.TextBreakDown[resampleID].titleText = TAG + " Resample: " + core.originalData.Count + "\nTo: " + resampling.Count + "\nTime: " + (elapsedTime[timeId].TotalMilliseconds);
             }
 
             //Current Unique Stuff
@@ -590,7 +590,7 @@ namespace penToText
             if (sectionsID >= 0)
             {
                 core.TextBreakDown[sectionsID].newData(new List<mPoint>(cleaned));
-                core.TextBreakDown[sectionsID].titleText = TAG + " Sections: " + originalData.Count + "\nTo: " + cleaned.Count + "\nTime: " + (elapsedTime[timeId]).TotalMilliseconds;
+                core.TextBreakDown[sectionsID].titleText = TAG + " Sections: " + core.originalData.Count + "\nTo: " + cleaned.Count + "\nTime: " + (elapsedTime[timeId]).TotalMilliseconds;
             }
             core.draw();
         }
@@ -602,7 +602,7 @@ namespace penToText
 
         public override void clear()
         {
-            originalData.Clear();
+            //originalData.Clear();
             scaling.Clear();
             resampling.Clear();
             resetTimes();
@@ -987,7 +987,6 @@ namespace penToText
         private String TAG = "Dominique";
         private List<mPoint> scaling;
         private List<mPoint> resampling;
-        private bool withLines = true;
 
         int timeCounts = 2;
         /*
@@ -1008,7 +1007,7 @@ namespace penToText
             resetTimes();
         }
 
-        public override void updateData()
+        public override void updateData(mPoint nextPoint)
         {
             double minDistance = .1;
             int timeId = 0;
@@ -1020,13 +1019,13 @@ namespace penToText
             //add new point
             elapsedTime[timeId] += Time(() =>
             {
-                addingToSampled(originalData[originalData.Count - 1], minDistance);
+                addingToSampled(nextPoint, minDistance);
             });
             //display the resampled data
             if (resampleID >= 0)
             {
                 core.TextBreakDown[resampleID].newData(new List<mPoint>(resampling));
-                core.TextBreakDown[resampleID].titleText = TAG + " Resample: " + originalData.Count + "\nTo: " + resampling.Count + "\nTime: " + (elapsedTime[timeId].TotalMilliseconds);
+                core.TextBreakDown[resampleID].titleText = TAG + " Resample: " + core.originalData.Count + "\nTo: " + resampling.Count + "\nTime: " + (elapsedTime[timeId].TotalMilliseconds);
             }
 
             //Current Unique Stuff
@@ -1041,7 +1040,7 @@ namespace penToText
             if (sectionsID >= 0)
             {
                 core.TextBreakDown[sectionsID].newData(new List<mPoint>(cleaned));
-                core.TextBreakDown[sectionsID].titleText = TAG + " Sections: " + originalData.Count + "\nTo: " + cleaned.Count + "\nTime: " + (elapsedTime[timeId]).TotalMilliseconds;
+                core.TextBreakDown[sectionsID].titleText = TAG + " Sections: " + core.originalData.Count + "\nTo: " + cleaned.Count + "\nTime: " + (elapsedTime[timeId]).TotalMilliseconds;
             }
             core.draw();
         }
@@ -1053,7 +1052,7 @@ namespace penToText
 
         public override void clear()
         {
-            originalData.Clear();
+            //originalData.Clear();
             scaling.Clear();
             resampling.Clear();
             resetTimes();
@@ -1264,7 +1263,7 @@ namespace penToText
             for (int i = 0; i < input.Count; i++)
             {
 
-                mPoint temp = roundedPoint(input[i], .05);
+                mPoint temp = roundedPoint(input[i], .01);
                 if (i == 0 || !temp.Equals(input[i - 1]))
                 {
                     input[i] = temp;
@@ -1304,75 +1303,69 @@ namespace penToText
             int output = 0;
             /*
              * 0: invalid
-             * 1: up
-             * 2: down
-             * 3: left
-             * 4: right
-             * 5: up-left
-             * 6: up-right
-             * 7: down-left
+             * 1: right
+             * 2: up-right
+             * 3: up
+             * 4: up-left
+             * 5: left
+             * 6: down-left
+             * 7: down
              * 8: down-right
              */
-            if (a.X == b.X)
+            if (a.line == b.line)
             {
-                //up or down
-                if (a.Y == b.Y)
-                {
-                    //no Y change
-                    output = 0;
-                }
-                else if (a.Y > b.Y)
-                {
-                    //down
-                    output = 2;
-                }
-                else if (a.Y < b.Y)
-                {
-                    //up
-                    output = 1;
-                }
-            }
-            else if (a.X < b.X)
-            {
-                //going right
-                if (a.Y == b.Y)
-                {
-                    //no Y change
-                    output = 4;
-                }
-                else if (a.Y >= b.Y)
-                {
-                    //down
-                    output = 8;
-                }
-                else if (a.Y < b.Y)
-                {
-                    //up
-                    output = 6;
-                }
-            }
-            else if (a.X > b.X)
-            {
-                //going left
-                if (a.Y == b.Y)
-                {
-                    //no Y change
-                    output = 3;
-                }
-                else if (a.Y > b.Y)
-                {
-                    //down
-                    output = 5;
-                }
-                else if (a.Y < b.Y)
-                {
-                    //up
-                    output = 7;
-                }
+                //the vector values
+
+                double X = b.X - a.X;
+                double Y = b.Y - a.Y;
+                output = smartFitTo45(X, Y);
             }
             return output;
         }
 
+        private double angleDifferent(double a, double b)
+        {
+            double difference = Math.Abs(a - b) % 360;
+
+            if (difference > 180)
+            {
+                difference = 360 - difference;
+            }
+
+            return difference;
+        }
+
+        private int smartFitTo45(double X, double Y)
+        {
+            //get the angle of theline, accounting for quadrant, in degrees
+            double degrees = ((Math.Atan2(Y, X) * (180.0 / Math.PI)) + 360) % 360;
+            //round angle to a 45 degree angle
+            int flatAngle = (int)RoundToNearest(degrees, 90.0) / 45;
+
+            int slopeAngle = flatAngle;
+            if (angleDifferent((flatAngle + 1) * 45.0, degrees) < angleDifferent((flatAngle - 1) * 45.0, degrees))
+            {
+                slopeAngle++;
+            }
+            else
+            {
+                slopeAngle--;
+            }
+
+            int newAngle = flatAngle;
+
+            if (3 * angleDifferent(flatAngle * 45.0, degrees) > 2 * angleDifferent(slopeAngle * 45.0, degrees))
+            {
+                newAngle = slopeAngle;
+            }
+
+            return (newAngle % 8) + 1;
+        }
+
+        private double degreesToRadians(double degrees)
+        {
+            return Math.PI * degrees / 180.0;
+        }
         public List<mPoint> cleanSections(List<mPoint> input)
         {
             double e = .15; // height over length
