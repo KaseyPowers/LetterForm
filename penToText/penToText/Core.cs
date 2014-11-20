@@ -20,6 +20,9 @@ namespace penToText
     public class Core
     {
 
+        private char[] alphabet = "abcdefghijklmnopqrstuvwxyz0123456789".ToCharArray();
+        dataManager mDataManager;
+
         public BlockingCollection<mPoint> blockingData;
         private Task addingData;
         public List<mPoint> originalData; //this is stored just in case we want it later?
@@ -29,24 +32,12 @@ namespace penToText
         public BlockingCollection<mPoint>[] collections;
         public Task[] addingThreads;
 
-
-        /*store dynamic windows:
-         * input
-         * display outputs
-         *      steps of breakdown
-         *      letter being guessed
-         *      etc.
-         * display data representation
-         * dynamic display to hold these
-         */
         private PenToText mainWindow;
         private dynamicDisplay2 display;
         private inputView input;
         public List<multiLineDrawView> TextBreakDown;
+        public charGuessView guessOutput;
         private bool windowStarted;
-       // private convertToText2 myTextConverter;
-       // private KaseyConvertToText kaseyTextConvert;
-        //private DominiqueConvertToText dominiqueTextConvert;
         private static long pause = (long)(.25 * 1000);
         public Core()
         {
@@ -133,24 +124,35 @@ namespace penToText
             thisX++;      
 
             textConverters = new List<textConverter>();
-            textConverters.Add(new currentTextConverter(this, 0, 1));
-            textConverters.Add(new dominiqueTextConverter(this, 2, 3));
-            textConverters.Add(new kaseyTextConverter(this, 4, 5));
+            textConverters.Add(new currentTextConverter(this, 0, 1, 0));
+            textConverters.Add(new dominiqueTextConverter(this, 2, 3, 1));
+            textConverters.Add(new kaseyTextConverter(this, 4, 5, 2));
 
             collections = new BlockingCollection<mPoint>[textConverters.Count];
             addingThreads = new Task[textConverters.Count];
 
+            guessOutput = new charGuessView(thisX, thisY, 1,1,display,true, textConverters.Count);
+
             dataTrees = new List<dataTree>();
+
+            mDataManager = new dataManager(this);
+            setupTrees();
 
             blockingData = new BlockingCollection<mPoint>();
             addingData = Task.Factory.StartNew(() => sendData(blockingData));
-            /*for (int i = 0; i < textConverters.Count; i++ )
-            {
-                int workingVal = i;
-                collections[workingVal] = new BlockingCollection<mPoint>();
-                addingThreads[workingVal] = Task.Factory.StartNew(() => textConverters[workingVal].getData(collections[workingVal]));
-            }*/
 
+            
+        }
+
+
+        public void setupTrees()
+        {
+            List<Tuple<List<mPoint>, char>> elements = mDataManager.getElements();
+
+            for (int i = 0; i < dataTrees.Count; i++)
+            {
+                dataTrees[i].smartStart(elements, alphabet);
+            }
         }
 
         public bool getWindowStarted()
@@ -203,6 +205,7 @@ namespace penToText
                     {
                         textConverters[i].updateData(current);
                     }
+                    display.draw();
                 }
             }
         }
@@ -252,11 +255,6 @@ namespace penToText
         private void Data_Click(object sender, RoutedEventArgs e)
         {
 
-        }
-
-        public void draw()
-        {
-            display.draw();
         }
     }
 }

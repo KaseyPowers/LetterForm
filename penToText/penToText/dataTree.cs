@@ -12,63 +12,160 @@ namespace penToText
         textConverter currentConverter;
         public dataTree(textConverter converter){
             currentConverter = converter;
+            currentConverter.setTree(this);
             root = new dataNode("", 0, ' ', false);
+        }
+
+        public Tuple<string, string> searchTree(List<Tuple<String, int>> thisBreakdown)
+        {
+            //the int is the position of the breakdown this datanode will compare its children with
+            List<Tuple<dataNode, int>> possibleOptions = new List<Tuple<dataNode, int>>();
+            Queue<Tuple<dataNode, int>> frontier = new Queue<Tuple<dataNode, int>>();
+            frontier.Enqueue(new Tuple<dataNode, int>(root, 0));
+
+            while (frontier.Count > 0)
+            {
+                Tuple<dataNode, int> current= frontier.Dequeue();
+
+                if (current.Item2 < thisBreakdown.Count && current.Item1.children.Count > 0)
+                {
+                    bool fitFound = false;
+                    for (int i = 0; i < current.Item1.children.Count; i++)
+                    {
+                        dataNode child = current.Item1.children[i];
+                        if (child.SectionLetter.Equals(thisBreakdown[current.Item2].Item1) && child.minValue <= thisBreakdown[current.Item2].Item2 && child.maxValue >= thisBreakdown[current.Item2].Item2)
+                        {
+                            frontier.Enqueue(new Tuple<dataNode, int>(child, current.Item2 + 1));
+                            fitFound = true;
+                        }      
+                    }
+
+                    if (!fitFound)
+                    {
+                        possibleOptions.Add(current);
+                    }
+                }
+                else
+                {
+                    possibleOptions.Add(current);
+                }
+
+            }
+
+
+            //if multiple equally likely option exist, will combine them, could say no match as well, can discuss later
+            string possibleLetters = "";
+            string ifStopHere = "";
+
+            if (possibleOptions.Count > 1)
+            {
+                //find best option
+                bool anyPerfectMatches = false; //exact matches, same length of input (only likely towards the end of input
+                bool anygreaterThan = false; //if there are any of the options that are equal to input but with children (the goal for most inputs)
+                int closestSmaller = thisBreakdown.Count + 1;
+                for (int i = 0; i < possibleOptions.Count && !anyPerfectMatches; i++)
+                {
+                    int difference = thisBreakdown.Count - possibleOptions[i].Item2;
+                    bool lessThan = difference > 0;
+                    if (lessThan && closestSmaller > difference)
+                    {
+                        closestSmaller = difference;
+                    }
+                    bool greaterThan = possibleOptions[i].Item1.children.Count > 0  && !lessThan;
+                    anyPerfectMatches =!greaterThan && !lessThan;
+                    anygreaterThan = anygreaterThan || greaterThan;
+                }
+
+
+                for (int i = 0; i < possibleOptions.Count && !anyPerfectMatches; i++)
+                {
+                    int difference = thisBreakdown.Count - possibleOptions[i].Item2;
+                    bool lessThan = thisBreakdown.Count - possibleOptions[i].Item2 > 0;
+                    bool greaterThan = possibleOptions[i].Item1.children.Count > 0 && !lessThan;
+                    if ((anyPerfectMatches && (greaterThan || lessThan)) || (anygreaterThan && !anyPerfectMatches && lessThan) || (!anyPerfectMatches && !anygreaterThan && difference > closestSmaller))
+                    {
+                        possibleOptions.RemoveAt(i);
+                        i--;
+                    }
+                }
+
+            }
+
+            for (int i = 0; i < possibleOptions.Count; i++)
+            {
+                possibleLetters = smartAlphaBetCombine(possibleLetters, possibleOptions[i].Item1.chars);
+                ifStopHere = smartAlphaBetCombine(ifStopHere, possibleOptions[i].Item1.ifStopHere + "");
+            }
+
+            return new Tuple<string, string>(possibleLetters, ifStopHere);
+        }
+
+        private String smartAlphaBetCombine(string a, string b)
+        {
+            //lets assume start at 'a'
+            List<bool> values = new List<bool>();
+
+            for (int i = 0; i < a.Length; i++)
+            {
+                int loc = a[i] - 'a';
+                while (values.Count <= loc)
+                {
+                    values.Add(false);
+                }
+                values[loc] = true;
+            }
+
+            for (int i = 0; i < b.Length; i++)
+            {
+                int loc = b[i] - 'a';
+                while (values.Count <= loc)
+                {
+                    values.Add(false);
+                }
+                values[loc] = true;
+            }
+
+            string output = "";
+            for (int i = 0; i < values.Count; i++)
+            {
+                if (values[i]) { output += "" + ('a' + i); }
+            }
+            return output;
+        }
+
+        public void smartStart(List<Tuple<List<mPoint>, char>> data, char[] alphabet)
+        {
+            dataNode[] roots = new dataNode[alphabet.Length];
+            
+            for (int i = 0; i < alphabet.Length; i++)
+            {
+                roots[i] = new dataNode("", 0, ' ', false);
+                char thisLetter = alphabet[i];
+                for (int j = 0; j < data.Count; j++)
+                {
+                    if (data[j].Item2 == thisLetter)
+                    {
+                        addToTree(roots[i], data[j].Item1, data[j].Item2);
+                        combineTree(roots[i]);
+                    }
+                }
+            }
+            for (int i = 0; i < roots.Length; i++)
+            {
+                root = new dataNode(root, roots[i]);
+                combineTree(root);
+            }
         }
         public void addToTree(dataNode start, List<mPoint> input, char associatedLetter)
         {
-            String newInfo = currentConverter.getSectionString(input);
-            int chunkAt = 0;
-            int chunkLength = 6;
+            List<Tuple<string, int>> newBreakdown = currentConverter.getSectionBreakDown(input);
+
             dataNode current = start;
-            while (newInfo.Length >= (chunkAt + 1) * chunkLength)
+            for (int i = 0; i < newBreakdown.Count; i++)
             {
-                string chunk = newInfo.Substring(chunkAt * chunkLength, chunkLength);
-                string sectionString;
-                double value = 0.0;
-                if (chunk.Equals("Line00"))
-                {
-                    sectionString = chunk;
-                }
-                else
-                {
-                    sectionString = chunk.Substring(0, 1);
-                    value = Double.Parse(chunk.Substring(1));
-                }
-
-                bool final = (newInfo.Length < (chunkAt + 2) * chunkLength);
-                dataNode next = new dataNode(sectionString, value, associatedLetter, final);
-
+                dataNode next = new dataNode(newBreakdown[i].Item1, newBreakdown[i].Item2, associatedLetter, (i==(newBreakdown.Count-1)));
                 current.addChild(next);
                 current = next;
-                chunkAt++;
-            }
-        }
-        public void addToThisTree(dataNode start, string newInfo, char associatedLetter)
-        {
-            int chunkAt = 0;
-            int chunkLength = 6;
-            dataNode current = start;
-            while (newInfo.Length >= (chunkAt + 1) * chunkLength)
-            {
-                string chunk = newInfo.Substring(chunkAt * chunkLength, chunkLength);
-                string sectionString;
-                double value = 0.0;
-                if (chunk.Equals("Line00"))
-                {
-                    sectionString = chunk;
-                }
-                else
-                {
-                    sectionString = chunk.Substring(0, 1);
-                    value = Double.Parse(chunk.Substring(1));
-                }
-
-                bool final = (newInfo.Length < (chunkAt + 2) * chunkLength);
-                dataNode next = new dataNode(sectionString, value, associatedLetter, final);
-
-                current.addChild(next);
-                current = next;
-                chunkAt++;
             }
         }
 
@@ -133,6 +230,7 @@ namespace penToText
                 }
             }
         }
+
     }
 
     public class dataNode
@@ -140,12 +238,12 @@ namespace penToText
         public dataNode parent;
         public List<dataNode> children;
         public String SectionLetter;
-        public double minValue;
-        public double maxValue;
+        public int minValue;
+        public int maxValue;
         public String chars;
         public char ifStopHere;
 
-        public dataNode(String letter, double value, char newChar , bool final)
+        public dataNode(String letter, int value, char newChar , bool final)
         {
             parent = null;
             children = new List<dataNode>();

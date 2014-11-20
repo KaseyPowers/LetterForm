@@ -468,6 +468,70 @@ namespace penToText
         }
     }
 
+
+    public class charGuessView : dynamicView2
+    {
+        TextBlock[] charGuesses;
+        StackPanel container;
+        String[] guessStrings;
+        int num_guessers;
+
+        public charGuessView(int xPos, int yPos, int xSize, int ySize, dynamicDisplay2 parent, bool reserved, int guessers)
+        {
+            this.reserveSpace = reserved;
+            this.active = true;
+            this.xPos = xPos;
+            this.yPos = yPos;
+            this.xSize = xSize;
+            this.ySize = ySize;
+            this.parent = parent;
+
+            num_guessers = guessers;
+            charGuesses = new TextBlock[num_guessers];
+            guessStrings = new String[num_guessers];
+
+            myFrame = new Frame();
+            Border currentBorder = new Border();
+            currentBorder.BorderBrush = Brushes.Black;
+            currentBorder.BorderThickness = new Thickness(1);
+
+            container = new StackPanel();
+
+            myFrame.Content = currentBorder;
+            currentBorder.Child = container;
+
+            for (int i = 0; i < num_guessers; i++)
+            {
+                Border childBorder = new Border();
+                childBorder.BorderBrush = Brushes.Black;
+                childBorder.BorderThickness = new Thickness(1);
+                charGuesses[i] = new TextBlock();
+                childBorder.Child = charGuesses[i];
+                container.Children.Add(childBorder);
+            }
+        }
+
+        public void updateGuess(int ID, String newText)
+        {
+            if (ID >= 0 && ID < num_guessers)
+            {
+                guessStrings[ID] = newText;
+            }
+        }
+
+        public override void clear()
+        {
+
+        }
+
+        public override void draw()
+        {
+            for (int i = 0; i < num_guessers; i++)
+            {
+                charGuesses[i].Text = guessStrings[i];
+            }
+        }
+    }
     public class charInputView : dynamicView2
     {
         TextBlock prompt;

@@ -11,8 +11,10 @@ namespace penToText
     public abstract class textConverter
     {
         protected Core core;
+        protected dataTree myTree;
         public int resampleID = -1;
         public int sectionsID = -1;
+        public int guessOutputID = -1;
         protected TimeSpan[] elapsedTime;
         protected static TimeSpan Time(Action action)
         {
@@ -42,11 +44,14 @@ namespace penToText
             }
         }*/
 
+        public void setTree(dataTree thisTree){
+            myTree = thisTree;
+        }
         abstract public void updateData(mPoint newPoint);
 
         abstract public void clear();
 
-        abstract public String getSectionString(List<mPoint> input);
+        abstract public List<Tuple<String, int>> getSectionBreakDown(List<mPoint> input);
 
         protected double distance(mPoint a, mPoint b)
         {
@@ -104,12 +109,12 @@ namespace penToText
             this.core = core;
             resetTimes();
         }
-        public kaseyTextConverter(Core core, int resampleID, int sectionsID)
+        public kaseyTextConverter(Core core, int resampleID, int sectionsID, int guessOutputID)
         {
-
             this.core = core;
             this.resampleID = resampleID;
             this.sectionsID = sectionsID;
+            this.guessOutputID = guessOutputID;
             resetTimes();
         }
 
@@ -155,12 +160,11 @@ namespace penToText
                 core.TextBreakDown[sectionsID].newData(new List<mPoint>(cleaned2));
                 core.TextBreakDown[sectionsID].titleText = "Kasey Sections: " + core.originalData.Count + "\nTo: " + cleaned2.Count + "\nTime: " + (elapsedTime[timeId]).TotalMilliseconds;
             }
-            core.draw();
         }
 
-        public override String getSectionString(List<mPoint> input)
+        abstract public List<Tuple<String, int>> getSectionBreakDown(List<mPoint> input)
         {
-            return "not implimented yet";
+            return null;
         }
 
         private void resetTimes()
@@ -639,10 +643,11 @@ namespace penToText
         private List<mPoint> resampling;
         private bool withLines = false;
 
-        int timeCounts = 2;
+        int timeCounts = 3;
         /*
          * 0 is rescaling
          * 1 is the other thing
+         * 2 time to search the tree
          */
 
         public currentTextConverter(Core core)
@@ -650,25 +655,25 @@ namespace penToText
             this.core = core;
             resetTimes();
         }
-        public currentTextConverter(Core core, int resampleID, int sectionsID)
+        public currentTextConverter(Core core, int resampleID, int sectionsID, int guessOutputID)
         {
             this.core = core;
             this.resampleID = resampleID;
             this.sectionsID = sectionsID;
+            this.guessOutputID = guessOutputID;
             resetTimes();
         }
 
         public override void updateData(mPoint newPoint)
         {
             double minDistance = .1;
-            int timeId = 0;
             /*
              * 0 is rescaling
              * 1 is the other thing
              */
 
             //add new point
-            elapsedTime[timeId] += Time(() =>
+            elapsedTime[0] += Time(() =>
             {
                 addingToSampled(newPoint, minDistance);
             });
@@ -676,30 +681,81 @@ namespace penToText
             if (resampleID >= 0)
             {
                 core.TextBreakDown[resampleID].newData(new List<mPoint>(resampling));
-                core.TextBreakDown[resampleID].titleText = TAG + " Resample: " + core.originalData.Count + "\nTo: " + resampling.Count + "\nTime: " + (elapsedTime[timeId].TotalMilliseconds);
+                core.TextBreakDown[resampleID].titleText = TAG + " Resample: " + core.originalData.Count + "\nTo: " + resampling.Count + "\nTime: " + (elapsedTime[0].TotalMilliseconds);
             }
 
             //Current Unique Stuff
             
             //get sections
-            timeId = 1;
             List<mPoint> cleaned = new List<mPoint>();
-            elapsedTime[timeId] += Time(() =>
+            elapsedTime[1] += Time(() =>
             {
-                cleaned = Sections(new List<mPoint>(resampling));
+                cleaned = cleanSections(Sections(new List<mPoint>(resampling)));
             });
             if (sectionsID >= 0)
             {
                 core.TextBreakDown[sectionsID].newData(new List<mPoint>(cleaned));
-                core.TextBreakDown[sectionsID].titleText = TAG + " Sections: " + core.originalData.Count + "\nTo: " + cleaned.Count + "\nTime: " + (elapsedTime[timeId]).TotalMilliseconds;
+                core.TextBreakDown[sectionsID].titleText = TAG + " Sections: " + core.originalData.Count + "\nTo: " + cleaned.Count + "\nTotal Time: " + (elapsedTime[0]).TotalMilliseconds + (elapsedTime[1]).TotalMilliseconds;
             }
-            core.draw();
+
+            
+            if (myTree != null && guessOutputID >= 0)
+            {
+                Tuple<String, String> results = new Tuple<string,string>("","");
+                elapsedTime[2] += Time(() =>
+                    {
+                        results = myTree.searchTree(getBreakDown(cleaned));
+                    });
+                core.guessOutput.updateGuess(guessOutputID,
+                    TAG + " guess:" +
+                    "\nPossible letters: " + results.Item1 +
+                    "\nCurrent Guess: " + results.Item2 +
+                    "\nTotal time: " + (elapsedTime[0].TotalMilliseconds + elapsedTime[1].TotalMilliseconds + elapsedTime[2].TotalMilliseconds));
+            }
         }
 
-        public override String getSectionString(List<mPoint> input)
+        abstract public List<Tuple<String, int>> getSectionBreakDown(List<mPoint> input)
         {
-            return "not implimented yet";
+            //This method is used to build the tree, assume input list is scaled and resampled, break it into sections and return those sections
+            return getBreakDown(cleanSections(Sections(new List<mPoint>(input))));
         }
+
+        public List<Tuple<String, int>> getBreakDown(List<mPoint> cleaned)
+        {
+            List<Tuple<string, int>> output = new List<Tuple<string, int>>();
+            //This method is used with tree data, assume input list is broken down sections
+            //No specific definition is required as long as it is concsistent within the textConverter
+            //Slopes are 1 = 'A' and 2 = 'B' ... if its a line break use 'L'
+            //Knowing this, The slope is always represented by 1 char
+            //Line lenghts will be represented by 0-1000, with 100 being the unit length 
+            //(was using 0-10 with 2 decimal places but this is same accuracy and would be easier to switch to a non-string memory-saving system for a small integer or whatnot)
+            double unitLength = 0;
+            for (int i = 1; i < cleaned.Count; i++)
+            {
+                double thisLength = distance(cleaned[i - 1], cleaned[i]);
+                if (unitLength == 0) { unitLength = thisLength; }
+
+                thisLength /= unitLength;
+                //moves to in scale so 0-1 is 0-100, so stores in that is equally accurate to two decimal points
+                int scaleLength = (int)(Math.Ceiling(thisLength * 100));
+
+                //keeps the length in 4 didgets
+                //scaleLength = Math.Min(scaleLength, 9999);
+
+                String slopeString = "L";
+
+                if (cleaned[i - 1].line == cleaned[i].line)
+                {
+                    slopeString = "" + ('A' + getDirection(cleaned[i - 1], cleaned[i]));
+                }
+
+                Tuple<string, int> nextTuple = new Tuple<string, int>(slopeString, scaleLength);
+                output.Add(nextTuple);
+            }
+
+            return output;
+        }
+
 
         public override void clear()
         {
@@ -1100,11 +1156,12 @@ namespace penToText
             this.core = core;
             resetTimes();
         }
-        public dominiqueTextConverter(Core core, int resampleID, int sectionsID)
+        public dominiqueTextConverter(Core core, int resampleID, int sectionsID, int guessOutputID)
         {
             this.core = core;
             this.resampleID = resampleID;
             this.sectionsID = sectionsID;
+            this.guessOutputID = guessOutputID;
             resetTimes();
         }
 
@@ -1143,12 +1200,11 @@ namespace penToText
                 core.TextBreakDown[sectionsID].newData(new List<mPoint>(cleaned));
                 core.TextBreakDown[sectionsID].titleText = TAG + " Sections: " + core.originalData.Count + "\nTo: " + cleaned.Count + "\nTime: " + (elapsedTime[timeId]).TotalMilliseconds;
             }
-            core.draw();
         }
 
-        public override String getSectionString(List<mPoint> input)
+        abstract public List<Tuple<String, int>> getSectionBreakDown(List<mPoint> input)
         {
-            return "not implimented yet";
+            return null;
         }
 
         public override void clear()
