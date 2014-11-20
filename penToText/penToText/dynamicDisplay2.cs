@@ -175,6 +175,7 @@ namespace penToText
         int currentLine;
         private bool first;
         Canvas drawCanvas;
+        private Point last;
         public inputView(int xPos, int yPos, int xSize, int ySize, dynamicDisplay2 parent, long pause, bool reserved)
         {
             currentLine = 0;
@@ -222,6 +223,31 @@ namespace penToText
            
         }
 
+        private void sendData(Point newPoint)
+        {
+            if (last != null)
+            {
+                if (!withinTolerance(newPoint, last, .005))
+                {
+                    myLine.Points.Add(newPoint);
+                    parent.core.addData(new mPoint(newPoint, currentLine));
+                    last = newPoint;
+                }
+            }
+            else
+            {
+                last = newPoint;
+            }
+        }
+
+        private bool withinTolerance(Point a, Point b, double percentTolerance)
+        {
+            double xTolerance = xSize * percentTolerance;
+            double yTolerance = ySize * percentTolerance;
+
+            return (Math.Abs(a.X - b.X) <= xTolerance && Math.Abs(a.Y - b.Y) <= yTolerance);
+        }
+        
         private void startMouseDraw(object sender, MouseEventArgs e)
         {
             if (e.StylusDevice == null)
@@ -242,8 +268,10 @@ namespace penToText
                 }
                 timer.Reset();
                 Point position = e.GetPosition(parent.core.getWindow());
+                sendData(position);
+                /*
                 parent.core.addData(new mPoint(position, currentLine));
-                myLine.Points.Add(position);
+                myLine.Points.Add(position);*/
             }
         }
 
@@ -265,8 +293,12 @@ namespace penToText
             }
             timer.Reset();
             Point position = e.GetPosition(parent.core.getWindow());
+            sendData(position);
+            /*
             parent.core.addData(new mPoint(position, currentLine));
-            myLine.Points.Add(position);
+            myLine.Points.Add(position);*/
+
+            e.Handled = true;
         }        
 
         private void mouseMoveDraw(object sender, MouseEventArgs e)
@@ -275,8 +307,10 @@ namespace penToText
             {
 
                 Point position = e.GetPosition(parent.core.getWindow());
+                sendData(position);
+                /*
                 parent.core.addData(new mPoint(position, currentLine));
-                myLine.Points.Add(position);
+                myLine.Points.Add(position);*/
 
             }
         }
@@ -285,8 +319,10 @@ namespace penToText
         {
 
             Point position = e.GetPosition(parent.core.getWindow());
+            sendData(position);
+            /*
             parent.core.addData(new mPoint(position, currentLine));
-            myLine.Points.Add(position);
+            myLine.Points.Add(position);*/
 
             e.Handled = true;   
         }
@@ -296,14 +332,18 @@ namespace penToText
             if (e.StylusDevice == null)
             {
                 Point position = e.GetPosition(parent.core.getWindow());
-                parent.core.addData(new mPoint(position, currentLine));
+                sendData(position);
+                /*
+                parent.core.addData(new mPoint(position, currentLine));*/
                 timer.Start();
             }
         }
         private void endStylusDraw(object sender, StylusEventArgs e)
         {
             Point position = e.GetPosition(parent.core.getWindow());
-            parent.core.addData(new mPoint(position, currentLine));
+            sendData(position);
+            /*
+            parent.core.addData(new mPoint(position, currentLine));*/
             timer.Start();
             e.Handled = true;
         }
@@ -384,6 +424,7 @@ namespace penToText
 
         public override void draw()
         {
+            List<mPoint> toDraw = new List<mPoint>(data);
             double radius = 4;            
             List<Polyline> lines = new List<Polyline>();
             List<Ellipse> circles = new List<Ellipse>();
@@ -391,9 +432,9 @@ namespace penToText
             title.Text = titleText;
             drawCanvas.Children.Clear();
 
-            for (int i = 0; i < data.Count; i++)
+            for (int i = 0; i < toDraw.Count; i++)
             {
-                while (lines.Count <= data[i].line)
+                while (lines.Count <= toDraw[i].line)
                 {
                         Polyline myLine = new Polyline();
                         myLine.Stroke = Brushes.Black;
@@ -404,9 +445,9 @@ namespace penToText
                 }
                 if (toAddCircles)
                 {
-                    drawCircle(data[i].X, data[i].Y, radius);
+                    drawCircle(toDraw[i].X, toDraw[i].Y, radius);
                 }
-                lines[data[i].line].Points.Add(data[i].getPoint());
+                lines[toDraw[i].line].Points.Add(toDraw[i].getPoint());
             }
         }
 

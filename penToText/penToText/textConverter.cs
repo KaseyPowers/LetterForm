@@ -363,9 +363,90 @@ namespace penToText
 
         }
 
-        
+        protected double distanceIgnoreLine(mPoint a, mPoint b)
+        {
+            return Math.Sqrt(Math.Pow((a.X - b.X), 2) + Math.Pow((a.Y - b.Y), 2));
+        }
 
         public List<mPoint> getSections(List<mPoint> input)
+        {
+            //create list of points and their directions
+            List<mPoint> points = new List<mPoint>();
+            if (input.Count > 2)
+            {
+                int sLoc = 0;
+                double initialRound = .05;
+                double unitScale = .01;
+                List<double> lengths = new List<double>();
+                List<int> directions = new List<int>();
+                List<bool> sameLine = new List<bool>();
+                double unitLength = 0;
+
+                int sDir = getDirectionCircular(input[0], input[1]);
+                for (int i = 0; i < (input.Count - 1); i++)
+                {
+                    bool sameSlope = input[sLoc].line == input[i + 1].line && sDir == getDirectionIgnoreLine(input[i], input[i + 1]);
+                    if (!sameSlope)
+                    {
+                        double length = distanceIgnoreLine(input[sLoc], input[i]);
+                        if (unitLength == 0)
+                        {
+                            unitLength = RoundToNearest(length, initialRound);
+                        }
+                        else
+                        {
+                            length = RoundToNearest(length, unitScale * unitLength);
+                        }
+                        lengths.Add(length);
+                        directions.Add(sDir);
+                        sameLine.Add(input[sLoc].line == input[i].line);
+
+                        sLoc = i;
+                        sDir = getDirectionIgnoreLine(input[sLoc], input[sLoc + 1]);
+                    }
+                }
+
+
+                double length2 = distanceIgnoreLine(input[sLoc], input[input.Count - 1]);
+                if (unitLength == 0)
+                {
+                    unitLength = RoundToNearest(length2, initialRound);
+                }
+                else
+                {
+                    length2 = RoundToNearest(length2, unitScale * unitLength);
+                }
+                lengths.Add(length2);
+                directions.Add(sDir);
+                sameLine.Add(input[sLoc].line == input[input.Count - 1].line);
+
+                int lineAt = 0;
+                mPoint lastPoint = input[0];
+                points.Add(lastPoint);
+
+                for (int i = 0; i < lengths.Count; i++)
+                {
+
+                    double angle = degreesToRadians((directions[i] - 1) * 45.0);
+                    double newX = (Math.Cos(angle) * lengths[i]) + lastPoint.X;
+                    double newY = (Math.Sin(angle) * lengths[i]) + lastPoint.Y;
+
+                    if (!sameLine[i]) { lineAt++; }
+
+                    mPoint thisPoint = new mPoint(newX, newY, lineAt);
+
+                    points.Add(thisPoint);
+                    lastPoint = thisPoint;                    
+                }
+            }
+            else
+            {
+                points = input;
+            }
+            return points;
+        }
+
+        public List<mPoint> getSections2(List<mPoint> input)
         {
             //create list of points and their directions
             List<mPoint> points = new List<mPoint>();
@@ -483,6 +564,26 @@ namespace penToText
                 output = smartFitTo45(X, Y);
             }
             return output;
+        }
+
+        public int getDirectionIgnoreLine(mPoint a, mPoint b)
+        {
+            /*
+             * 0: invalid
+             * 1: right
+             * 2: up-right
+             * 3: up
+             * 4: up-left
+             * 5: left
+             * 6: down-left
+             * 7: down
+             * 8: down-right
+             */
+                //the vector values
+
+            double X = b.X - a.X;
+            double Y = b.Y - a.Y;
+            return smartFitTo45(X, Y);
         }
 
         private double angleDifferent(double a, double b)
