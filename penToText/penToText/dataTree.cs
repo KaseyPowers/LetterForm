@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace penToText
 {
-    class dataTree
+    public class dataTree
     {
         dataNode root;
         textConverter currentConverter;
@@ -104,25 +104,33 @@ namespace penToText
         {
             //lets assume start at 'a'
             List<bool> values = new List<bool>();
+            a = a.Replace(" ", "");
+            b = b.Replace(" ", "");
 
-            for (int i = 0; i < a.Length; i++)
+            if (a.Length > 0)
             {
-                int loc = a[i] - 'a';
-                while (values.Count <= loc)
+                for (int i = 0; i < a.Length; i++)
                 {
-                    values.Add(false);
+                    int loc = a[i] - 'a';
+                    while (values.Count <= loc)
+                    {
+                        values.Add(false);
+                    }
+                    values[loc] = true;
                 }
-                values[loc] = true;
             }
 
-            for (int i = 0; i < b.Length; i++)
+            if (b.Length > 0)
             {
-                int loc = b[i] - 'a';
-                while (values.Count <= loc)
+                for (int i = 0; i < b.Length; i++)
                 {
-                    values.Add(false);
+                    int loc = b[i] - 'a';
+                    while (values.Count <= loc)
+                    {
+                        values.Add(false);
+                    }
+                    values[loc] = true;
                 }
-                values[loc] = true;
             }
 
             string output = "";

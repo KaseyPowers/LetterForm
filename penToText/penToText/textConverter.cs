@@ -51,6 +51,8 @@ namespace penToText
 
         abstract public void clear();
 
+        abstract public List<mPoint> getCleanedData();
+
         abstract public List<Tuple<String, int>> getSectionBreakDown(List<mPoint> input);
 
         protected double distance(mPoint a, mPoint b)
@@ -162,9 +164,14 @@ namespace penToText
             }
         }
 
-        abstract public List<Tuple<String, int>> getSectionBreakDown(List<mPoint> input)
+        public override List<Tuple<String, int>> getSectionBreakDown(List<mPoint> input)
         {
             return null;
+        }
+
+        public override List<mPoint> getCleanedData()
+        {
+            return new List<mPoint>(resampling);
         }
 
         private void resetTimes()
@@ -695,7 +702,7 @@ namespace penToText
             if (sectionsID >= 0)
             {
                 core.TextBreakDown[sectionsID].newData(new List<mPoint>(cleaned));
-                core.TextBreakDown[sectionsID].titleText = TAG + " Sections: " + core.originalData.Count + "\nTo: " + cleaned.Count + "\nTotal Time: " + (elapsedTime[0]).TotalMilliseconds + (elapsedTime[1]).TotalMilliseconds;
+                core.TextBreakDown[sectionsID].titleText = TAG + " Sections: " + core.originalData.Count + "\nTo: " + cleaned.Count + "\nTotal Time: " + ((elapsedTime[0]).TotalMilliseconds + (elapsedTime[1]).TotalMilliseconds);
             }
 
             
@@ -714,7 +721,7 @@ namespace penToText
             }
         }
 
-        abstract public List<Tuple<String, int>> getSectionBreakDown(List<mPoint> input)
+        public override List<Tuple<String, int>> getSectionBreakDown(List<mPoint> input)
         {
             //This method is used to build the tree, assume input list is scaled and resampled, break it into sections and return those sections
             return getBreakDown(cleanSections(Sections(new List<mPoint>(input))));
@@ -756,6 +763,10 @@ namespace penToText
             return output;
         }
 
+        public override List<mPoint> getCleanedData()
+        {
+            return new List<mPoint>(resampling);
+        }
 
         public override void clear()
         {
@@ -1202,7 +1213,12 @@ namespace penToText
             }
         }
 
-        abstract public List<Tuple<String, int>> getSectionBreakDown(List<mPoint> input)
+        public override List<mPoint> getCleanedData()
+        {
+            return new List<mPoint>(resampling);
+        }
+
+        public override List<Tuple<String, int>> getSectionBreakDown(List<mPoint> input)
         {
             return null;
         }

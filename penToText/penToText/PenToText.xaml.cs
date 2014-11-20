@@ -1,16 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.ComponentModel;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 namespace penToText
 {
@@ -19,9 +9,17 @@ namespace penToText
     /// </summary>
     public partial class PenToText : Window
     {
-        public PenToText()
+        Core myCore;
+        public PenToText(Core core)
         {
+            myCore = core;
             InitializeComponent();
         }
+
+        public void OnWindowClosing(object sender, CancelEventArgs e)
+        {
+            myCore.closing();
+        }
+
     }
 }

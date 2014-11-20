@@ -468,7 +468,6 @@ namespace penToText
         }
     }
 
-
     public class charGuessView : dynamicView2
     {
         TextBlock[] charGuesses;
@@ -495,16 +494,23 @@ namespace penToText
             currentBorder.BorderBrush = Brushes.Black;
             currentBorder.BorderThickness = new Thickness(1);
 
+            ScrollViewer scroll = new ScrollViewer();
+            scroll.VerticalScrollBarVisibility = ScrollBarVisibility.Visible;
+            scroll.HorizontalScrollBarVisibility = ScrollBarVisibility.Auto;
             container = new StackPanel();
 
             myFrame.Content = currentBorder;
-            currentBorder.Child = container;
+            currentBorder.Child = scroll;
+            scroll.Content = container;
 
             for (int i = 0; i < num_guessers; i++)
             {
                 Border childBorder = new Border();
                 childBorder.BorderBrush = Brushes.Black;
                 childBorder.BorderThickness = new Thickness(1);
+                Thickness margin = childBorder.Margin;
+                margin.Top = 10;
+                childBorder.Margin = margin;
                 charGuesses[i] = new TextBlock();
                 childBorder.Child = charGuesses[i];
                 container.Children.Add(childBorder);
@@ -532,17 +538,72 @@ namespace penToText
             }
         }
     }
+
     public class charInputView : dynamicView2
     {
-        TextBlock prompt;
         TextBox input;
-        public charInputView()
+        public charInputView(int xPos, int yPos, int xSize, int ySize, dynamicDisplay2 parent, bool reserved)
         {
+            this.reserveSpace = reserved;
+            this.active = true;
+            this.xPos = xPos;
+            this.yPos = yPos;
+            this.xSize = xSize;
+            this.ySize = ySize;
+            this.parent = parent;
+
+            myFrame = new Frame();
+            Border currentBorder = new Border();
+            currentBorder.BorderBrush = Brushes.Black;
+            currentBorder.BorderThickness = new Thickness(1);
             
+            int numViews = 3;
+
+            Grid gridContainer = new Grid();
+            ColumnDefinition singleColumn = new ColumnDefinition();
+            singleColumn.Width = new GridLength(1, GridUnitType.Star);
+            gridContainer.ColumnDefinitions.Add(singleColumn);
+            for (int i = 0; i < numViews; i++)
+            {
+                RowDefinition thisRow = new RowDefinition();
+                thisRow.Height = new GridLength(1, GridUnitType.Star);
+                gridContainer.RowDefinitions.Add(thisRow);
+            }
+
+            myFrame.Content = currentBorder;
+            currentBorder.Child = gridContainer;
+
+            TextBlock prompt = new TextBlock();
+            prompt.HorizontalAlignment = HorizontalAlignment.Stretch;
+            prompt.VerticalAlignment = VerticalAlignment.Stretch;
+            prompt.Text = "Submit letter";
+            Grid.SetColumn(prompt, 0);
+            Grid.SetRow(prompt, 0);
+            gridContainer.Children.Add(prompt);
+
+            input = new TextBox();
+            input.MaxLength = 1;
+            Grid.SetColumn(input, 0);
+            Grid.SetRow(input, 1);
+            gridContainer.Children.Add(input);
+
+            Button submit = new Button();
+            submit.Content = "Submit";
+            submit.Click += new RoutedEventHandler(Submit_Click);
+            Grid.SetColumn(submit, 0);
+            Grid.SetRow(submit, 2);
+            gridContainer.Children.Add(submit);
+        }
+
+        public void Submit_Click(object sender, RoutedEventArgs e)
+        {
+            char toSend = input.Text.ToCharArray()[0];
+            parent.core.submitData(toSend);
         }
 
         public override void clear()
         {
+            input.Text = "";
         }
 
         public override void draw()

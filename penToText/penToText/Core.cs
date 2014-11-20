@@ -37,20 +37,23 @@ namespace penToText
         private inputView input;
         public List<multiLineDrawView> TextBreakDown;
         public charGuessView guessOutput;
+        public charGuessView savedCharCounts;
+        private charInputView charSubmit;
         private bool windowStarted;
         private static long pause = (long)(.25 * 1000);
         public Core()
         {
             windowStarted = false;
-            mainWindow = new PenToText();
+            mainWindow = new PenToText(this);
             display = new dynamicDisplay2(this);
             mainWindow.Window_Container.Children.Add(display.getContent());            
 
             mainWindow.Clear.Click += new RoutedEventHandler(Clear_Click);
-            mainWindow.Submit.Click += new RoutedEventHandler(Submit_Click);
+            //mainWindow.
+            /*mainWindow.Submit.Click += new RoutedEventHandler(Submit_Click);
             mainWindow.TextBreakDown.Click += new RoutedEventHandler(Display_Click);
             mainWindow.OverallData.Click += new RoutedEventHandler(Data_Click);
-            mainWindow.SetLetter.Click += new RoutedEventHandler(Submit_Option_Click);
+            mainWindow.SetLetter.Click += new RoutedEventHandler(Submit_Option_Click);*/
 
             mainWindow.InitializeComponent();
             //mainWindow.SizeToContent = SizeToContent.WidthAndHeight;
@@ -60,8 +63,35 @@ namespace penToText
             mainWindow.Height = System.Windows.SystemParameters.WorkArea.Height;
             mainWindow.ShowActivated = true;
             mainWindow.Show();
-            windowStarted = true;
+            windowStarted = true;           
 
+            textConverters = new List<textConverter>();
+            textConverters.Add(new currentTextConverter(this, 0, 1, 0));
+            textConverters.Add(new dominiqueTextConverter(this, 2, 3, 1));
+            textConverters.Add(new kaseyTextConverter(this, 4, 5, 2));
+
+            collections = new BlockingCollection<mPoint>[textConverters.Count];
+            addingThreads = new Task[textConverters.Count];
+
+            setupWindow();
+
+            dataTrees = new List<dataTree>();
+            dataTrees.Add(new dataTree(textConverters[0]));
+
+            mDataManager = new dataManager(this);
+            setupTrees();
+
+            blockingData = new BlockingCollection<mPoint>();
+            addingData = Task.Factory.StartNew(() => sendData(blockingData));            
+        }
+
+        public void closing()
+        {
+            mDataManager.writeData();
+        }
+
+        private void setupWindow()
+        {
             input = new inputView(0, 0, 2, 2, display, pause, true);
             display.addCanvas(input);
             TextBreakDown = new List<multiLineDrawView>();
@@ -80,7 +110,7 @@ namespace penToText
             display.addCanvas(nextCanvas);
             TextBreakDown.Add(nextCanvas);
 
-            nextCanvas = new multiLineDrawView(thisX, thisY+1, 1, 1, display, "Sections", true);
+            nextCanvas = new multiLineDrawView(thisX, thisY + 1, 1, 1, display, "Sections", true);
             nextCanvas.outOf = 1.2;
             nextCanvas.padding = .1;
             nextCanvas.toAddCircles = true;
@@ -121,38 +151,39 @@ namespace penToText
             display.addCanvas(nextCanvas);
             TextBreakDown.Add(nextCanvas);
 
-            thisX++;      
+            thisX++;
 
-            textConverters = new List<textConverter>();
-            textConverters.Add(new currentTextConverter(this, 0, 1, 0));
-            textConverters.Add(new dominiqueTextConverter(this, 2, 3, 1));
-            textConverters.Add(new kaseyTextConverter(this, 4, 5, 2));
 
-            collections = new BlockingCollection<mPoint>[textConverters.Count];
-            addingThreads = new Task[textConverters.Count];
-
-            guessOutput = new charGuessView(thisX, thisY, 1,1,display,true, textConverters.Count);
-
-            dataTrees = new List<dataTree>();
-
-            mDataManager = new dataManager(this);
-            setupTrees();
-
-            blockingData = new BlockingCollection<mPoint>();
-            addingData = Task.Factory.StartNew(() => sendData(blockingData));
-
-            
+            guessOutput = new charGuessView(thisX, thisY, 1, 1, display, true, textConverters.Count);
+            charSubmit = new charInputView(thisX, thisY + 1, 1, 1, display, true);
+            savedCharCounts = new charGuessView(0, 2, 1, 1, display, true, alphabet.Length);
+            display.addCanvas(guessOutput);
+            display.addCanvas(charSubmit);
+            display.addCanvas(savedCharCounts);
         }
 
-
+        //getting rid of this soon
+        public void draw()
+        {
+            display.draw();
+        }
         public void setupTrees()
         {
             List<Tuple<List<mPoint>, char>> elements = mDataManager.getElements();
-
+            //for now we just are gonna use pos 0
+            int[] counts = new int[alphabet.Length];
+            for(int i=0; i<elements.Count; i++){
+                counts[ Array.IndexOf(alphabet,  elements[i].Item2)]++;
+            }
+            for(int i=0; i<alphabet.Length; i++){
+                savedCharCounts.updateGuess(i, alphabet[i] + " : " + counts[i]);
+            }
+            dataTrees[0].smartStart(elements, alphabet);
+            /*
             for (int i = 0; i < dataTrees.Count; i++)
             {
                 dataTrees[i].smartStart(elements, alphabet);
-            }
+            }*/
         }
 
         public bool getWindowStarted()
@@ -210,23 +241,23 @@ namespace penToText
             }
         }
 
-        private void Clear_Click(object sender, RoutedEventArgs e)
+        public void submitData(char submitChar)
+        {
+            if (alphabet.Contains(submitChar))
+            {
+                //use current textConverter to get the cleaned data
+                mDataManager.addData(new Tuple<List<mPoint>, char>(textConverters[0].getCleanedData(), submitChar));
+                setupTrees();
+                clear();
+            }
+        }
+
+        private void clear()
         {
             display.clear();
-            /*
-            for (int i = 0; i < textConverters.Count; i++)
-            {
-                int workingVal = i;
-                collections[workingVal].CompleteAdding();
-                addingThreads[workingVal].Wait();
-                textConverters[workingVal].clear();
-                collections[workingVal] = new BlockingCollection<mPoint>();
-                addingThreads[workingVal] = Task.Factory.StartNew(() => textConverters[workingVal].getData(collections[workingVal]));
-            }*/
 
             blockingData.CompleteAdding();
             addingData.Wait();
-            //myTextConverter.clear();
 
             for (int i = 0; i < textConverters.Count; i++)
             {
@@ -234,7 +265,14 @@ namespace penToText
             }
             originalData.Clear();
             blockingData = new BlockingCollection<mPoint>();
-            addingData = Task.Factory.StartNew(() => sendData(blockingData)); 
+            addingData = Task.Factory.StartNew(() => sendData(blockingData));
+
+            display.draw();
+        }
+
+        private void Clear_Click(object sender, RoutedEventArgs e)
+        {
+            clear();
         }
 
         private void Submit_Click(object sender, RoutedEventArgs e)
