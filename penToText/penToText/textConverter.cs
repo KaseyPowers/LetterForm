@@ -221,12 +221,7 @@ namespace penToText
                 }
             }
 
-
-
             addTo.Add(newPoint);
-
-
-
 
             if (changed)
             {
@@ -1072,6 +1067,7 @@ namespace penToText
         }
 
         private double minX, minY, scale;
+
         private bool addToScale(mPoint adding, List<mPoint> addTo)
         {
             if (addTo.Count == 0)
@@ -1304,74 +1300,71 @@ namespace penToText
             int output = 0;
             /*
              * 0: invalid
-             * 1: up
-             * 2: down
-             * 3: left
-             * 4: right
-             * 5: up-left
-             * 6: up-right
-             * 7: down-left
+             * 1: right
+             * 2: up-right
+             * 3: up
+             * 4: up-left
+             * 5: left
+             * 6: down-left
+             * 7: down
              * 8: down-right
              */
-            if (a.X == b.X)
+            if (a.line == b.line)
             {
-                //up or down
-                if (a.Y == b.Y)
-                {
-                    //no Y change
-                    output = 0;
-                }
-                else if (a.Y > b.Y)
-                {
-                    //down
-                    output = 2;
-                }
-                else if (a.Y < b.Y)
-                {
-                    //up
-                    output = 1;
-                }
-            }
-            else if (a.X < b.X)
-            {
-                //going right
-                if (a.Y == b.Y)
-                {
-                    //no Y change
-                    output = 4;
-                }
-                else if (a.Y >= b.Y)
-                {
-                    //down
-                    output = 8;
-                }
-                else if (a.Y < b.Y)
-                {
-                    //up
-                    output = 6;
-                }
-            }
-            else if (a.X > b.X)
-            {
-                //going left
-                if (a.Y == b.Y)
-                {
-                    //no Y change
-                    output = 3;
-                }
-                else if (a.Y > b.Y)
-                {
-                    //down
-                    output = 5;
-                }
-                else if (a.Y < b.Y)
-                {
-                    //up
-                    output = 7;
-                }
+                //the vector values
+
+                double X = b.X - a.X;
+                double Y = b.Y - a.Y;
+                output = smartFitTo45(X, Y);
             }
             return output;
         }
+
+        private int smartFitTo45(double X, double Y)
+        {
+            //get the angle of theline, accounting for quadrant, in degrees
+            double degrees = ((Math.Atan2(Y, X) * (180.0 / Math.PI)) + 360) % 360;
+            //round angle to a 45 degree angle
+            int flatAngle = (int)RoundToNearest(degrees, 90.0) / 45;
+
+            int slopeAngle = flatAngle;
+            if (angleDifferent((flatAngle + 1) * 45.0, degrees) < angleDifferent((flatAngle - 1) * 45.0, degrees))
+            {
+                slopeAngle++;
+            }
+            else
+            {
+                slopeAngle--;
+            }
+
+            int newAngle = flatAngle;
+
+            if (3 * angleDifferent(flatAngle * 45.0, degrees) > 2 * angleDifferent(slopeAngle * 45.0, degrees))
+            {
+                newAngle = slopeAngle;
+            }
+
+            return (newAngle % 8) + 1;
+        }
+
+         private double angleDifferent(double a, double b)
+        {
+            double difference = Math.Abs(a - b) % 360;
+
+            if (difference > 180)
+            {
+                difference = 360 - difference;
+            }
+
+            return difference;
+        }
+
+        private double degreesToRadians(double degrees)
+        {
+            return Math.PI * degrees / 180.0;
+        }
+
+    
 
         public List<mPoint> cleanSections(List<mPoint> input)
         {
