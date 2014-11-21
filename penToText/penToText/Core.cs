@@ -45,26 +45,11 @@ namespace penToText
         public Core()
         {
             windowStarted = false;
+
+            display = new dynamicDisplay2(this); 
+
             mainWindow = new PenToText(this);
-            display = new dynamicDisplay2(this);
-            mainWindow.Window_Container.Children.Add(display.getContent());            
-
-            mainWindow.Clear.Click += new RoutedEventHandler(Clear_Click);
-            //mainWindow.
-            /*mainWindow.Submit.Click += new RoutedEventHandler(Submit_Click);
-            mainWindow.TextBreakDown.Click += new RoutedEventHandler(Display_Click);
-            mainWindow.OverallData.Click += new RoutedEventHandler(Data_Click);
-            mainWindow.SetLetter.Click += new RoutedEventHandler(Submit_Option_Click);*/
-
-            mainWindow.InitializeComponent();
-            //mainWindow.SizeToContent = SizeToContent.WidthAndHeight;
-            mainWindow.Top = System.Windows.SystemParameters.WorkArea.Top;
-            mainWindow.Left = System.Windows.SystemParameters.WorkArea.Left;
-            mainWindow.Width = System.Windows.SystemParameters.WorkArea.Width;
-            mainWindow.Height = System.Windows.SystemParameters.WorkArea.Height;
-            mainWindow.ShowActivated = true;
-            mainWindow.Show();
-            windowStarted = true;           
+            mainWindow.Window_Container.Children.Add(display.getContent());   
 
             textConverters = new List<textConverter>();
             textConverters.Add(new currentTextConverter(this, 0, 1, 0));
@@ -73,8 +58,6 @@ namespace penToText
 
             collections = new BlockingCollection<mPoint>[textConverters.Count];
             addingThreads = new Task[textConverters.Count];
-
-            
 
             dataTrees = new List<dataTree>();
             dataTrees.Add(new dataTree(textConverters[0]));
@@ -85,7 +68,21 @@ namespace penToText
             setupTrees();
 
             blockingData = new BlockingCollection<mPoint>();
-            addingData = Task.Factory.StartNew(() => sendData(blockingData));            
+            addingData = Task.Factory.StartNew(() => sendData(blockingData));
+
+
+            mainWindow.Clear.Click += new RoutedEventHandler(Clear_Click);
+
+            mainWindow.InitializeComponent();
+            //mainWindow.SizeToContent = SizeToContent.WidthAndHeight;
+            mainWindow.Top = System.Windows.SystemParameters.WorkArea.Top;
+            mainWindow.Left = System.Windows.SystemParameters.WorkArea.Left;
+            mainWindow.Width = System.Windows.SystemParameters.WorkArea.Width;
+            mainWindow.Height = System.Windows.SystemParameters.WorkArea.Height;
+            mainWindow.ShowActivated = true;
+            mainWindow.Show();
+            windowStarted = true;
+            display.updateDisplay();
         }
 
         public void closing()

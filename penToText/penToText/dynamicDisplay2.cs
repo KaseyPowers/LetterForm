@@ -42,51 +42,54 @@ namespace penToText
 
         public void updateDisplay()
         {
-            //start from scratch
-            flexibleGrid.Children.Clear();
-            flexibleGrid.ColumnDefinitions.Clear();
-            flexibleGrid.RowDefinitions.Clear();
-           // double columnWidth = core.getWindow().ActualWidth;
-            //double rowHeight = core.getWindow().ActualHeight;
-
-            double columnWidth = flexibleGrid.ActualWidth - 100;
-            double rowHeight = flexibleGrid.ActualHeight - 100;
-
-            columnWidth /= x_max;
-            rowHeight /= y_max;
-
-            double size = rowHeight;
-            if (columnWidth < size)
+            if (core.getWindowStarted())
             {
-                size = columnWidth;
-            }
+                //start from scratch
+                flexibleGrid.Children.Clear();
+                flexibleGrid.ColumnDefinitions.Clear();
+                flexibleGrid.RowDefinitions.Clear();
+                // double columnWidth = core.getWindow().ActualWidth;
+                //double rowHeight = core.getWindow().ActualHeight;
 
-            for (int x = 0; x <= x_max; x++)
-            {
-                ColumnDefinition newColumn = new ColumnDefinition();
-                newColumn.Width = new GridLength(size);
-                flexibleGrid.ColumnDefinitions.Add(newColumn);
-            }
+                double columnWidth = flexibleGrid.ActualWidth - 100;
+                double rowHeight = flexibleGrid.ActualHeight - 100;
 
-            for (int y = 0; y <= y_max; y++)
-            {
-                RowDefinition newRow = new RowDefinition();
-                newRow.Height = new GridLength(size);
-                flexibleGrid.RowDefinitions.Add(newRow);
-            }
+                columnWidth /= x_max;
+                rowHeight /= y_max;
 
-            if (children.Count != 0)
-            {
-                foreach (dynamicView2 current in children)
+                double size = rowHeight;
+                if (columnWidth < size)
                 {
-                    if (current.active)
-                    {
-                        Grid.SetColumn(current.myFrame, current.xPos);
-                        Grid.SetColumnSpan(current.myFrame, current.xSize);
-                        Grid.SetRow(current.myFrame, current.yPos);
-                        Grid.SetRowSpan(current.myFrame, current.ySize);
+                    size = columnWidth;
+                }
 
-                        flexibleGrid.Children.Add(current.myFrame);
+                for (int x = 0; x <= x_max; x++)
+                {
+                    ColumnDefinition newColumn = new ColumnDefinition();
+                    newColumn.Width = new GridLength(size);
+                    flexibleGrid.ColumnDefinitions.Add(newColumn);
+                }
+
+                for (int y = 0; y <= y_max; y++)
+                {
+                    RowDefinition newRow = new RowDefinition();
+                    newRow.Height = new GridLength(size);
+                    flexibleGrid.RowDefinitions.Add(newRow);
+                }
+
+                if (children.Count != 0)
+                {
+                    foreach (dynamicView2 current in children)
+                    {
+                        if (current.active)
+                        {
+                            Grid.SetColumn(current.myFrame, current.xPos);
+                            Grid.SetColumnSpan(current.myFrame, current.xSize);
+                            Grid.SetRow(current.myFrame, current.yPos);
+                            Grid.SetRowSpan(current.myFrame, current.ySize);
+
+                            flexibleGrid.Children.Add(current.myFrame);
+                        }
                     }
                 }
             }
