@@ -617,76 +617,13 @@ namespace penToText
 
     public class treeView : dynamicView2
     {
-        dataNode root;
-        bool updated;
-        TreeView mainView;
-
-        public treeView(int xPos, int yPos, int xSize, int ySize, dynamicDisplay2 parent, bool reserved, dataNode root)
-        {
-            this.reserveSpace = reserved;
-            this.active = true;
-            this.xPos = xPos;
-            this.yPos = yPos;
-            this.xSize = xSize;
-            this.ySize = ySize;
-            this.parent = parent;
-            this.root = root;
-            updated = true;
-
-            myFrame = new Frame();
-            Border currentBorder = new Border();
-            currentBorder.BorderBrush = Brushes.Black;
-            currentBorder.BorderThickness = new Thickness(1);
-
-            ScrollViewer scroll = new ScrollViewer();
-            scroll.VerticalScrollBarVisibility = ScrollBarVisibility.Visible;
-            scroll.HorizontalScrollBarVisibility = ScrollBarVisibility.Auto;
-            mainView = new TreeView();
-
-            myFrame.Content = currentBorder;
-            currentBorder.Child = scroll;
-            scroll.Content = mainView;
-        }
-
-        public void newTree(dataNode root){
-            this.root = root;
-            updated = true;
-        }
-
         public override void clear()
         {
         }
 
         public override void draw()
         {
-            //build the tree here
-            if (updated)
-            {
-                mainView.Items.Clear();
-                //build the tree if there is a new one, it is stored at mainView
-                for (int i = 0; i < root.children.Count; i++)
-                {
-                    mainView.Items.Add(getView(root.children[i]));
-                }
-            }
-            updated = false;
+
         }
-
-        private TreeViewItem getView(dataNode node){
-            TreeViewItem output = new TreeViewItem();
-            String header = node.SectionLetter + " [ " + node.maxValue + " , " + node.minValue + " ] " +
-                "\nPossible Letters: " + node.chars;
-            if (node.ifStopHere != ' ') { header += "\nIf stop here: " + node.ifStopHere; }
-            output.Header = header;
-
-            for (int i = 0; i < node.children.Count; i++)
-            {
-                output.Items.Add(getView(node.children[i]));
-            }
-         
-            return output;
-        }
-
-
     }
 }

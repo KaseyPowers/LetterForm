@@ -753,39 +753,7 @@ namespace penToText
 
                 if (cleaned[i - 1].line == cleaned[i].line)
                 {
-                    //slopeString = "" + (char)('A' + getDirection(cleaned[i - 1], cleaned[i]));
-
-                    //readable string system
-                    slopeString = "";
-                    int thisDirection = getDirection(cleaned[i-1], cleaned[i]);
-                    if (thisDirection == 1 || thisDirection == 5 || thisDirection == 6)
-                    {
-                        slopeString += "U";
-                    }
-                    else if (thisDirection == 2 || thisDirection == 7 || thisDirection == 8)
-                    {
-                        slopeString += "D";
-                    }
-                    else
-                    {
-                        slopeString += "N";
-                    }
-
-                    if (thisDirection > 2)
-                    {
-                        if (thisDirection % 2 == 1)
-                        {
-                            slopeString += "L";
-                        }
-                        else
-                        {
-                            slopeString += "R";
-                        }
-                    }
-                    else
-                    {
-                        slopeString += "N";
-                    }
+                    slopeString = "" + ('A' + getDirection(cleaned[i - 1], cleaned[i]));
                 }
 
                 Tuple<string, int> nextTuple = new Tuple<string, int>(slopeString, scaleLength);
