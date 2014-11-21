@@ -10,10 +10,17 @@ namespace penToText
     {
         dataNode root;
         textConverter currentConverter;
-        public dataTree(textConverter converter){
+        public dataTree(textConverter converter)
+        {
             currentConverter = converter;
             currentConverter.setTree(this);
-            root = new dataNode("", 0, ' ', false);
+            root = new dataNode("", 0);
+        }
+
+        public dataNode getRoot()
+        {
+            //do a deep copy just in case
+            return new dataNode(root);
         }
 
         public Tuple<string, string> searchTree(List<Tuple<String, int>> thisBreakdown)
@@ -25,7 +32,7 @@ namespace penToText
 
             while (frontier.Count > 0)
             {
-                Tuple<dataNode, int> current= frontier.Dequeue();
+                Tuple<dataNode, int> current = frontier.Dequeue();
 
                 if (current.Item2 < thisBreakdown.Count && current.Item1.children.Count > 0)
                 {
@@ -37,7 +44,7 @@ namespace penToText
                         {
                             frontier.Enqueue(new Tuple<dataNode, int>(child, current.Item2 + 1));
                             fitFound = true;
-                        }      
+                        }
                     }
 
                     if (!fitFound)
@@ -71,8 +78,8 @@ namespace penToText
                     {
                         closestSmaller = difference;
                     }
-                    bool greaterThan = possibleOptions[i].Item1.children.Count > 0  && !lessThan;
-                    anyPerfectMatches =!greaterThan && !lessThan;
+                    bool greaterThan = possibleOptions[i].Item1.children.Count > 0 && !lessThan;
+                    anyPerfectMatches = !greaterThan && !lessThan;
                     anygreaterThan = anygreaterThan || greaterThan;
                 }
 
@@ -144,10 +151,10 @@ namespace penToText
         public void smartStart(List<Tuple<List<mPoint>, char>> data, char[] alphabet)
         {
             dataNode[] roots = new dataNode[alphabet.Length];
-            
+
             for (int i = 0; i < alphabet.Length; i++)
             {
-                roots[i] = new dataNode("", 0, ' ', false);
+                roots[i] = new dataNode("", 0);
                 char thisLetter = alphabet[i];
                 for (int j = 0; j < data.Count; j++)
                 {
@@ -171,9 +178,16 @@ namespace penToText
             dataNode current = start;
             for (int i = 0; i < newBreakdown.Count; i++)
             {
-                dataNode next = new dataNode(newBreakdown[i].Item1, newBreakdown[i].Item2, associatedLetter, (i==(newBreakdown.Count-1)));
+                dataNode next = new dataNode(newBreakdown[i].Item1, newBreakdown[i].Item2);
+
+
                 current.addChild(next);
+                if (i == (newBreakdown.Count - 1))
+                {
+                    next.addFinalChar(associatedLetter);
+                }
                 current = next;
+
             }
         }
 
@@ -191,46 +205,45 @@ namespace penToText
                 while (hasChanged)
                 {
                     hasChanged = false;
-                    int foundLoc = -1;
+                    List<int> usedLocs = new List<int>();
                     for (int i = 0; i < currentChildren.Count; i++)
                     {
-                        bool foundMatch = false;
-                        List<int> possibleLocs = new List<int>();
-                        for (int j = 0; j < currentChildren.Count && !hasChanged; j++)
+
+                        List<int> matches = new List<int>();
+                        for (int j = 0; j < currentChildren.Count; j++)
                         {
-                            if (i != j && currentChildren[i].canComabine(currentChildren[j]))
+                            if (i != j && !usedLocs.Contains(j) && currentChildren[i].canComabine(currentChildren[j]))
                             {
-                                //hasChanged = true;
-                                foundMatch = true;
-                                possibleLocs.Add(j);
-                                //nextCildren.Add(new mSectionNode2(currentChildren[i], currentChildren[j]));
+                                matches.Add(j);
                             }
                         }
-                        if (!foundMatch && i != foundLoc)
+                        if (matches.Count == 0 && !usedLocs.Contains(i))
                         {
                             nextCildren.Add(currentChildren[i]);
+                            usedLocs.Add(i);
                         }
-                        else if (possibleLocs.Count > 0)
+                        else if (matches.Count > 0)
                         {
                             hasChanged = true;
-                            int bestLoc = 0;
-                            for (int j = 1; j < possibleLocs.Count; j++)
+                            int bestLoc = matches[0];
+                            for (int j = 1; j < matches.Count; j++)
                             {
                                 //compare values
-                                if (currentChildren[i].bestCombine(currentChildren[possibleLocs[bestLoc]], currentChildren[possibleLocs[j]]) < 0)
+                                if (currentChildren[i].bestCombine(currentChildren[matches[j]], currentChildren[bestLoc]) >= 0)
                                 {
-                                    bestLoc = j;
+                                    bestLoc = matches[j];
                                 }
                             }
-                            foundLoc = possibleLocs[bestLoc];
-                            nextCildren.Add(new dataNode(currentChildren[i], currentChildren[possibleLocs[bestLoc]]));
+                            usedLocs.Add(i);
+                            usedLocs.Add(bestLoc);
+                            nextCildren.Add(new dataNode(currentChildren[i], currentChildren[bestLoc]));
                         }
                     }
                     currentChildren = new List<dataNode>(nextCildren);
                     nextCildren = new List<dataNode>();
                 }
 
-                current.children = currentChildren;
+                current.children = new List<dataNode>(currentChildren);
 
                 for (int i = 0; i < current.children.Count; i++)
                 {
@@ -251,7 +264,23 @@ namespace penToText
         public String chars;
         public char ifStopHere;
 
-        public dataNode(String letter, int value, char newChar , bool final)
+        public dataNode(dataNode copy)
+        {
+            this.parent = null;
+            this.SectionLetter = copy.SectionLetter;
+            this.minValue = copy.minValue;
+            this.maxValue = copy.maxValue;
+            this.chars = copy.chars;
+            this.ifStopHere = copy.ifStopHere;
+            this.children = new List<dataNode>();
+
+            for (int i = 0; i < copy.children.Count; i++)
+            {
+                this.addChild(new dataNode(copy.children[i]));
+            }
+        }
+
+        public dataNode(String letter, int value)
         {
             parent = null;
             children = new List<dataNode>();
@@ -260,46 +289,40 @@ namespace penToText
             maxValue = value;
             chars = "";
             ifStopHere = ' ';
-            if (final)
-            {
-                addFinalChar(newChar);               
-            }
-            else
-            {
-                //addChar(newChar);  
-            }
         }
 
         public bool canComabine(dataNode other)
         {
+            bool output = false;
+
             bool main = (this.parent == other.parent) && (this.SectionLetter.Equals(other.SectionLetter));
-            bool rangesMatch = ((this.minValue >= other.minValue && this.maxValue <= other.maxValue) 
-                ||  (this.minValue <= other.minValue && this.maxValue >= other.maxValue));
-            //bool matchingEndPoint = ifStopHere.Equals(other.ifStopHere) && ifStopHere.Length>0;
-            bool aCharContainB = true;
-            bool bCharContainA = true;
-            for (int i = 0; i < other.chars.Length && aCharContainB; i++)
+            bool validRoots = !(ifStopHere != ' ' && other.ifStopHere != ' ' && ifStopHere == other.ifStopHere);
+            if (main && validRoots)
             {
-                aCharContainB = chars.Contains(other.chars[i]);
+                bool rangesMatch = ((this.minValue >= other.minValue && this.maxValue <= other.maxValue)
+                    || (this.minValue <= other.minValue && this.maxValue >= other.maxValue));
+                //bool matchingEndPoint = ifStopHere.Equals(other.ifStopHere) && ifStopHere.Length>0;
+                output = rangesMatch;
+
+                if (!rangesMatch)
+                {
+                    bool aCharContainB = this.chars.Contains(other.chars);
+                    bool bCharContainA = other.chars.Contains(this.chars);
+
+                    output = aCharContainB || bCharContainA;
+                }
+
+
             }
-            for (int i = 0; i < chars.Length && bCharContainA; i++)
-            {
-                bCharContainA = other.chars.Contains(chars[i]);
-            }
-            bool validChars = aCharContainB || bCharContainA;
-            bool validRoots = true;
-            if (ifStopHere != ' ' && other.ifStopHere != ' ')
-            {
-                validRoots = ifStopHere == other.ifStopHere;
-            }
-            return main && (rangesMatch ||validChars) && validRoots;
+            return output;
         }
 
         public int bestCombine(dataNode a, dataNode b)
         {
             int output = 0;
 
-            for (int i = 0; i < chars.Length; i++){
+            for (int i = 0; i < chars.Length; i++)
+            {
                 if (a.chars.Contains(chars[i]))
                 {
                     output++;
@@ -308,15 +331,6 @@ namespace penToText
                 {
                     output--;
                 }
-            }
-
-            if (a.ifStopHere == ifStopHere)
-            {
-                output++;
-            }
-            else if(b.ifStopHere == ifStopHere)
-            {
-
             }
 
             return output;
@@ -384,7 +398,8 @@ namespace penToText
             if (!chars.Contains(newChar))
             {
                 chars += newChar;
-                if(parent != null){
+                if (parent != null)
+                {
                     parent.addChar(newChar);
                 }
             }
@@ -393,11 +408,11 @@ namespace penToText
 
         public void addFinalChar(char newChar)
         {
-            if (ifStopHere==' ')
+            if (ifStopHere == ' ')
             {
                 ifStopHere = newChar;
                 addChar(newChar);
             }
-        }        
+        }
     }
 }

@@ -18,7 +18,7 @@ namespace penToText
 {
     public class dynamicDisplay2
     {
-        
+
         private delegate void drawingDelegate();
 
         private Grid flexibleGrid;
@@ -36,7 +36,8 @@ namespace penToText
             children = new List<dynamicView2>();
         }
 
-        public Panel getContent(){
+        public Panel getContent()
+        {
             return flexibleGrid;
         }
 
@@ -129,13 +130,13 @@ namespace penToText
 
         public void draw()
         {
-            core.getWindow().Dispatcher.BeginInvoke( new drawingDelegate(() =>
+            core.getWindow().Dispatcher.BeginInvoke(new drawingDelegate(() =>
+            {
+                for (int i = 0; i < children.Count; i++)
                 {
-                    for (int i = 0; i < children.Count; i++)
-                    {
-                        children[i].draw();
-                    }
-                }));
+                    children[i].draw();
+                }
+            }));
         }
     }
 
@@ -182,7 +183,7 @@ namespace penToText
         public inputView(int xPos, int yPos, int xSize, int ySize, dynamicDisplay2 parent, long pause, bool reserved)
         {
             currentLine = 0;
-            first = true;            
+            first = true;
             pauseLength = pause;
             timer = new Stopwatch();
             this.reserveSpace = reserved;
@@ -200,7 +201,7 @@ namespace penToText
             drawCanvas = new Canvas();
 
             drawCanvas.AddHandler(Canvas.MouseDownEvent, new MouseButtonEventHandler(startMouseDraw));
-            drawCanvas.AddHandler(Canvas.StylusDownEvent , new StylusDownEventHandler(startStylusDraw));
+            drawCanvas.AddHandler(Canvas.StylusDownEvent, new StylusDownEventHandler(startStylusDraw));
 
             drawCanvas.AddHandler(Canvas.MouseMoveEvent, new MouseEventHandler(mouseMoveDraw));
             drawCanvas.AddHandler(Canvas.StylusMoveEvent, new StylusEventHandler(stylusMoveDraw));
@@ -212,8 +213,8 @@ namespace penToText
             currentBorder.Child = drawCanvas;
             myFrame = new Frame();
             myFrame.Content = currentBorder;
-        }    
-       
+        }
+
         public override void clear()
         {
             currentLine = 0;
@@ -223,7 +224,7 @@ namespace penToText
 
         public override void draw()
         {
-           
+
         }
 
         private void sendData(Point newPoint)
@@ -250,7 +251,7 @@ namespace penToText
 
             return (Math.Abs(a.X - b.X) <= xTolerance && Math.Abs(a.Y - b.Y) <= yTolerance);
         }
-        
+
         private void startMouseDraw(object sender, MouseEventArgs e)
         {
             if (e.StylusDevice == null)
@@ -282,8 +283,8 @@ namespace penToText
         {
             timer.Stop();
             if (timer.ElapsedMilliseconds > pauseLength || first)
-            {                
-                
+            {
+
                 if (!first)
                 {
                     currentLine++;
@@ -302,11 +303,11 @@ namespace penToText
             myLine.Points.Add(position);*/
 
             e.Handled = true;
-        }        
+        }
 
         private void mouseMoveDraw(object sender, MouseEventArgs e)
         {
-            if (e.LeftButton == MouseButtonState.Pressed && e.StylusDevice==null)
+            if (e.LeftButton == MouseButtonState.Pressed && e.StylusDevice == null)
             {
 
                 Point position = e.GetPosition(parent.core.getWindow());
@@ -327,7 +328,7 @@ namespace penToText
             parent.core.addData(new mPoint(position, currentLine));
             myLine.Points.Add(position);*/
 
-            e.Handled = true;   
+            e.Handled = true;
         }
 
         private void endMouseDraw(object sender, MouseEventArgs e)
@@ -353,7 +354,7 @@ namespace penToText
     }
 
     public class multiLineDrawView : dynamicView2
-    {       
+    {
         private List<mPoint> data;
         public TextBox title;
         public Canvas drawCanvas;
@@ -422,13 +423,13 @@ namespace penToText
 
         public override void clear()
         {
-            drawCanvas.Children.Clear();            
+            drawCanvas.Children.Clear();
         }
 
         public override void draw()
         {
             List<mPoint> toDraw = new List<mPoint>(data);
-            double radius = 4;            
+            double radius = 4;
             List<Polyline> lines = new List<Polyline>();
             List<Ellipse> circles = new List<Ellipse>();
 
@@ -439,12 +440,12 @@ namespace penToText
             {
                 while (lines.Count <= toDraw[i].line)
                 {
-                        Polyline myLine = new Polyline();
-                        myLine.Stroke = Brushes.Black;
-                        myLine.StrokeThickness = 2;
-                        drawCanvas.Children.Add(myLine);
-                        lines.Add(myLine);
-                        
+                    Polyline myLine = new Polyline();
+                    myLine.Stroke = Brushes.Black;
+                    myLine.StrokeThickness = 2;
+                    drawCanvas.Children.Add(myLine);
+                    lines.Add(myLine);
+
                 }
                 if (toAddCircles)
                 {
@@ -559,7 +560,7 @@ namespace penToText
             Border currentBorder = new Border();
             currentBorder.BorderBrush = Brushes.Black;
             currentBorder.BorderThickness = new Thickness(1);
-            
+
             int numViews = 3;
 
             Grid gridContainer = new Grid();
@@ -617,13 +618,78 @@ namespace penToText
 
     public class treeView : dynamicView2
     {
+        dataNode root;
+        bool updated;
+        TreeView mainView;
+
+        public treeView(int xPos, int yPos, int xSize, int ySize, dynamicDisplay2 parent, bool reserved, dataNode root)
+        {
+            this.reserveSpace = reserved;
+            this.active = true;
+            this.xPos = xPos;
+            this.yPos = yPos;
+            this.xSize = xSize;
+            this.ySize = ySize;
+            this.parent = parent;
+            this.root = root;
+            updated = true;
+
+            myFrame = new Frame();
+            Border currentBorder = new Border();
+            currentBorder.BorderBrush = Brushes.Black;
+            currentBorder.BorderThickness = new Thickness(1);
+
+            ScrollViewer scroll = new ScrollViewer();
+            scroll.VerticalScrollBarVisibility = ScrollBarVisibility.Visible;
+            scroll.HorizontalScrollBarVisibility = ScrollBarVisibility.Auto;
+            mainView = new TreeView();
+
+            myFrame.Content = currentBorder;
+            currentBorder.Child = scroll;
+            scroll.Content = mainView;
+        }
+
+        public void newTree(dataNode root)
+        {
+            this.root = root;
+            updated = true;
+        }
+
         public override void clear()
         {
         }
 
         public override void draw()
         {
-
+            //build the tree here
+            if (updated)
+            {
+                mainView.Items.Clear();
+                //build the tree if there is a new one, it is stored at mainView
+                for (int i = 0; i < root.children.Count; i++)
+                {
+                    mainView.Items.Add(getView(root.children[i]));
+                }
+            }
+            updated = false;
         }
+
+        private TreeViewItem getView(dataNode node)
+        {
+            TreeViewItem output = new TreeViewItem();
+            String header = node.SectionLetter + " [ " + node.maxValue + " , " + node.minValue + " ] " +
+                "\nPossible Letters: " + node.chars;
+            if (node.ifStopHere != ' ') { header += "\nIf stop here: " + node.ifStopHere; }
+            output.Header = header;
+
+            for (int i = 0; i < node.children.Count; i++)
+            {
+                output.Items.Add(getView(node.children[i]));
+            }
+
+            return output;
+        }
+
+
     }
 }

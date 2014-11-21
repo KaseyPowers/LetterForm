@@ -44,7 +44,8 @@ namespace penToText
             }
         }*/
 
-        public void setTree(dataTree thisTree){
+        public void setTree(dataTree thisTree)
+        {
             myTree = thisTree;
         }
         abstract public void updateData(mPoint newPoint);
@@ -64,7 +65,7 @@ namespace penToText
             }
             return output;
         }
-        
+
         protected static Double RoundToNearest(Double passednumber, Double roundto)
         {
             // 105.5 up to nearest 1 = 106
@@ -94,13 +95,14 @@ namespace penToText
             }
         }
     }
-       
-    public class kaseyTextConverter : textConverter{
+
+    public class kaseyTextConverter : textConverter
+    {
         private String TAG = "Kasey";
         private List<mPoint> scaling;
         private List<mPoint> resampling;
 
-        int timeCounts = 2;        
+        int timeCounts = 2;
         /*
          * 0 is rescaling
          * 1 is the other thing
@@ -447,7 +449,7 @@ namespace penToText
                     mPoint thisPoint = new mPoint(newX, newY, lineAt);
 
                     points.Add(thisPoint);
-                    lastPoint = thisPoint;                    
+                    lastPoint = thisPoint;
                 }
             }
             else
@@ -590,7 +592,7 @@ namespace penToText
              * 7: down
              * 8: down-right
              */
-                //the vector values
+            //the vector values
 
             double X = b.X - a.X;
             double Y = b.Y - a.Y;
@@ -692,7 +694,7 @@ namespace penToText
             }
 
             //Current Unique Stuff
-            
+
             //get sections
             List<mPoint> cleaned = new List<mPoint>();
             elapsedTime[1] += Time(() =>
@@ -705,14 +707,14 @@ namespace penToText
                 core.TextBreakDown[sectionsID].titleText = TAG + " Sections: " + core.originalData.Count + "\nTo: " + cleaned.Count + "\nTotal Time: " + ((elapsedTime[0]).TotalMilliseconds + (elapsedTime[1]).TotalMilliseconds);
             }
 
-            
+
             if (myTree != null && guessOutputID >= 0)
             {
-                Tuple<String, String> results = new Tuple<string,string>("","");
+                Tuple<String, String> results = new Tuple<string, string>("", "");
                 elapsedTime[2] += Time(() =>
-                    {
-                        results = myTree.searchTree(getBreakDown(cleaned));
-                    });
+                {
+                    results = myTree.searchTree(getBreakDown(cleaned));
+                });
                 core.guessOutput.updateGuess(guessOutputID,
                     TAG + " guess:" +
                     "\nPossible letters: " + results.Item1 +
@@ -753,7 +755,39 @@ namespace penToText
 
                 if (cleaned[i - 1].line == cleaned[i].line)
                 {
-                    slopeString = "" + ('A' + getDirection(cleaned[i - 1], cleaned[i]));
+                    //slopeString = "" + (char)('A' + getDirection(cleaned[i - 1], cleaned[i]));
+
+                    //readable string system
+                    slopeString = "";
+                    int thisDirection = getDirection(cleaned[i - 1], cleaned[i]);
+                    if (thisDirection == 1 || thisDirection == 5 || thisDirection == 6)
+                    {
+                        slopeString += "U";
+                    }
+                    else if (thisDirection == 2 || thisDirection == 7 || thisDirection == 8)
+                    {
+                        slopeString += "D";
+                    }
+                    else
+                    {
+                        slopeString += "N";
+                    }
+
+                    if (thisDirection > 2)
+                    {
+                        if (thisDirection % 2 == 1)
+                        {
+                            slopeString += "L";
+                        }
+                        else
+                        {
+                            slopeString += "R";
+                        }
+                    }
+                    else
+                    {
+                        slopeString += "N";
+                    }
                 }
 
                 Tuple<string, int> nextTuple = new Tuple<string, int>(slopeString, scaleLength);
