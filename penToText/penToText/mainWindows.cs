@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -12,41 +14,43 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
-using Petzold.Media2D;
 
 namespace penToText
 {
     class program
     {
         private static mainWindows manager;
+        private static Core core;
         [STAThread]
         static void Main(string[] args)
         {
-            manager = new mainWindows();
-            manager.createWindows();
-           
             App app = new App();
-            app.Run(manager.myInputWindow);
+            //manager = new mainWindows();
+            //manager.createWindows();
+            //app.Run(manager.myInputWindow);
 
+            core = new Core();
+            app.Run(core.getWindow());
         }
     }
     public class mainWindows
     {
-        //Hello Everybody
-        //Hi Doctor Nick!
+        public delegate void addDataDelegate(List<Point> arg);
+
         public InputWindow myInputWindow;
         public DisplayWindow myDisplayWindow;
+        public DataDisplay myDataDisplay;
+        public dynamicDisplay myDynamicDisplay;
+        public static convertToText myPenToText;
+        public dataStuff myDataStuff;
 
-        private double inputHeight = 300;
-        private double inputWidth = 300;
-
-        Point currentPoint;
-        List<Point> data;
+        //threading attempt 2
+        public BlockingCollection<mPoint> blockingData;
+        private Task addingData;
 
         public mainWindows()
-        {
-            data = new List<Point>();
-            currentPoint = new Point(-5, -5);
+        {         
+            myDynamicDisplay = new dynamicDisplay();
         }
 
         public void createWindows()
@@ -54,97 +58,141 @@ namespace penToText
             myInputWindow = new InputWindow();
             myInputWindow.manager = this;
 
-            myDisplayWindow = new DisplayWindow();
+            myPenToText = new convertToText(myDynamicDisplay);
+            myDataStuff = new dataStuff(this);
+            blockingData = new BlockingCollection<mPoint>();
+            addingData = Task.Factory.StartNew(() => myPenToText.getData(blockingData));            
+
+            myDisplayWindow = new DisplayWindow(myDynamicDisplay);
+
+            myPenToText.setDisplayActive(true);
 
             myDisplayWindow.manager = this;
             myDisplayWindow.Visibility = Visibility.Visible;
 
-            myDisplayWindow.Top = myInputWindow.Top;
-            myDisplayWindow.Left = myInputWindow.Left + inputWidth;
+            
 
             myDisplayWindow.Owner = myInputWindow;
 
-            resized();
+            myDataDisplay = new DataDisplay(myDataStuff);
+            myDataDisplay.Visibility = Visibility.Visible;
 
+            myDataDisplay.Owner = myInputWindow;
+
+            myInputWindow.Top = System.Windows.SystemParameters.WorkArea.Top;
+            myInputWindow.Left = System.Windows.SystemParameters.WorkArea.Left;
+
+            myDataDisplay.Top = myInputWindow.Top+ myInputWindow.Height;
+            myDataDisplay.Left = myInputWindow.Left;
+            myDataDisplay.Width = System.Windows.SystemParameters.WorkArea.Width - myDisplayWindow.Width;
+            myDataDisplay.Height = System.Windows.SystemParameters.WorkArea.Height - myDataDisplay.Top;
+
+            myDisplayWindow.Top = System.Windows.SystemParameters.WorkArea.Top;
+            myDisplayWindow.Left = System.Windows.SystemParameters.WorkArea.Width - myDisplayWindow.Width;
+
+            resized();
+            //toggleDataDisplayWindow();
+        }
+
+        internal static void OnDisplayWindowClose(object sender, CancelEventArgs e)
+        {
+            myPenToText.setDisplayActive(false);
+        }
+
+        public void toggleDisplayWindow()
+        {
+            if (myPenToText.getDisplayActive())
+            {
+                myDisplayWindow.Close();
+            }
+            else
+            {
+                myDisplayWindow = new DisplayWindow(myDynamicDisplay);
+
+                myPenToText.setDisplayActive(true);
+
+                myDisplayWindow.manager = this;
+                myDisplayWindow.Visibility = Visibility.Visible;
+
+                myDisplayWindow.Top = myInputWindow.Top;
+                myDisplayWindow.Left = myInputWindow.Left + myInputWindow.ActualWidth;
+
+                myDisplayWindow.Owner = myInputWindow;
+            }
+        }
+
+        public void toggleDataDisplayWindow()
+        {
+            if (myDataDisplay.IsVisible)
+            {
+                myDataDisplay.Visibility = Visibility.Hidden;
+            }
+            else if(myDataDisplay !=null )
+            {
+                myDataDisplay.Visibility = Visibility.Visible;
+                myDataDisplay.Top = System.Windows.SystemParameters.WorkArea.Top;
+                myDataDisplay.Left = System.Windows.SystemParameters.WorkArea.Left;
+                myDataDisplay.Height = System.Windows.SystemParameters.WorkArea.Height;
+                myDataDisplay.Owner = myInputWindow;
+            }
+            else
+            {
+                myDataDisplay = new DataDisplay(myDataStuff);
+                myDataDisplay.Visibility = Visibility.Visible;
+                myDataDisplay.Top = System.Windows.SystemParameters.WorkArea.Top;
+                myDataDisplay.Left = System.Windows.SystemParameters.WorkArea.Left;
+                myDataDisplay.Height = System.Windows.SystemParameters.WorkArea.Height;
+                myDataDisplay.Owner = myInputWindow;
+            }
         }
 
         public void resized()
         {
-            inputWidth = ((Grid)myInputWindow.Content).ActualWidth;
-            inputHeight = ((Grid)myInputWindow.Content).ActualHeight;
 
-            myDisplayWindow.canvasSize.Height = inputHeight;
-            myDisplayWindow.canvasSize.Width = inputWidth;
-            myDisplayWindow.resize();
         }
 
-        
+        public void Submit(char associatedCharacter)
+        {
+            blockingData.CompleteAdding();
+            addingData.Wait();
+            myDataStuff.Submit(myPenToText.getCleanedData(), associatedCharacter);
+            myPenToText.clear();
+            blockingData = new BlockingCollection<mPoint>();
+            currentLine = 0;
+            addingData = Task.Factory.StartNew(() => myPenToText.getData(blockingData)); 
+        }
+
+        private int currentLine;
         public void newData(Point newPoint)
         {
-            //input copy
-            if(currentPoint==new Point(-5,-5)){
-                currentPoint=newPoint;
-            }else{
-                Line temp= new Line();
-                temp.Stroke= Brushes.Black;
-                temp.StrokeThickness=2;
-                temp.X1= currentPoint.X;
-                temp.Y1= currentPoint.Y;
-                temp.X2= newPoint.X;
-                temp.Y2= newPoint.Y;
-                myDisplayWindow.InputCanvas.Children.Add(temp);
-                currentPoint = newPoint;
-            }
-
-            //arrow copy
-            double recordDistance = 15.0f;
-
-            if (data.Count == 0) { data.Add(newPoint); }
-
-            if (distance(newPoint, data[data.Count - 1]) >= recordDistance)
-            {
-                data.Add(newPoint);
-                /*ArrowLine test = new ArrowLine();
-                test.Stroke = Brushes.Black;
-                test.StrokeThickness = 3;
-                test.X1 = 15;
-                test.Y1 = 15;
-                test.X2 = 200;
-                test.Y2 = 200;
-                DisplayCanvas.Children.Add(test);*/
-                //drawArrow(new Point(5, 5), new Point(100, 100));
-
-                myDisplayWindow.ArrowCanvas.Children.Clear();
-                for (int i = 1; i < data.Count; i++)
-                {
-                    Point a = data[i - 1];
-                    Point b = data[i];
-
-                    ArrowLine test = new ArrowLine();
-                    test.Stroke = Brushes.Black;
-                    test.StrokeThickness = 3;
-                    test.X1 = a.X;
-                    test.Y1 = a.Y;
-                    test.X2 = b.X;
-                    test.Y2 = b.Y;
-                    myDisplayWindow.ArrowCanvas.Children.Add(test);
-
-                }
-            }
-
+            if (!blockingData.IsAddingCompleted) { blockingData.Add(new mPoint(newPoint, currentLine)); }            
         }
 
-        private double distance(Point a, Point b)
+        public void closing()
         {
-            return Math.Sqrt(Math.Pow((a.X - b.X), 2) + Math.Pow((a.Y - b.Y), 2));
+            myDataStuff.writeData();
         }
 
-        internal void clear()
+        public void clear()
         {
-            data.Clear();
-            currentPoint = new Point(-5, -5);
-            myDisplayWindow.InputCanvas.Children.Clear();
-            myDisplayWindow.ArrowCanvas.Children.Clear();
+            currentLine = 0;
+            blockingData.CompleteAdding();
+            addingData.Wait();
+            myPenToText.clear();
+            blockingData = new BlockingCollection<mPoint>();
+
+            addingData = Task.Factory.StartNew(() => myPenToText.getData(blockingData)); 
         }
+
+        public void endDraw()
+        {
+            currentLine++;
+        }
+
+        public void updateTree(mSectionNode2 treeRoot){
+            //Console.WriteLine(treeRoot.getString());
+            myPenToText.setTree(treeRoot);
+        }
+       
     }
 }

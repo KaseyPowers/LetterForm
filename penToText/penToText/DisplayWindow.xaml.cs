@@ -21,65 +21,25 @@ namespace penToText
     {
         public Size canvasSize;
         public mainWindows manager;
-        public Canvas InputCanvas;
-        public Canvas ArrowCanvas;
+        public dynamicView dynamicInput;
+        public dynamicView arrows;
+        public dynamicDisplay display;
 
-        public DisplayWindow()
+        public DisplayWindow(dynamicDisplay display)
         {
+            Closing += mainWindows.OnDisplayWindowClose;
             InitializeComponent();
-            canvasSize = new Size();
-            canvasSize.Height = 300;
-            canvasSize.Width = 300;
-
-            Grid DynamicGrid = new Grid();
-            DynamicGrid.HorizontalAlignment = HorizontalAlignment.Left;
-            DynamicGrid.VerticalAlignment = VerticalAlignment.Top;
-            DynamicGrid.ShowGridLines = true;
-
-            // Create Columns
-            ColumnDefinition column0 = new ColumnDefinition();
-            ColumnDefinition column1 = new ColumnDefinition();
-            DynamicGrid.ColumnDefinitions.Add(column0);
-            DynamicGrid.ColumnDefinitions.Add(column1);
-
-            // Create Rows
-            RowDefinition row0 = new RowDefinition();
-            DynamicGrid.RowDefinitions.Add(row0);
-
-            InputCanvas = new Canvas();
-            InputCanvas.Name = "InputCopy";
-            InputCanvas.Width = canvasSize.Width;
-            InputCanvas.Height = canvasSize.Height;
-            InputCanvas.HorizontalAlignment = HorizontalAlignment.Left;
-            InputCanvas.VerticalAlignment = VerticalAlignment.Top;
-
-            Grid.SetRow(InputCanvas, 0);
-            Grid.SetColumn(InputCanvas, 0);
-
-            ArrowCanvas = new Canvas();
-            ArrowCanvas.Name = "ArrowCanvas";
-            ArrowCanvas.Width = canvasSize.Width;
-            ArrowCanvas.Height = canvasSize.Height;
-            ArrowCanvas.HorizontalAlignment = HorizontalAlignment.Left;
-            ArrowCanvas.VerticalAlignment = VerticalAlignment.Top;
-
-            Grid.SetRow(ArrowCanvas, 0);
-            Grid.SetColumn(ArrowCanvas, 1);
-
-            DynamicGrid.Children.Add(InputCanvas);
-            DynamicGrid.Children.Add(ArrowCanvas);
-            this.Content = DynamicGrid;
+            this.display=display;
+            this.Content = display.getScrollView();
 
             this.SizeToContent = SizeToContent.WidthAndHeight;
+            this.ShowActivated = false;
+            this.Show();
         }
 
         internal void resize()
         {
-            InputCanvas.Width = canvasSize.Width;
-            InputCanvas.Height = canvasSize.Height;
-
-            ArrowCanvas.Width = canvasSize.Width;
-            ArrowCanvas.Height = canvasSize.Height;
+           //todo: read this
         }
-    }
+    }   
 }

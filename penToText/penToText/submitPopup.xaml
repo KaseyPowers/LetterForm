@@ -1,0 +1,25 @@
+﻿<Window x:Class="penToText.submitPopup"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Submit" Height="200" Width="200">
+    <StackPanel >
+        <TextBlock 
+            Name="Prompt"
+            Text="Set Letter"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Margin="10"/>
+        <TextBox
+            Name="LetterSet"
+            MaxLength="1"
+            Margin="10"/>
+        <Button
+            Name="SubmitLetter"
+            Click="Set_Letter_Click"
+            Margin="10">Set Letter</Button>
+        <Button
+            Name="Cancel"
+            Click="Cancel_Letter_Change"
+            Margin="10">Cancel</Button>
+    </StackPanel>
+</Window>
