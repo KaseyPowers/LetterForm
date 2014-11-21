@@ -39,6 +39,7 @@ namespace penToText
         public charGuessView guessOutput;
         public charGuessView savedCharCounts;
         private charInputView charSubmit;
+        private treeView myTreeView;
         private bool windowStarted;
         private static long pause = (long)(.25 * 1000);
         public Core()
@@ -73,12 +74,14 @@ namespace penToText
             collections = new BlockingCollection<mPoint>[textConverters.Count];
             addingThreads = new Task[textConverters.Count];
 
-            setupWindow();
+            
 
             dataTrees = new List<dataTree>();
             dataTrees.Add(new dataTree(textConverters[0]));
 
             mDataManager = new dataManager(this);
+
+            setupWindow();
             setupTrees();
 
             blockingData = new BlockingCollection<mPoint>();
@@ -160,6 +163,10 @@ namespace penToText
             display.addCanvas(guessOutput);
             display.addCanvas(charSubmit);
             display.addCanvas(savedCharCounts);
+
+            myTreeView = new treeView(1,2,4,1,display, true, new dataNode("", 0));
+            display.addCanvas(myTreeView);
+
         }
 
         //getting rid of this soon
@@ -184,6 +191,8 @@ namespace penToText
             {
                 dataTrees[i].smartStart(elements, alphabet);
             }*/
+            myTreeView.newTree(dataTrees[0].getRoot());
+            display.draw();
         }
 
         public bool getWindowStarted()
@@ -245,10 +254,28 @@ namespace penToText
         {
             if (alphabet.Contains(submitChar))
             {
+                display.clear();
+
+                blockingData.CompleteAdding();
+                addingData.Wait();
+
                 //use current textConverter to get the cleaned data
                 mDataManager.addData(new Tuple<List<mPoint>, char>(textConverters[0].getCleanedData(), submitChar));
                 setupTrees();
-                clear();
+
+
+                for (int i = 0; i < textConverters.Count; i++)
+                {
+                    textConverters[i].clear();
+                }
+
+                originalData.Clear();
+                blockingData = new BlockingCollection<mPoint>();
+                addingData = Task.Factory.StartNew(() => sendData(blockingData));
+
+                display.draw();             
+                
+                
             }
         }
 
