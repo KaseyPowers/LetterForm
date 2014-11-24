@@ -22,32 +22,43 @@ namespace penToText
             action();
             stopwatch.Stop();
             return stopwatch.Elapsed;
-        }
-        /*
-        public void getData(BlockingCollection<mPoint> data)
-        {
-            mPoint last = null;
-            foreach (var item in data.GetConsumingEnumerable())
-            {
-                mPoint current = item;
-
-                if (originalData.Count > 0)
-                {
-                    last = originalData[originalData.Count - 1];
-                }
-
-                if (originalData.Count == 0 || !(current.X == last.X && current.Y == last.Y && current.line == last.line))
-                {
-                    originalData.Add(current);
-                    updateData();
-                }
-            }
-        }*/
+        }   
 
         public void setTree(dataTree thisTree)
         {
             myTree = thisTree;
         }
+
+        public List<mPoint> minimumLines(List<mPoint> input)
+        {
+            int linePoints = 0;
+            for (int i = 0; i < input.Count-1; i++)
+            {
+                if (input[i].line == input[i+1].line)
+                {
+                    linePoints++;
+                }
+                else
+                {
+                    if (linePoints == 0)
+                    {
+                        //do something
+                        input.Insert(i+1, new mPoint(input[i].X, input[i].Y + .001, input[i].line));
+                        i--;
+                    }
+                    else
+                    {
+                        linePoints = 0;
+                        /*if (i == (input.Count - 1))
+                        {
+                            input.Add(new mPoint(input[i].X, input[i].Y + .001, input[i].line));
+                        }*/
+                    }
+                }
+            }
+            return input;
+        }
+        
         abstract public void updateData(mPoint newPoint);
 
         abstract public void clear();
@@ -102,10 +113,11 @@ namespace penToText
         private List<mPoint> scaling;
         private List<mPoint> resampling;
 
-        int timeCounts = 2;
+        int timeCounts = 3;
         /*
          * 0 is rescaling
          * 1 is the other thing
+         * search tree and guess
          */
 
         public kaseyTextConverter(Core core)
@@ -162,13 +174,139 @@ namespace penToText
             if (sectionsID >= 0)
             {
                 core.TextBreakDown[sectionsID].newData(new List<mPoint>(cleaned2));
-                core.TextBreakDown[sectionsID].titleText = "Kasey Sections: " + core.originalData.Count + "\nTo: " + cleaned2.Count + "\nTime: " + (elapsedTime[timeId]).TotalMilliseconds;
+                core.TextBreakDown[sectionsID].titleText = TAG+ " Sections: " + core.originalData.Count + "\nTo: " + cleaned2.Count + "\nTime: " + (elapsedTime[timeId]).TotalMilliseconds;
+            }
+
+            if (myTree != null && guessOutputID >= 0)
+            {
+                Tuple<String, String> results = new Tuple<string, string>("", "");
+                List<Tuple<String, int>> breakdown = null;
+                elapsedTime[2] += Time(() =>
+                {
+                    breakdown = (getSectionBreakDown(resampling));
+                    results = myTree.getTotalString(myTree.searchTree(breakdown));
+                });
+                String thisGuess = "";
+                for (int i = 0; breakdown != null && i < breakdown.Count; i++)
+                {
+                    thisGuess += breakdown[i].Item1 + " " + breakdown[i].Item2;
+                    if (i < breakdown.Count - 1)
+                    {
+                        thisGuess += " , ";
+                    }
+                }
+                    core.guessOutput.updateGuess(guessOutputID,
+                        TAG + " guess:" +
+                        "\n" + thisGuess + 
+                        "\nPossible letters: " + results.Item1 +
+                        "\nCurrent Guess: " + results.Item2 +
+                        "\nTotal time: " + (elapsedTime[0].TotalMilliseconds + elapsedTime[2].TotalMilliseconds));
             }
         }
-
         public override List<Tuple<String, int>> getSectionBreakDown(List<mPoint> input)
         {
-            return null;
+            List<Tuple<string, int>> output = new List<Tuple<string, int>>();
+            List<mPoint> cleaned = minimumLines(input);
+            //create list of points and their directions
+            if (cleaned.Count > 2)
+            {
+                int sLoc = 0;
+                double unitLength = 0;
+                int scaleLength = 0;
+                String sectionSlope = "Line";
+
+                int sDir = getDirectionIgnoreLine(cleaned[0], cleaned[1]);
+                for (int i = 0; i < (cleaned.Count - 1); i++)
+                {
+                    bool sameSlope = cleaned[sLoc].line == cleaned[i + 1].line && sDir == getDirectionIgnoreLine(cleaned[i], cleaned[i + 1]);
+                    if (!sameSlope)
+                    {
+                        double length = distanceIgnoreLine(cleaned[sLoc], cleaned[i]);
+                        if (unitLength == 0)
+                        {
+                            unitLength = length;
+                        }
+
+                        length = length / unitLength;
+                        
+
+                        //moves to in scale so 0-1 is 0-100, so stores in that is equally accurate to two decimal points
+                        scaleLength = 0;
+                        sectionSlope = "Line";
+                        if (cleaned[sLoc].line == cleaned[i].line)
+                        {
+                            sectionSlope = "";
+                            scaleLength = (int)(RoundToNearest(length*100, 5));
+                            /*
+                             * down: 2,3,4
+                             * up: 6,7,8
+                             * left: 4,5,6
+                             * right: 8,1,2
+                             */
+                            if (sDir >= 2 && sDir <= 4)
+                            {
+                                sectionSlope += "D";
+                            }
+                            else if (sDir >= 6 && sDir <= 8)
+                            {
+                                sectionSlope += "U";
+                            }
+                            if (sDir >= 4 && sDir <= 6)
+                            {
+                                sectionSlope += "L";
+                            }
+                            else if (sDir == 8 || sDir == 1 || sDir == 2)
+                            {
+                                sectionSlope += "R";
+                            }                            
+                        }
+                        output.Add(new Tuple<string, int>(sectionSlope, scaleLength));
+
+                        sLoc = i;
+                        sDir = getDirectionIgnoreLine(cleaned[sLoc], cleaned[sLoc + 1]);
+                    }
+                }
+                if (sLoc != cleaned.Count-1)
+                {
+                    scaleLength = 0;
+                    sectionSlope = "Line";
+                    double length2 = distanceIgnoreLine(cleaned[sLoc], cleaned[cleaned.Count - 1]);
+                    if (unitLength == 0)
+                    {
+                        unitLength = length2;
+                    }
+                    length2 = length2 / unitLength;
+                    if (cleaned[sLoc].line == cleaned[cleaned.Count - 1].line)
+                    {
+                        sectionSlope = "";
+                        scaleLength = (int)(RoundToNearest(length2 * 100, 5));
+                        /*
+                         * down: 2,3,4
+                         * up: 6,7,8
+                         * left: 4,5,6
+                         * right: 8,1,2
+                         */
+                        if (sDir >= 2 && sDir <= 4)
+                        {
+                            sectionSlope += "D";
+                        }
+                        else if (sDir >= 6 && sDir <= 8)
+                        {
+                            sectionSlope += "U";
+                        }
+                        if (sDir >= 4 && sDir <= 6)
+                        {
+                            sectionSlope += "L";
+                        }
+                        else if (sDir == 8 || sDir == 1 || sDir == 2)
+                        {
+                            sectionSlope += "R";
+                        }
+                    }
+                    output.Add(new Tuple<string, int>(sectionSlope, scaleLength));
+                }
+            }
+            return output;
         }
 
         public override List<mPoint> getCleanedData()
@@ -581,7 +719,7 @@ namespace penToText
 
         public int getDirectionIgnoreLine(mPoint a, mPoint b)
         {
-            /*
+            /* except scale is backwards so up <=> down
              * 0: invalid
              * 1: right
              * 2: up-right
@@ -592,7 +730,7 @@ namespace penToText
              * 7: down
              * 8: down-right
              */
-            //the vector values
+            //the vector values 
 
             double X = b.X - a.X;
             double Y = b.Y - a.Y;
@@ -711,22 +849,34 @@ namespace penToText
             if (myTree != null && guessOutputID >= 0)
             {
                 Tuple<String, String> results = new Tuple<string, string>("", "");
+                List<Tuple<String, int>> breakdown = null;
                 elapsedTime[2] += Time(() =>
                 {
-                    results = myTree.searchTree(getBreakDown(cleaned));
+                    breakdown = (getSectionBreakDown(resampling));
+                    results = myTree.getTotalString(myTree.searchTree(breakdown));
                 });
+                String thisGuess = "";
+                for (int i = 0; breakdown != null && i < breakdown.Count; i++)
+                {
+                    thisGuess += breakdown[i].Item1 + " " + breakdown[i].Item2;
+                    if (i < breakdown.Count - 1)
+                    {
+                        thisGuess += " , ";
+                    }
+                }
                 core.guessOutput.updateGuess(guessOutputID,
                     TAG + " guess:" +
+                    "\n" + thisGuess +
                     "\nPossible letters: " + results.Item1 +
                     "\nCurrent Guess: " + results.Item2 +
-                    "\nTotal time: " + (elapsedTime[0].TotalMilliseconds + elapsedTime[1].TotalMilliseconds + elapsedTime[2].TotalMilliseconds));
+                    "\nTotal time: " + (elapsedTime[0].TotalMilliseconds + elapsedTime[2].TotalMilliseconds));
             }
         }
 
         public override List<Tuple<String, int>> getSectionBreakDown(List<mPoint> input)
         {
             //This method is used to build the tree, assume input list is scaled and resampled, break it into sections and return those sections
-            return getBreakDown(cleanSections(Sections(new List<mPoint>(input))));
+            return getBreakDown(minimumLines(cleanSections(Sections(new List<mPoint>(input)))));
         }
 
         public List<Tuple<String, int>> getBreakDown(List<mPoint> cleaned)
@@ -746,7 +896,8 @@ namespace penToText
 
                 thisLength /= unitLength;
                 //moves to in scale so 0-1 is 0-100, so stores in that is equally accurate to two decimal points
-                int scaleLength = (int)(Math.Ceiling(thisLength * 100));
+                int scaleLength = (int)(RoundToNearest(thisLength * 100, 5));
+                //int scaleLength = (int)(Math.Ceiling(thisLength * 100));
 
                 //keeps the length in 4 didgets
                 //scaleLength = Math.Min(scaleLength, 9999);

@@ -99,7 +99,6 @@ namespace penToText
             foreach (XmlElement element in currentLetters)
             {
                 elements.Add( getDataElement(element));
-                element.ParentNode.RemoveChild(element);
             }
             myXmlDocument.Save(fileLoc);
         }
@@ -119,9 +118,17 @@ namespace penToText
                 myXmlDocument.AppendChild(dec);
                 myXmlDocument.AppendChild(myXmlDocument.CreateElement("myData"));
             }
+            XmlNodeList currentLetters = myXmlDocument.DocumentElement.SelectNodes("DataElement");
+            foreach (XmlElement element in currentLetters)
+            {
+                element.ParentNode.RemoveChild(element);
+            }
             foreach (Tuple<List<mPoint>,char> current in elements)
             {
-                myXmlDocument.DocumentElement.AppendChild(getXmlElement(current, myXmlDocument));
+                if (current.Item1.Count > 0)
+                {
+                    myXmlDocument.DocumentElement.AppendChild(getXmlElement(current, myXmlDocument));
+                }
             }
             elements.Clear();
             myXmlDocument.Save(fileLoc);

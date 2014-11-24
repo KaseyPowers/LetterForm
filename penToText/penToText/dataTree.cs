@@ -10,8 +10,10 @@ namespace penToText
     {
         dataNode root;
         textConverter currentConverter;
-        public dataTree(textConverter converter)
+        Core core;
+        public dataTree(textConverter converter, Core core)
         {
+            this.core = core;
             currentConverter = converter;
             currentConverter.setTree(this);
             root = new dataNode("", 0);
@@ -23,12 +25,35 @@ namespace penToText
             return new dataNode(root);
         }
 
-        public Tuple<string, string> searchTree(List<Tuple<String, int>> thisBreakdown)
+        public Tuple<string, string> getTotalString(List<dataNode> input)
+        {
+            string possibleLetters = "";
+            string ifStopHere = "";
+            for (int i = 0; i < input.Count; i++)
+            {
+                possibleLetters = smartAlphabetCombine(possibleLetters, input[i].chars);
+                ifStopHere = smartAlphabetCombine(ifStopHere, input[i].ifStopHere + "");
+            }
+            return new Tuple<string, string>(possibleLetters, ifStopHere);
+        }
+
+        public List<dataNode> searchTree(List<Tuple<String, int>> thisBreakdown)
+        {
+            List<Tuple<dataNode, int>> start = new List<Tuple<dataNode,int>>();
+            start.Add(new Tuple<dataNode, int>(root, 0));
+            return searchTree(start, thisBreakdown, true);
+        }
+
+        public List<dataNode> searchTree(List<Tuple<dataNode, int>> input, List<Tuple<String, int>> thisBreakdown, bool withScale)
         {
             //the int is the position of the breakdown this datanode will compare its children with
             List<Tuple<dataNode, int>> possibleOptions = new List<Tuple<dataNode, int>>();
+            List<dataNode> output = new List<dataNode>();
             Queue<Tuple<dataNode, int>> frontier = new Queue<Tuple<dataNode, int>>();
-            frontier.Enqueue(new Tuple<dataNode, int>(root, 0));
+            for (int i = 0; i < input.Count; i++)
+            {
+                frontier.Enqueue(input[i]);
+            }
 
             while (frontier.Count > 0)
             {
@@ -40,7 +65,7 @@ namespace penToText
                     for (int i = 0; i < current.Item1.children.Count; i++)
                     {
                         dataNode child = current.Item1.children[i];
-                        if (child.SectionLetter.Equals(thisBreakdown[current.Item2].Item1) && child.minValue <= thisBreakdown[current.Item2].Item2 && child.maxValue >= thisBreakdown[current.Item2].Item2)
+                        if (child.SectionLetter.Equals(thisBreakdown[current.Item2].Item1) && (withScale &&  child.minValue <= thisBreakdown[current.Item2].Item2 && child.maxValue >= thisBreakdown[current.Item2].Item2))
                         {
                             frontier.Enqueue(new Tuple<dataNode, int>(child, current.Item2 + 1));
                             fitFound = true;
@@ -56,61 +81,67 @@ namespace penToText
                 {
                     possibleOptions.Add(current);
                 }
-
             }
-
-
-            //if multiple equally likely option exist, will combine them, could say no match as well, can discuss later
-            string possibleLetters = "";
-            string ifStopHere = "";
 
             if (possibleOptions.Count > 1)
             {
-                //find best option
-                bool anyPerfectMatches = false; //exact matches, same length of input (only likely towards the end of input
-                bool anygreaterThan = false; //if there are any of the options that are equal to input but with children (the goal for most inputs)
-                int closestSmaller = thisBreakdown.Count + 1;
-                for (int i = 0; i < possibleOptions.Count && !anyPerfectMatches; i++)
+                if (withScale)
                 {
-                    int difference = thisBreakdown.Count - possibleOptions[i].Item2;
-                    bool lessThan = difference > 0;
-                    if (lessThan && closestSmaller > difference)
-                    {
-                        closestSmaller = difference;
-                    }
-                    bool greaterThan = possibleOptions[i].Item1.children.Count > 0 && !lessThan;
-                    anyPerfectMatches = !greaterThan && !lessThan;
-                    anygreaterThan = anygreaterThan || greaterThan;
+                    output = searchTree(possibleOptions, thisBreakdown, false);
                 }
-
-
-                for (int i = 0; i < possibleOptions.Count && !anyPerfectMatches; i++)
+                else
                 {
-                    int difference = thisBreakdown.Count - possibleOptions[i].Item2;
-                    bool lessThan = thisBreakdown.Count - possibleOptions[i].Item2 > 0;
-                    bool greaterThan = possibleOptions[i].Item1.children.Count > 0 && !lessThan;
-                    if ((anyPerfectMatches && (greaterThan || lessThan)) || (anygreaterThan && !anyPerfectMatches && lessThan) || (!anyPerfectMatches && !anygreaterThan && difference > closestSmaller))
+                    //find best option
+                    bool anyPerfectMatches = false; //exact matches, same length of input (only likely towards the end of input
+                    bool anygreaterThan = false; //if there are any of the options that are equal to input but with children (the goal for most inputs)
+                    int closestSmaller = thisBreakdown.Count + 1;
+                    for (int i = 0; i < possibleOptions.Count && !anyPerfectMatches; i++)
                     {
-                        possibleOptions.RemoveAt(i);
-                        i--;
+                        int difference = thisBreakdown.Count - possibleOptions[i].Item2;
+                        bool lessThan = difference > 0;
+                        if (lessThan && closestSmaller > difference)
+                        {
+                            closestSmaller = difference;
+                        }
+                        bool greaterThan = possibleOptions[i].Item1.children.Count > 0 && !lessThan;
+                        anyPerfectMatches = !greaterThan && !lessThan;
+                        anygreaterThan = anygreaterThan || greaterThan;
                     }
-                }
 
+
+                    for (int i = 0; i < possibleOptions.Count; i++)
+                    {
+                        int difference = thisBreakdown.Count - possibleOptions[i].Item2;
+                        bool lessThan = difference > 0;
+                        bool greaterThan = possibleOptions[i].Item1.children.Count > 0 && !lessThan;
+                        if ((anyPerfectMatches && (greaterThan || lessThan)) || (!anyPerfectMatches && anygreaterThan && lessThan) || (!anyPerfectMatches && !anygreaterThan && difference > closestSmaller))
+                        {
+                            possibleOptions.RemoveAt(i);
+                            i--;
+                        }
+                    }
+                }               
             }
 
-            for (int i = 0; i < possibleOptions.Count; i++)
+            if(output.Count == 0)
             {
-                possibleLetters = smartAlphaBetCombine(possibleLetters, possibleOptions[i].Item1.chars);
-                ifStopHere = smartAlphaBetCombine(ifStopHere, possibleOptions[i].Item1.ifStopHere + "");
-            }
+                for (int i = 0; i < possibleOptions.Count; i++)
+                {
+                    output.Add(possibleOptions[i].Item1);
+                }
+            };
+            
 
-            return new Tuple<string, string>(possibleLetters, ifStopHere);
+            return output;
         }
 
-        private String smartAlphaBetCombine(string a, string b)
+        private String smartAlphabetCombine(string a, string b)
         {
             //lets assume start at 'a'
-            List<bool> values = new List<bool>();
+            bool[] values = new bool[core.alphabet.Length];
+            for(int i=0; i< values.Length; i++){
+                values[i]=false;
+            }
             a = a.Replace(" ", "");
             b = b.Replace(" ", "");
 
@@ -118,12 +149,7 @@ namespace penToText
             {
                 for (int i = 0; i < a.Length; i++)
                 {
-                    int loc = a[i] - 'a';
-                    while (values.Count <= loc)
-                    {
-                        values.Add(false);
-                    }
-                    values[loc] = true;
+                    values[Array.IndexOf(core.alphabet, a[i])] = true;
                 }
             }
 
@@ -131,25 +157,21 @@ namespace penToText
             {
                 for (int i = 0; i < b.Length; i++)
                 {
-                    int loc = b[i] - 'a';
-                    while (values.Count <= loc)
-                    {
-                        values.Add(false);
-                    }
-                    values[loc] = true;
+                    values[Array.IndexOf(core.alphabet, b[i])] = true;
                 }
             }
 
             string output = "";
-            for (int i = 0; i < values.Count; i++)
+            for (int i = 0; i < values.Length; i++)
             {
-                if (values[i]) { output += "" + ('a' + i); }
+                if (values[i]) { output += ""+core.alphabet[i]; }
             }
-            return output;
+            return output.Replace(" ", "");
         }
 
         public void smartStart(List<Tuple<List<mPoint>, char>> data, char[] alphabet)
         {
+            root = new dataNode("", 0);
             dataNode[] roots = new dataNode[alphabet.Length];
 
             for (int i = 0; i < alphabet.Length; i++)

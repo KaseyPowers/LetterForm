@@ -20,7 +20,7 @@ namespace penToText
     public class Core
     {
 
-        private char[] alphabet = "abcdefghijklmnopqrstuvwxyz0123456789".ToCharArray();
+        public char[] alphabet = "abcdefghijklmnopqrstuvwxyz0123456789".ToCharArray();
         dataManager mDataManager;
 
         public BlockingCollection<mPoint> blockingData;
@@ -39,9 +39,9 @@ namespace penToText
         public charGuessView guessOutput;
         public charGuessView savedCharCounts;
         private charInputView charSubmit;
-        private treeView myTreeView;
+        private List<treeView> myTreeViews;
         private bool windowStarted;
-        private static long pause = (long)(.25 * 1000);
+        private static long pause = (long)(.05 * 1000);
         public Core()
         {
             windowStarted = false;
@@ -60,7 +60,8 @@ namespace penToText
             addingThreads = new Task[textConverters.Count];
 
             dataTrees = new List<dataTree>();
-            dataTrees.Add(new dataTree(textConverters[0]));
+            dataTrees.Add(new dataTree(textConverters[0], this));
+            dataTrees.Add(new dataTree(textConverters[2], this));
 
             mDataManager = new dataManager(this);
 
@@ -95,8 +96,6 @@ namespace penToText
             input = new inputView(0, 0, 2, 2, display, pause, true);
             display.addCanvas(input);
             TextBreakDown = new List<multiLineDrawView>();
-
-
 
             multiLineDrawView nextCanvas;
 
@@ -161,9 +160,11 @@ namespace penToText
             display.addCanvas(charSubmit);
             display.addCanvas(savedCharCounts);
 
-            myTreeView = new treeView(1,2,4,1,display, true, new dataNode("", 0));
-            display.addCanvas(myTreeView);
-
+            myTreeViews = new List<treeView>();
+            myTreeViews.Add(new treeView(1, 2, 2, 1, display, true, new dataNode("", 0)));
+            myTreeViews.Add(new treeView(3, 2, 2, 1, display, true, new dataNode("", 0)));
+            display.addCanvas(myTreeViews[0]);
+            display.addCanvas(myTreeViews[1]);
         }
 
         //getting rid of this soon
@@ -182,13 +183,11 @@ namespace penToText
             for(int i=0; i<alphabet.Length; i++){
                 savedCharCounts.updateGuess(i, alphabet[i] + " : " + counts[i]);
             }
-            dataTrees[0].smartStart(elements, alphabet);
-            /*
             for (int i = 0; i < dataTrees.Count; i++)
             {
                 dataTrees[i].smartStart(elements, alphabet);
-            }*/
-            myTreeView.newTree(dataTrees[0].getRoot());
+                myTreeViews[i].newTree(dataTrees[i].getRoot());
+            }            
             display.draw();
         }
 
@@ -258,6 +257,7 @@ namespace penToText
 
                 //use current textConverter to get the cleaned data
                 mDataManager.addData(new Tuple<List<mPoint>, char>(textConverters[0].getCleanedData(), submitChar));
+
                 setupTrees();
 
 
@@ -267,6 +267,7 @@ namespace penToText
                 }
 
                 originalData.Clear();
+
                 blockingData = new BlockingCollection<mPoint>();
                 addingData = Task.Factory.StartNew(() => sendData(blockingData));
 

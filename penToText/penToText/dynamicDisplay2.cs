@@ -585,11 +585,43 @@ namespace penToText
             Grid.SetRow(prompt, 0);
             gridContainer.Children.Add(prompt);
 
+
+            Grid middleView = new Grid();
+            RowDefinition singleRow = new RowDefinition();
+            singleRow.Height = new GridLength(1, GridUnitType.Star);
+            middleView.RowDefinitions.Add(singleRow);
+            for (int i = 0; i < 3; i++)
+            {
+                ColumnDefinition thisColumn = new ColumnDefinition();
+                thisColumn.Width = new GridLength(1, GridUnitType.Star);
+                middleView.ColumnDefinitions.Add(thisColumn);
+            }
+
+            Button cycleLeft = new Button();
+            cycleLeft.Content = "<";
+            cycleLeft.Click += new RoutedEventHandler(cycle_Left);
+            Grid.SetColumn(cycleLeft, 0);
+            Grid.SetRow(cycleLeft, 0);
+            middleView.Children.Add(cycleLeft);
+
+            Button cycleRight = new Button();
+            cycleRight.Content = "<";
+            cycleRight.Click += new RoutedEventHandler(cycle_Right);
+            Grid.SetColumn(cycleRight, 2);
+            Grid.SetRow(cycleRight, 0);
+            middleView.Children.Add(cycleRight);
+
             input = new TextBox();
             input.MaxLength = 1;
-            Grid.SetColumn(input, 0);
-            Grid.SetRow(input, 1);
-            gridContainer.Children.Add(input);
+            input.KeyDown += new KeyEventHandler(OnKeyDownHandler);
+            Grid.SetColumn(input, 1);
+            Grid.SetRow(input, 0);
+            middleView.Children.Add(input);
+
+
+            Grid.SetColumn(middleView, 0);
+            Grid.SetRow(middleView, 1);
+            gridContainer.Children.Add(middleView);
 
             Button submit = new Button();
             submit.Content = "Submit";
@@ -601,19 +633,74 @@ namespace penToText
 
         public void Submit_Click(object sender, RoutedEventArgs e)
         {
-            char toSend = input.Text.ToCharArray()[0];
-            parent.core.submitData(toSend);
+            submit();
+        }
+
+        public void cycle_Left(object sender, RoutedEventArgs e)
+        {
+            cycleChar(true);
+        }
+
+        public void cycle_Right(object sender, RoutedEventArgs e)
+        {
+            cycleChar(false);
+        }
+
+        private void OnKeyDownHandler(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Return)
+            {
+                submit();
+            }
+            else if (e.Key == Key.Left)
+            {
+                cycleChar(true);
+            }
+            else if (e.Key == Key.Right)
+            {
+                cycleChar(false);
+            }
+        }
+
+        public void submit()
+        {
+            if (input.Text.Length > 0)
+            {
+                char toSend = input.Text.ToCharArray()[0];
+                parent.core.submitData(toSend);
+            }
+        }
+
+        public void cycleChar(bool isLeft)
+        {
+            int currentLoc = 0;
+            if (input.Text.Length > 0)
+            {
+                currentLoc = Array.IndexOf(parent.core.alphabet, input.Text.ToArray()[0]);
+                if (isLeft)
+                {
+                    currentLoc--;
+                }
+                else
+                {
+                    currentLoc++;
+                }
+            }
+            currentLoc = currentLoc % parent.core.alphabet.Length;
+            if (currentLoc < 0) { currentLoc += parent.core.alphabet.Length; }
+            input.Text = "" + (parent.core.alphabet[currentLoc]);
         }
 
         public override void clear()
         {
-            input.Text = "";
+
         }
 
         public override void draw()
         {
 
         }
+
     }
 
     public class treeView : dynamicView2
@@ -677,8 +764,8 @@ namespace penToText
         private TreeViewItem getView(dataNode node)
         {
             TreeViewItem output = new TreeViewItem();
-            String header = node.SectionLetter + " [ " + node.maxValue + " , " + node.minValue + " ] " +
-                "\nPossible Letters: " + node.chars;
+            String header = node.SectionLetter + " [ " + node.minValue + " , " + node.maxValue + " ] " +
+                "\nPossible Letters: " + node.chars.Replace(" ", "");
             if (node.ifStopHere != ' ') { header += "\nIf stop here: " + node.ifStopHere; }
             output.Header = header;
 
